@@ -1,0 +1,49 @@
+/* themes.css */
+
+/* Light Theme Variables */
+:root {
+  --background-color: #f9fafb; /* Светло-серый фон */
+  --text-color: #212529; /* Темный текст */
+  --card-background: #ffffff; /* Белый фон карточек */
+  --border-color: #e0e0e0; /* Светлая граница */
+  --input-background: #ffffff; /* Фон инпутов/кнопок по умолчанию */
+  --input-border: #ced4da; /* Граница инпутов/кнопок по умолчанию */
+  --bs-primary: #0d6efd; /* Цвет Bootstrap primary */
+  --bs-success: #198754; /* Цвет Bootstrap success */
+  --bs-white: #ffffff; /* Белый цвет для текста на primary/success */
+  --axis-label-color: #6c757d; /* Цвет меток осей для PieChart/SalesChart, если они там есть */
+}
+
+/* Dark Theme Variables */
+body.dark-theme {
+  --background-color: #2c2f33; /* Темный фон */
+  --text-color: #f8f9fa; /* Светлый текст */
+  --card-background: #36393f; /* Темный фон карточек */
+  --border-color: #4a4d52; /* Темная граница */
+  --input-background: #4a4d52; /* Фон инпутов/кнопок в темной теме */
+  --input-border: #6c757d; /* Граница инпутов/кнопок в темной теме */
+  --bs-primary: #0a58ca; /* Более темный синий для Bootstrap primary в темной теме */
+  --bs-success: #157347; /* Более темный зеленый для Bootstrap success в темной теме */
+  --bs-white: #e9ecef; /* Слегка серовато-белый для текста на primary/success */
+  --axis-label-color: #adb5bd; /* Более светлый цвет меток осей для темной темы */
+}
+
+/* Общие стили для плавного перехода, если вы не добавили их в инлайн стили */
+/* Если вы добавили transition в инлайн стили (как в моем предыдущем ответе),
+   то этот блок не так критичен, но полезен для глобальных элементов */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Также убедитесь, что компоненты PieChart и SalesChart используют эти переменные для своих стилей,
+   если они содержат элементы, которые должны меняться (например, цвет текста, фона, осей) */
+/* Пример: */
+/* .chart-container {
+  background-color: var(--card-background);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+.chart-axis-label {
+  color: var(--axis-label-color);
+}
+*/

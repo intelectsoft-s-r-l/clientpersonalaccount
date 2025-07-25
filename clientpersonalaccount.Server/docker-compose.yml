@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  webapp:
+    build: .
+    ports:
+      - "8080:8080"  # Пробрасываем порт 8080
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+    volumes:
+      - ./logs:/app/logs  # Опционально для логов
+    restart: unless-stopped

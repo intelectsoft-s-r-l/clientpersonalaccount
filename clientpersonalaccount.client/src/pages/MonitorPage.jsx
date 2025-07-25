@@ -1,0 +1,392 @@
+import React, { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "../context/AuthContext";
+import { PieChart } from "../components/PieChart";
+import SalesChart from "../components/SalesChart";
+
+export default function MonitorPage() {
+  //#region вспомогательные атрибуты
+  const { t } = useTranslation();
+  const [selectedRange, setSelectedRange] = useState("day"); // day/week/month/year
+  const [posList, setPosList] = useState([]);
+  const [selectedPos, setSelectedPos] = useState([]);
+  const [allDevices, setAllDevices] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [chartData, setChartData] = useState({});
+  const [allDevicesChartData, setAllDevicesChartData] = useState({});
+  const { user } = useAuth();
+  //#endregion
+
+  //#region  Расчет startDate и endDate по выбранному диапазону
+  function getDateRange(range) {
+    const now = new Date();
+    let start, end;
+    switch (range) {
+      case "day":
+        start = end = now;
+        break;
+      case "week":
+        start = new Date(now);
+        start.setDate(now.getDate() - 6);
+        end = now;
+        break;
+      case "month":
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = now;
+        break;
+      case "year":
+        start = new Date(now.getFullYear(), 0, 1);
+        end = now;
+        break;
+      default:
+        start = end = now;
+    }
+    return {
+      startDate: start.toLocaleDateString("sv-SE"),
+      endDate: end.toLocaleDateString("sv-SE"),
+    };
+  }
+  //#endregion
+
+  const togglePos = (id) => {
+    if (selectedPos.includes(id)) {
+      setSelectedPos(selectedPos.filter((x) => x !== id));
+    } else {
+      setSelectedPos([...selectedPos, id]);
+    }
+  };
+
+  //#region загрузка данных
+  // Загрузка списка POS
+  const fetchPosList = useCallback(async () => {
+    try {
+      const resp = await fetch(
+        `http://localhost:5001/api/proxy/BINavigatorAPI/ClientPortal/POSitems?CompanyId=${user.CompanyID}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Service-Id": "58",
+          },
+        }
+      );
+      const data = await resp.json();
+      setPosList(data.posItems || []);
+    } catch (e) {
+      console.error("Error loading POS list", e);
+    }
+  }, [user]);
+
+  const loadAllDevicesData = useCallback(async () => {
+    if (!user) return;
+    const now = new Date();
+    const formatDate = (date) => date.toISOString().split("T")[0];
+    const startDate = formatDate(new Date(now.getFullYear(), now.getMonth(), 1));
+    const endDate = formatDate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+
+    try {
+      const resp = await fetch(
+        `http://localhost:5001/api/proxy/BINavigatorAPI/ClientPortal/DailyTotalsForAllPosByDateRange?companyId=${user.CompanyID}&startDate=${startDate}&endDate=${endDate}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Service-Id": "58",
+          },
+        }
+      );
+
+      const data = await resp.json();
+      if (!data.posSummaryItems) data.posSummaryItems = [];
+
+      const groupedByPosItem = {};
+      data.posSummaryItems.forEach((item) => {
+        const key = item.avgCheck || "Unknown";
+        const date = item.date?.split("T")[0] || "Unknown";
+        const amount = typeof item.totalAmount === "number" ? item.totalAmount : 0;
+
+        if (!groupedByPosItem[key]) groupedByPosItem[key] = {};
+        if (!groupedByPosItem[key][date]) groupedByPosItem[key][date] = 0;
+
+        groupedByPosItem[key][date] += amount;
+      });
+
+      const formattedData = Object.entries(groupedByPosItem).reduce(
+        (acc, [posItem, dateMap]) => {
+          const dataArray = Object.entries(dateMap)
+            .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+            .map(([date, value]) => ({ date, value }));
+
+          acc[posItem] = {
+            title: posItem,
+            data: dataArray,
+          };
+
+          return acc;
+        },
+        {}
+      );
+
+      setAllDevicesChartData(formattedData);
+    } catch (e) {
+      console.error("Error loading All Devices chart", e);
+    }
+  }, [user, selectedRange, getDateRange]);
+
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    const newChartData = {};
+    const { startDate, endDate } = getDateRange(selectedRange);
+
+    try {
+      if (allDevices) {
+        // Группируем по всем устройствам за период
+        const resp = await fetch(
+          `http://localhost:5001/api/proxy/BINavigatorAPI/ClientPortal/DailyTotalsForAllPosByDateRange?companyId=${user.CompanyID}&startDate=${startDate}&endDate=${endDate}`,
+          {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Service-Id": "58",
+            },
+          }
+        );
+        const data = await resp.json();
+
+        if (!data.posSummaryItems || data.posSummaryItems.length === 0) {
+          setChartData({});
+          setLoading(false);
+          return;
+        }
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        // Группируем сумму по датам всех POS вместе
+        const grouped = {};
+        data.posSummaryItems.forEach((item) => {
+          const rawDate = item.date?.split("T")[0];
+          if (!rawDate) return;
+
+          const currentDate = new Date(rawDate);
+          if (currentDate < start || currentDate > end) return;
+
+          const amount = typeof item.totalAmount === "number" ? item.totalAmount : 0;
+
+          if (!grouped[rawDate]) grouped[rawDate] = 0;
+          grouped[rawDate] += amount;
+        });
+
+        const aggregatedData = Object.entries(grouped)
+          .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+          .map(([date, value]) => ({ date, value }));
+
+        newChartData["allDevices"] = {
+          title: t("AllDevices"),
+          data: aggregatedData,
+        };
+      } else {
+        if (selectedPos.length === 0) {
+          setChartData({});
+          setLoading(false);
+          return;
+        }
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        const results = await Promise.all(
+          selectedPos.map(async (posID) => {
+            try {
+              const resp = await fetch(
+                `http://localhost:5001/api/proxy/BINavigatorAPI/ClientPortal/DailyTotalsForPos?PosId=${posID}`,
+                {
+                  method: "GET",
+                  credentials: "include",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "X-Service-Id": "58",
+                  },
+                }
+              );
+              const data = await resp.json();
+              if (!data.posSummaryItems || data.posSummaryItems.length === 0) return null;
+
+              return {
+                posID,
+                data: data.posSummaryItems.map((item) => ({
+                  date: item.date.split("T")[0],
+                  value: item.totalAmount,
+                })),
+              };
+            } catch (err) {
+              console.error(`Error loading data for POS ${posID}`, err);
+              return null;
+            }
+          })
+        );
+
+        results.forEach((result) => {
+          if (result) {
+            const filteredData = result.data.filter(({ date }) => {
+              const current = new Date(date);
+              return current >= start && current <= end;
+            });
+
+            if (filteredData.length === 0) return;
+
+            newChartData[result.posID] = {
+              title: `POS: ${posList.find((p) => p.posID === result.posID)?.name || result.posID}`,
+              data: filteredData,
+            };
+          }
+        });
+      }
+
+      setChartData(newChartData);
+    } catch (e) {
+      console.error("Error loading chart data", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, selectedPos, allDevices, selectedRange, loadAllDevicesData, getDateRange, posList]);
+  //#endregion
+
+  //#region useEffect
+  useEffect(() => {
+    if (user) {
+      fetchPosList();
+      loadAllDevicesData();
+    }
+  }, [user]);
+
+  // Сброс выбора, если включаем "All Devices"
+  useEffect(() => {
+    if (allDevices) setSelectedPos([]);
+  }, [allDevices]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (!allDevices && selectedPos.length === 0) return;
+
+    loadData();
+  }, [user?.id, allDevices, selectedPos.length, selectedRange]);
+  //#endregion
+
+  return (
+    <div id="monitor" className="page-section active">
+      <div className="top-header mb-4 d-flex justify-content-between align-items-center" >
+        <h4>{t("Monitoring")}</h4>
+        <div className="d-flex align-items-center">
+          <div style={{ marginRight: 40 }}>
+            <div className="dropdown">
+              <button
+                className="btn btn-outline-secondary dropdown-toggle text-start"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                style={{ width: 200 }}
+              >
+                {allDevices
+                  ? t("AllDevices")
+                  : selectedPos.length === 0
+                    ? t("SelectPOSdevices")
+                    : `${selectedPos.length} ${t("Selected")}`}
+              </button>
+
+              <ul className="dropdown-menu p-2" style={{ width: 200, maxHeight: "200px", overflowY: "auto" }}>
+                {/* All Devices */}
+                <li
+                  className={`dropdown-item rounded mb-1 ${allDevices ? "bg-success text-white" : ""}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAllDevices((prev) => {
+                      const newValue = !prev;
+                      if (newValue) {
+                        setSelectedPos([]); // если включаем "All Devices" — сбрасываем выбор устройств
+                      }
+                      return newValue;
+                    });
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  {t("AllDevices")}
+                </li>
+
+                {/* Always render the device list */}
+                {posList.map(({ posID, name }) => {
+                  const isSelected = selectedPos.includes(posID);
+                  return (
+                    <li
+                      key={posID}
+                      className={`dropdown-item border rounded mb-1 ${isSelected ? "bg-primary text-white border-primary" : "border-secondary"
+                        } ${allDevices ? "disabled text-muted" : ""}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!allDevices) togglePos(posID);
+                      }}
+                      style={{ cursor: allDevices ? "not-allowed" : "pointer" }}
+                    >
+                      {name || posID}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+          <div className="d-flex">
+            <button
+              type="button"
+              className={`btn btn-sm me-2 ${selectedRange === "day" ? "btn-primary" : "btn-outline-primary"
+                }`}
+              onClick={() => setSelectedRange("day")}
+            >
+              {t("Day")}
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm me-2 ${selectedRange === "week" ? "btn-primary" : "btn-outline-primary"
+                }`}
+              onClick={() => setSelectedRange("week")}
+            >
+              {t("Week")}
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm me-2 ${selectedRange === "month" ? "btn-primary" : "btn-outline-primary"
+                }`}
+              onClick={() => setSelectedRange("month")}
+            >
+              {t("Month")}
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm me-3 ${selectedRange === "year" ? "btn-primary" : "btn-outline-primary"
+                }`}
+              onClick={() => setSelectedRange("year")}
+            >
+              {t("Year")}
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="flex-grow-1 row g-3 d-flex gap-4 mb-4">
+        <div className="col-md-6">
+          <PieChart data={allDevicesChartData} t={t} title={t("OneMonthForAllPOS")} />
+        </div>
+      </div>
+      {/* Правая панель — графики */}
+      <div className="flex-grow-1 row g-3">
+        {Object.entries(chartData).map(([posID, { title, data }]) => (
+          <div className="col-md-6" key={posID}>
+            <SalesChart title={title} data={data} t={t} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
