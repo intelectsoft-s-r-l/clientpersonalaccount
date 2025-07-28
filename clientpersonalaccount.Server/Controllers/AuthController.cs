@@ -27,7 +27,7 @@ public class AuthController : ControllerBase
                 {
                     HttpOnly = true,
                     Secure = true,
-                    SameSite = SameSiteMode.Lax,
+                    SameSite = SameSiteMode.None,
                     MaxAge = TimeSpan.FromHours(2)
                 });
 
@@ -64,7 +64,7 @@ public class AuthController : ControllerBase
                 {
                     HttpOnly = true,
                     Secure = true,
-                    SameSite = SameSiteMode.Lax,
+                    SameSite = SameSiteMode.None,
                     MaxAge = TimeSpan.FromHours(2)
                 });
 

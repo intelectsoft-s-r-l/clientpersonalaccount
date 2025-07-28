@@ -4,19 +4,16 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
     plugins: [react()],
     build: {
-        outDir: 'dist',
+        outDir: '../clientpersonalaccount.Server/wwwroot',
         emptyOutDir: true,
         rollupOptions: {
-            input: {
-                main: './index.html'
-            }
+            input: './index.html'
         }
     },
     server: {
-        port: 5173,
-        https: {
-            key: './aspnetcore-react.pem',
-            cert: './aspnetcore-react.pem',
-        }
+        port: 5173
+    },
+    "scripts": {
+        "build": "vite build"
     }
 })

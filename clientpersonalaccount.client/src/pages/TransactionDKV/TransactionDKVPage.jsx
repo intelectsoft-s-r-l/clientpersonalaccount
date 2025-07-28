@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { DataTable } from "../../components/DataTable"; // универсальная таблица
 import { Eye } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import apiService from '../../services/apiService';
 
 function formatDate(dateStr) {
     if (!dateStr) return "-";
@@ -25,19 +26,14 @@ export default function TransactionDKVPage() {
             setLoading(true);
             setError("");
 
-            const res = await fetch(
-                `http://localhost:5001/api/proxy/ISDKVManagement/GetTransactions?startDate=${startDate}&endDate=${endDate}`,
-                {
-                    method: "GET",
-                    credentials: 'include',
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Service-Id": "43"
-                    },
+            const data = await apiService.proxyRequest(`/ISDKVManagement/GetTransactions?startDate=${startDate}&endDate=${endDate}`, {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Service-Id": "43",
                 }
-            );
-
-            const data = await res.json();
+            })
 
             if (data?.errorMessage) {
                 setError(`${data.errorName || "Ошибка"}: ${data.errorMessage}`);

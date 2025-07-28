@@ -28,3 +28,8 @@ README.md
 !.git/config
 !.git/packed-refs
 !.git/refs/heads/**
+.vscode
+.dockerignore
+Dockerfile
+*.md
+*.log

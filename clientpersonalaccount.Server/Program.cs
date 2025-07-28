@@ -7,22 +7,12 @@ builder.Services.AddHttpClient();
 // CORS настройка для Docker/Production
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        if (builder.Environment.IsDevelopment())
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        }
-        else
-        {
-            // В production разрешаем только необходимые источники
-            policy.WithOrigins("http://localhost:8080", "http://localhost")
-                  .AllowCredentials()
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        }
+        policy.WithOrigins("http://localhost:5173") // <-- Укажи ТОЛЬКО нужный origin, не "*"
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // <-- ВАЖНО
     });
 });
 
@@ -40,12 +30,10 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseRouting();
+app.UseCors("AllowFrontend");
 // Добавляем поддержку статических файлов для React
 app.UseStaticFiles();
-
-app.UseRouting();
-app.UseCors();
 
 // Middleware для установки токена из cookie
 app.Use(async (context, next) =>
@@ -56,10 +44,6 @@ app.Use(async (context, next) =>
     if (!string.IsNullOrEmpty(tokenFromCookie))
     {
         authProxy.SetToken(tokenFromCookie);
-    }
-    else
-    {
-        authProxy.SetToken(null);
     }
 
     await next();

@@ -4,7 +4,7 @@ class ApiService {
     constructor() {
         // Теперь базовый URL - это ваш ASP.NET сервер
         this.baseUrl = process.env.NODE_ENV === 'development'
-            ? 'https://localhost:8080' // Порт вашего ASP.NET приложения в development
+            ? 'https://localhost:7215' // Порт вашего ASP.NET приложения в development
             : window.location.origin;   // В production используем тот же домен
     }
 
@@ -32,6 +32,9 @@ class ApiService {
         const response = await fetch(`${this.baseUrl}/api/auth/refresh`, {
             method: 'POST',
             credentials: 'include',
+            headers: {
+                "Content-Type": "application/json"
+            }
         });
 
         if (!response.ok) {
@@ -46,6 +49,9 @@ class ApiService {
         const response = await fetch(`${this.baseUrl}/api/auth/GetProfileInfo`, {
             method: 'POST',
             credentials: 'include',
+            headers: {
+                "Content-Type": "application/json"
+            }
         });
 
         if (!response.ok) {
@@ -60,6 +66,9 @@ class ApiService {
         const response = await fetch(`${this.baseUrl}/api/auth/logout`, {
             method: 'POST',
             credentials: 'include',
+            headers: {
+                "Content-Type": "application/json"
+            }
         });
 
         return await response.json();
@@ -68,7 +77,11 @@ class ApiService {
     // Проверка токена
     async checkAuth() {
         const response = await fetch(`${this.baseUrl}/api/auth/me`, {
+            method: 'GET',
             credentials: 'include',
+            headers: {
+                "Content-Type": "application/json"
+            }
         });
 
         if (!response.ok) {

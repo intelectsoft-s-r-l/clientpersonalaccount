@@ -27,7 +27,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="position-relative min-h-screen" style={{ backgroundColor: "#d2eff2" }}>
+    <div id="login" className="position-relative min-h-screen" style={{ backgroundColor: "#d2eff2" }}>
       <div className="position-absolute top-0 end-0 p-3 z-50">
         <LanguageSwitcher />
       </div>

@@ -75,11 +75,11 @@ public class AuthSettingsService
         var json = await response.Content.ReadAsStringAsync();
         var settingsResponse = JsonSerializer.Deserialize<SettingsResponse>(json);
 
-        if (string.IsNullOrEmpty(settingsResponse?.Settings))
+        if (string.IsNullOrEmpty(settingsResponse?.settings))
             throw new Exception("settings не найдены");
 
         // Декодируем зашифрованные настройки
-        var decoded = DecodeApiCredential(settingsResponse.Settings, settingsResponse.Uri ?? url);
+        var decoded = DecodeApiCredential(settingsResponse.settings, settingsResponse.uri ?? url);
 
         return decoded;
     }
@@ -95,6 +95,6 @@ public class ServiceCredentials
 
 public class SettingsResponse
 {
-    public string? Settings { get; set; }
-    public string? Uri { get; set; }
+    public string? settings { get; set; }
+    public string? uri { get; set; }
 }

@@ -5,6 +5,7 @@ import { DataTable } from "../../components/DataTable";
 import { Eye } from "lucide-react";
 import BankModal from "./BankModal";
 import { useTranslation } from "react-i18next";
+import apiService from '../../services/apiService';
 
 function formatDate(dateStr) {
     if (!dateStr) return "-";
@@ -17,23 +18,23 @@ export default function BankPage() {
     const [bankNames, setBankNames] = useState({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const { token } = useAuth();
     const { t } = useTranslation();
+    const { token } = useAuth();
 
     const [selectedTapxphoneSettings, setSelectedTapxphoneSettings] = useState(null);
 
     const fetchBankNames = async () => {
         try {
-            const res = await fetch(`http://localhost:5001/api/proxy/MobileCashRegister/web/GetBanks`, {
+
+            const data = await apiService.proxyRequest(`/MobileCashRegister/web/GetBanks`, {
                 method: "GET",
-                credentials: 'include',
+                credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Service-Id": "16"
-                },
-            });
+                    "X-Service-Id": "16",
+                }
+            })
 
-            const data = await res.json();
             if (Array.isArray(data.banks)) {
                 const map = {};
                 data.banks.forEach((item) => {
@@ -51,19 +52,15 @@ export default function BankPage() {
             setLoading(true);
             setError("");
 
-            const res = await fetch(
-                `http://localhost:5001/api/proxy/MobileCashRegister/web/GetTapxphoneSettings`,
-                {
-                    method: "GET",
-                    credentials: 'include',
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Service-Id": "16"
-                    },
+            const data = await apiService.proxyRequest(`/MobileCashRegister/web/GetTapxphoneSettings`, {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Service-Id": "16",
                 }
-            );
+            })
 
-            const data = await res.json();
             if (data?.errorMessage) {
                 setError(`${data.errorName || "Ошибка"}: ${data.errorMessage}`);
             } else if (Array.isArray(data.tapxphoneSettings)) {
@@ -106,8 +103,8 @@ export default function BankPage() {
     });
 
     const columns = [
-        { key: "nameFromApi", label: t("Name"), filterable: true, width: "45%" },
-        { key: "login", label: t("Login"), filterable: true }
+        { key: "nameFromApi", label: t("Name"), filterable: true, width: "50%" },
+        { key: "login", label: t("Login"), filterable: true, width: "50%" }
     ];
 
     return (

@@ -15,21 +15,6 @@ import {
 export default function SalesChart({ title, data, t }) {
   const [chartType, setChartType] = useState("line");
 
-  // --- Отладочный вывод данных ---
-  useEffect(() => {
-    console.log("Данные, полученные SalesChart:", data);
-    if (!data || data.length === 0) {
-      console.warn("Массив данных пуст или не определен. График не будет отображаться.");
-    } else {
-      console.log("Первый элемент данных:", data[0]);
-      // Дополнительная проверка на наличие ключей 'date' и 'value'
-      if (data[0] && (!('date' in data[0]) || !('value' in data[0]))) {
-        console.error("Данные не содержат ключи 'date' или 'value'. Проверьте формат данных (например, { date: 'Jan', value: 100 }).");
-      }
-    }
-  }, [data]);
-  // --- Конец отладочного вывода ---
-
   // Кастомный компонент для тултипа
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {

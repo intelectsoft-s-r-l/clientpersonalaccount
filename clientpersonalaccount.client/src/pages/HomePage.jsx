@@ -13,34 +13,36 @@ import BankPage from "./Bank/BankPage";
 import TransactionDKVPage from "./TransactionDKV/TransactionDKVPage";
 
 export default function HomePage() {
-  const { user } = useAuth();
-  const { activePage } = usePageNavigation();
-  const navigate = useNavigate();
+    const { user } = useAuth();
+    const { activePage } = usePageNavigation();
+    const navigate = useNavigate();
 
-  useSyncPageFromQuery();
+    useSyncPageFromQuery();
 
-  useEffect(() => {
-    if (!user) navigate("/login");
-  }, [user, navigate]);
+    useEffect(() => {
+        if (!user) {
+            navigate("/login");
+        }
+    }, [user, navigate]);
 
-  const renderPage = () => {
-    switch (activePage) {
-      case "monitor":
-        return <MonitorPage />;
-      case "license":
-        return <LicensePage />;
-      case "assortement":
-        return <AssortementPage />;
-      case "fiscal-devices":
-        return <FiscalDevicesListPage />;
-      case "banks":
-        return <BankPage />;
-      case "transactionDkv":
-        return <TransactionDKVPage />;
-      default:
-        return <MonitorPage />;
-    }
-  };
+    const renderPage = () => {
+        switch (activePage) {
+            case "monitor":
+                return <MonitorPage />;
+            case "license":
+                return <LicensePage />;
+            case "assortement":
+                return <AssortementPage />;
+            case "fiscal-devices":
+                return <FiscalDevicesListPage />;
+            case "banks":
+                return <BankPage />;
+            case "transactionDkv":
+                return <TransactionDKVPage />;
+            default:
+                return <MonitorPage />;
+        }
+    };
 
-  return <LayoutWithSidebar>{renderPage()}</LayoutWithSidebar>;
+    return <LayoutWithSidebar>{renderPage()}</LayoutWithSidebar>;
 }
