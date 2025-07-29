@@ -34,10 +34,11 @@ export const AuthProvider = ({ children }) => {
 
     const refreshToken = async () => {
         try {
-            await apiService.refreshToken();
+            var token = await apiService.refreshToken();
             return true;
         } catch (error) {
-            console.error('Ошибка обновления токена:', error);
+            setUser(null);
+            setIsAuthenticated(false);
             return false;
         }
     };
@@ -46,7 +47,6 @@ export const AuthProvider = ({ children }) => {
     const getUserInfo = async () => {
         try {
             const userInfo = await apiService.getProfileInfo();
-
             setUser(userInfo.user);
             setIsAuthenticated(true);
 
@@ -79,19 +79,8 @@ export const AuthProvider = ({ children }) => {
 
     const forgotPassword = async (email) => {
         try {
-            const response = await fetch('http://localhost:5001/api/auth/reset', {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-                return { success: true };
-            }
-
-            return { success: false, error: result.error || 'Ошибка восстановаления пароля' };
+            await apiService.forgotPassword(email);
+            return { success: true };
         } catch {
             return { success: false, error: 'Ошибка сети' };
         }

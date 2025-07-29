@@ -12,6 +12,7 @@ public class AuthProxy : BaseProxy
     private const string LoginPath = "/ISAuthService/json/AuthorizeUser";
     private const string RefreshPath = "/ISAuthService/json/RefreshToken";
     private const string ProfileInfoPath = "/ISAuthService/json/GetProfileInfo";
+    private const string ForgotPasswordPath = "/ISAuthService/json/ResetPassword";
 
     public AuthProxy(IHttpClientFactory httpClientFactory, AuthSettingsService authSettingsService)
         : base("https://dev.edi.md", httpClientFactory)
@@ -41,6 +42,16 @@ public class AuthProxy : BaseProxy
                 SetToken(token);
             }
         }
+
+        return result;
+    }
+
+    public async Task<ProxyResponse> ForgotPassword(string email)
+    {
+        var result = await Post(ForgotPasswordPath, new
+        {
+            Email = email
+        });
 
         return result;
     }

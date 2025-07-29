@@ -4,14 +4,14 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
     plugins: [react()],
     build: {
-        outDir: '../clientpersonalaccount.Server/wwwroot',
+        outDir: 'dist',
         emptyOutDir: true,
         rollupOptions: {
             input: './index.html'
         }
     },
     server: {
-        port: 5173
+        port: 5174
     },
     "scripts": {
         "build": "vite build"

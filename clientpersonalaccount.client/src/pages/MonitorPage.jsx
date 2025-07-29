@@ -276,15 +276,15 @@ export default function MonitorPage() {
     //#endregion
 
     return (
-        <div id="monitor" className="page-section active">
-            <div className="top-header mb-4 d-flex justify-content-between align-items-center" >
+        <div id="monitor" className="page-section active dark:bg-gray-700 dark:text-white">
+            <div className="top-header mb-4 d-flex justify-content-between align-items-center dark:bg-gray-800 dark:text-white rounded shadow-sm" >
                 <h4>{t("Monitoring")}</h4>
                 <div className="d-flex align-items-center">
                     <div style={{ marginRight: 40 }}>
                         <div className="dropdown" ref={dropdownRef}>
 
                             <button
-                                className="btn btn-outline-secondary dropdown-toggle text-start"
+                                className="btn btn-outline-secondary dropdown-toggle text-start dark:text-white"
                                 type="button"
                                 data-bs-toggle="dropdown"
                                 aria-expanded="false"
@@ -299,11 +299,11 @@ export default function MonitorPage() {
                             </button>
 
                             <ul
-                                className={`dropdown-menu p-2 ${isOpen ? "show" : ""}`}
+                                className={`dropdown-menu p-2 ${isOpen ? "show" : ""} dark:bg-gray-800 dark:text-white`}
                                 style={{ width: 200, maxHeight: "200px", overflowY: "auto" }}
                             >
                                 <li
-                                    className={`dropdown-item rounded mb-1 ${allDevices ? "bg-success text-white" : ""}`}
+                                    className={`dropdown-item rounded mb-1 ${allDevices ? "bg-success text-white" : "text-white"} dark:hover:bg-gray-700`}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setAllDevices((prev) => {
@@ -322,7 +322,7 @@ export default function MonitorPage() {
                                     return (
                                         <li
                                             key={posID}
-                                            className={`dropdown-item border rounded mb-1 ${isSelected ? "bg-primary text-white border-primary" : "border-secondary"} ${allDevices ? "disabled text-muted" : ""}`}
+                                            className={`dropdown-item border rounded mb-1 ${isSelected ? "bg-primary text-white border-primary" : "text-white border-secondary"} ${allDevices ? "disabled text-muted" : ""} dark:hover:bg-gray-700`}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 if (!allDevices) togglePos(posID);
@@ -339,7 +339,7 @@ export default function MonitorPage() {
                     <div className="d-flex">
                         <button
                             type="button"
-                            className={`btn btn-sm me-2 ${selectedRange === "day" ? "btn-primary" : "btn-outline-primary"
+                            className={`btn btn-sm me-2 ${selectedRange === "day" ? "btn-primary dark:bg-blue-700 dark:border-blue-600 dark:text-white" : "btn-outline-primary dark:border-gray-600 dark:text-white"
                                 }`}
                             onClick={() => setSelectedRange("day")}
                         >
@@ -347,7 +347,7 @@ export default function MonitorPage() {
                         </button>
                         <button
                             type="button"
-                            className={`btn btn-sm me-2 ${selectedRange === "week" ? "btn-primary" : "btn-outline-primary"
+                            className={`btn btn-sm me-2 ${selectedRange === "week" ? "btn-primary dark:bg-blue-700 dark:border-blue-600 dark:text-white" : "btn-outline-primary dark:border-gray-600 dark:text-white"
                                 }`}
                             onClick={() => setSelectedRange("week")}
                         >
@@ -355,7 +355,7 @@ export default function MonitorPage() {
                         </button>
                         <button
                             type="button"
-                            className={`btn btn-sm me-2 ${selectedRange === "month" ? "btn-primary" : "btn-outline-primary"
+                            className={`btn btn-sm me-2 ${selectedRange === "month" ? "btn-primary dark:bg-blue-700 dark:border-blue-600 dark:text-white" : "btn-outline-primary dark:border-gray-600 dark:text-white"
                                 }`}
                             onClick={() => setSelectedRange("month")}
                         >
@@ -363,7 +363,7 @@ export default function MonitorPage() {
                         </button>
                         <button
                             type="button"
-                            className={`btn btn-sm me-3 ${selectedRange === "year" ? "btn-primary" : "btn-outline-primary"
+                            className={`btn btn-sm me-3 ${selectedRange === "year" ? "btn-primary dark:bg-blue-700 dark:border-blue-600 dark:text-white" : "btn-outline-primary dark:border-gray-600 dark:text-white"
                                 }`}
                             onClick={() => setSelectedRange("year")}
                         >

@@ -87,7 +87,6 @@ export default function AssortmentPage() {
             }
         }
 
-        fetchToken();
         fetchAndDecode();
     }, [token]);
 
@@ -296,7 +295,7 @@ export default function AssortmentPage() {
                     <button
                         key={key}
                         onClick={() => setActiveTable(key)}
-                        className={`px-4 py-2 border-b-2 ${key === activeTable ? " border-green-600 text-green-600" : "border-transparent text-gray-600"
+                        className={`px-4 py-2 border-b-2 ${key === activeTable ? " border-green-600 text-green-600" : "border-transparent text-gray-600 dark:text-white"
                             }`}
                     >
                         {key === "payments" && t("Tabs.Payments")}

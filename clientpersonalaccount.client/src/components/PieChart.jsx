@@ -79,7 +79,7 @@ export function PieChart({ data, t, title }) {
 
   return (
     <div
-      className="card h-100"
+          className="card h-100 dark:bg-gray-800"
       style={{
         backgroundColor: "#d2eff2",
         color: "#343534",

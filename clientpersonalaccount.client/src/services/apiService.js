@@ -4,7 +4,7 @@ class ApiService {
     constructor() {
         // Теперь базовый URL - это ваш ASP.NET сервер
         this.baseUrl = process.env.NODE_ENV === 'development'
-            ? 'https://localhost:7215' // Порт вашего ASP.NET приложения в development
+            ? 'http://localhost:8080' // Порт вашего ASP.NET приложения в development
             : window.location.origin;   // В production используем тот же домен
     }
 
@@ -22,6 +22,24 @@ class ApiService {
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || 'Ошибка авторизации');
+        }
+
+        return await response.json();
+    }
+
+    // Обновление токена
+    async forgotPassword(email) {
+        const response = await fetch(`${this.baseUrl}/api/auth/forgotPassword`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ email }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Не сбросить пароль');
         }
 
         return await response.json();

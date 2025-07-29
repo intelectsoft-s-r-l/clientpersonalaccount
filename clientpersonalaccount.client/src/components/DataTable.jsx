@@ -163,38 +163,38 @@ export function DataTable({
   }, [sortedData, currentPage]);
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl overflow-hidden select-none">
-      <div className="p-4 border-b flex justify-between items-center">
-        <h2 className="text-xl font-semibold">{title}</h2>
-        <div className="flex items-center gap-2">
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden select-none dark:bg-gray-800 dark:text-white">
+          <div className="p-4 border-b flex justify-between items-center dark:bg-gray-800 dark:text-white">
+              <h2 className="text-xl font-semibold dark:bg-gray-800 dark:text-white">{title}</h2>
+              <div className="flex items-center gap-2 dark:bg-gray-800 dark:text-white">
           {onAddRow && (
             <button
               onClick={onAddRow}
-              className="px-3 py-1 text-sm rounded bg-gradient-to-r from-[#72b827] to-green-600 text-white"
+                          className="px-3 py-1 text-sm rounded bg-gradient-to-r from-[#72b827] to-green-600 text-white dark:bg-gray-800 dark:text-white"
             >
               +
             </button>
           )}
-          <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:bg-gray-800 dark:text-white">
             {t("Page")} {currentPage} {t("Of")} {totalPages}
           </div>
         </div>
       </div>
-      <div className="overflow-x-auto w-full">
-        <table className="w-full border-collapse table-fixed min-w-full">
+          <div className="overflow-x-auto w-full dark:bg-gray-800 dark:text-white">
+              <table className="w-full border-collapse table-fixed min-w-full dark:bg-gray-800 dark:text-white">
           <thead>
-            <tr className="bg-gray-100 border-b border-gray-300">
+                      <tr className="bg-gray-100 border-b border-gray-300 dark:bg-gray-800 dark:text-white">
               {columns.map((col) => (
                 <th
                   key={col.key}
                   style={{ width: col.width || "auto" }}
-                  className="text-center text-xs font-bold text-gray-700 uppercase tracking-wider p-2 border-gray-300"
+                      className="text-center text-xs font-bold text-gray-700 uppercase tracking-wider p-2 border-gray-300 dark:bg-gray-800 dark:text-white"
                   onClick={() =>
                     col.sortable !== false && handleSort(col.key)
                   }
                 >
-                  <div className="flex flex-col">
-                    <div className="flex items-center justify-center">
+                      <div className="flex flex-col dark:bg-gray-800 dark:text-white">
+                          <div className="flex items-center justify-center dark:bg-gray-800 dark:text-white">
                       <span className="truncate">{col.label}</span>
                       {sortConfig.key === col.key && (
                         <span className="ml-1 text-xs">
@@ -208,7 +208,7 @@ export function DataTable({
                           <select
                             value={filters[col.key] ?? ""}
                             onChange={(e) => handleFilterChange(col.key, e.target.value)}
-                            className="mt-1 p-1 border-gray-300 rounded text-xs"
+                                          className="mt-1 p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <option value="">{t("All")}</option>
@@ -229,7 +229,7 @@ export function DataTable({
                               handleFilterChange(col.key, e.target.value)
                             }
                             placeholder={`${t("Filter")}...`}
-                            className="mt-1 p-1 border-gray-300 rounded text-xs"
+                                              className="mt-1 p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
                             onClick={(e) => e.stopPropagation()}
                           />
                         )}
@@ -238,18 +238,18 @@ export function DataTable({
                   </div>
                 </th>
               ))}
-              {onDeleteRow && <th className="w-12"></th>}
+                          {onDeleteRow && <th className="w-12 dark:bg-gray-800 dark:text-white"></th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:bg-gray-800 dark:text-white">
             {loading ? (
               <tr>
                 <td
                   colSpan={columns.length + 1}
-                  className="text-center py-8 text-gray-500"
+                                  className="text-center py-8 text-gray-500 dark:bg-gray-800 dark:text-white"
                 >
-                  <div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid"></div>
+                                  <div className="flex items-center justify-center h-64 dark:bg-gray-800 dark:text-white">
+                                      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid dark:bg-gray-800 dark:text-white"></div>
                   </div>
                 </td>
               </tr>
@@ -257,7 +257,7 @@ export function DataTable({
               <tr>
                 <td
                   colSpan={columns.length + 1}
-                  className="text-center py-8 text-gray-400"
+                                      className="text-center py-8 text-gray-400 dark:bg-gray-800 dark:text-white"
                 >
                   Нет данных для отображения
                 </td>
@@ -296,7 +296,7 @@ export function DataTable({
                         return (
                           <td
                             key={col.key}
-                            className="text-sm text-gray-900 border-gray-200 p-2 text-center"
+                                className="text-sm text-gray-900 border-gray-200 p-2 text-center dark:bg-gray-800 dark:text-white"
                             onDoubleClick={() =>
                               col.editable && startEdit(row.ID, col.key, row[col.key])
                             }
@@ -330,7 +330,7 @@ export function DataTable({
                         return (
                           <td
                             key={col.key}
-                            className="text-sm text-gray-900 border-gray-200 p-2 text-center"
+                                className="text-sm text-gray-900 border-gray-200 p-2 text-center dark:bg-gray-800 dark:text-white"
                             onDoubleClick={() =>
                               col.editable &&
                               startEdit(row.ID, col.key, row[col.key])
@@ -377,7 +377,7 @@ export function DataTable({
                       return (
                         <td
                           key={col.key}
-                          className="text-sm text-gray-900 border-gray-200 p-2 text-center"
+                              className="text-sm text-gray-900 border-gray-200 p-2 text-center dark:bg-gray-800 dark:text-white"
                           onDoubleClick={() =>
                             col.editable &&
                             startEdit(row.ID, col.key, row[col.key])
@@ -428,7 +428,7 @@ export function DataTable({
                             e.stopPropagation();
                             onDeleteRow(row.ID);
                           }}
-                          className="text-red-600 hover:text-red-800"
+                                    className="text-red-600 hover:text-red-800 dark:bg-gray-800 dark:text-white"
                           title="Удалить строку"
                         >
                           🗑️
@@ -443,11 +443,11 @@ export function DataTable({
         </table>
       </div>
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 p-4">
+              <div className="flex justify-center items-center gap-2 p-4 dark:bg-gray-800 dark:text-white">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="px-3 py-1 text-sm rounded-full bg-white border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+                      className="px-3 py-1 text-sm rounded-full border border-gray-300 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-white"
           >
             ⬅
           </button>
@@ -472,7 +472,7 @@ export function DataTable({
                     onClick={() => setCurrentPage(page)}
                     className={`px-3 py-1 text-sm rounded-full ${currentPage === page
                       ? "bg-blue-500 text-white"
-                      : "bg-white border border-gray-300 hover:bg-gray-100"
+                        : " border border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-white"
                       }`}
                   >
                     {page}
@@ -484,7 +484,7 @@ export function DataTable({
           <button
             onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className="px-3 py-1 text-sm rounded-full bg-white border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+                      className="px-3 py-1 text-sm rounded-full border border-gray-300 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-white"
           >
             ➡
           </button>

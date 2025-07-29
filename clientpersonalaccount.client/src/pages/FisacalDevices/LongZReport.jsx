@@ -14,7 +14,7 @@ export default function LongZReport({ model }) {
   const formattedDate = reportDate.toLocaleDateString();
   const formattedTime = reportDate.toLocaleTimeString();
   return (
-    <div className="billStyle">
+      <div className="billStyle dark:bg-gray-800 dark:text-white">
       <div className="receipt">
         <div className="receiptBody">
           <div className="contentReceipt d-flex flex-column">

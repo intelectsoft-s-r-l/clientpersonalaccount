@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { PageNavigationProvider } from './context/PageNavigationContext';
 
 import LoginPage from './pages/Authorize/LoginPage';
+import ForgotPasswordPage from './pages/Authorize/ForgotPasswordPage';
 import HomePage from './pages/HomePage';
 import FiscalDevicePage from './pages/FisacalDevices/FiscalDevicePage';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -54,6 +55,7 @@ const AppRoutes = () => (
             }
         />
         <Route path="*" element={<Navigate to="/Main" />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
     </Routes>
 );
 

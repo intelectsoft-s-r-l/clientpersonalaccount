@@ -9,7 +9,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // <-- Укажи ТОЛЬКО нужный origin, не "*"
+        policy.WithOrigins("http://localhost:5174") // <-- Укажи ТОЛЬКО нужный origin, не "*"
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials(); // <-- ВАЖНО
@@ -19,6 +19,8 @@ builder.Services.AddCors(options =>
 // Регистрируем наши прокси сервисы
 builder.Services.AddSingleton<AuthProxy>();
 builder.Services.AddSingleton<AuthSettingsService>();
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://+:{port}");
 
 var app = builder.Build();
 
@@ -27,9 +29,9 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
     app.UseHsts();
+    app.UseHttpsRedirection();
 }
 
-app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("AllowFrontend");
 // Добавляем поддержку статических файлов для React
@@ -42,9 +44,7 @@ app.Use(async (context, next) =>
     var tokenFromCookie = context.Request.Cookies["auth_token"];
 
     if (!string.IsNullOrEmpty(tokenFromCookie))
-    {
         authProxy.SetToken(tokenFromCookie);
-    }
 
     await next();
 });

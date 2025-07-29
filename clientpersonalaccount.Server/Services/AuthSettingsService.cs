@@ -54,8 +54,9 @@ public class AuthSettingsService
         using var srDecrypt = new StreamReader(csDecrypt);
 
         var decrypted = srDecrypt.ReadToEnd();
-        return JsonSerializer.Deserialize<ServiceCredentials>(decrypted)
-               ?? throw new Exception("Failed to deserialize credentials");
+        var json = JsonSerializer.Deserialize<ServiceCredentials>(decrypted);
+        Console.WriteLine($"Json GetSetting: {decrypted.ToString()}");
+        return json ?? throw new Exception("Failed to deserialize credentials");
     }
 
     public async Task<ServiceCredentials> GetCredentialsFromSettings(string env = "dev", string? serviceId = null)

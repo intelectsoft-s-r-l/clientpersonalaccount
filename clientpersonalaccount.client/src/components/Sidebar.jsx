@@ -7,44 +7,44 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 
 const menuSections = [
-  {
-    items: [
-      { id: "monitor", key: "Monitoring", icon: "bi-graph-up" },
-    ],
-  },
-  {
-    items: [
-      { id: "assortement", key: "Assortment", icon: "bi-box" },
-      { id: "license", key: "Licenses", icon: "bi-building" },
-      { id: "fiscal-devices", key: "FiscalDevice", icon: "bi-terminal" },
-      { id: "banks", key: "Banks", icon: "bi-bank" },
-      { id: "transactionDkv", key: "TransactionDKV", icon: "bi-cash" },
-    ],
-  },
+    {
+        items: [
+            { id: "monitor", key: "Monitoring", icon: "bi-graph-up" },
+        ],
+    },
+    {
+        items: [
+            { id: "assortement", key: "Assortment", icon: "bi-box" },
+            { id: "license", key: "Licenses", icon: "bi-building" },
+            { id: "fiscal-devices", key: "FiscalDevice", icon: "bi-terminal" },
+            { id: "banks", key: "Banks", icon: "bi-bank" },
+            { id: "transactionDkv", key: "TransactionDKV", icon: "bi-cash" },
+        ],
+    },
 ];
 
 export default function Sidebar() {
-  const { activePage } = usePageNavigation();
-  const { logout } = useAuth();
-  const { t } = useTranslation();
-  const navigate = useNavigate();
+    const { activePage } = usePageNavigation();
+    const { logout } = useAuth();
+    const { t } = useTranslation();
+    const navigate = useNavigate();
 
-  const [collapsed, setCollapsed] = useState(true);
+    const [collapsed, setCollapsed] = useState(true);
 
-  function handleClick(id, e) {
-    e.preventDefault();
-    if (id !== activePage) {
-      navigate(`/Main?tab=${id}`);
+    function handleClick(id, e) {
+        e.preventDefault();
+        if (id !== activePage) {
+            navigate(`/Main?tab=${id}`);
+        }
     }
-  }
 
-  return (
-    <>
-      <style>{`
+    return (
+        <>
+            <style>{`
         .sidebar {
           width: ${collapsed ? "72px" : "280px"};
           flex-shrink: 0;
-          height: 100vh;
+          min-height: 100vh;
           background-color: #fff;
           border-right: 1px solid #e5e7eb;
           display: flex;
@@ -208,63 +208,70 @@ export default function Sidebar() {
 */
       `}</style>
 
-      <aside
-        id="sidebar"
-        className="sidebar"
-        role="navigation"
-        aria-label="Главное меню"
-      >
-        <div className="sidebar-content">
-          {/* Кнопка сворачивания сверху */}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="collapse-button"
-            aria-label={collapsed ? "Развернуть меню" : "Свернуть меню"}
-            title={collapsed ? "Развернуть меню" : "Свернуть меню"}
-          >
-            <i className="bi bi-list"></i>
-          </button>
-
-          {/* Логотип и текст */}
-          <div className="brand-logo">
-            <img
-              src={Logo}
-              alt="Fiscal Cloud Logo"
-              className="w-10 h-10 animate-pulse"
-            />
-            <span className="brand-text">Fiscal Cloud</span>
-          </div>
-          <div className="sidebar-menu-sections">
-            {menuSections.map(({ title, items }, idx) => (
-              <section key={idx}>
-                {/* Показываем заголовок секции только если сайдбар не свернут */}
-                {!collapsed && title && <div className="sidebar-section-title">{t(title)}</div>}
-                <nav
-                  className="nav-column"
-                  aria-label={title || t(`Section ${idx + 1}`)}
-                >
-                  {items.map(({ id, key, icon, disabled }) => (
+            <aside
+                id="sidebar"
+                className="sidebar"
+                role="navigation"
+                aria-label="Главное меню"
+            >
+                <div className="sidebar-content dark:bg-gray-800">
+                    {/* Кнопка сворачивания сверху */}
                     <button
-                      key={id}
-                      type="button"
-                      className={`nav-link${activePage === id ? " active" : ""}${disabled ? " disabled" : ""}`}
-                      onClick={disabled ? undefined : (e) => handleClick(id, e)}
-                      disabled={disabled}
-                      title={t(key)} // Используем title для Tooltip при наведении
+                        onClick={() => setCollapsed(!collapsed)}
+                        className="collapse-button"
+                        aria-label={collapsed ? "Развернуть меню" : "Свернуть меню"}
+                        title={collapsed ? "Развернуть меню" : "Свернуть меню"}
                     >
-                      {icon && <i className={`bi ${icon}`}></i>}
-                      {/* Показываем текст пункта меню только если сайдбар не свернут */}
-                      {!collapsed && <span>{t(key)}</span>}
+                        <i className="bi bi-list"></i>
                     </button>
-                  ))}
-                </nav>
-              </section>
-            ))}
-          </div>
 
-          <button onClick={logout} className="logout-button" aria-label={t("Logout")} title={t("Logout")}><i className="bi bi-box-arrow-right"></i></button>
-        </div>
-      </aside>
-    </>
-  );
+                    {/* Логотип и текст */}
+                    <div className="brand-logo">
+                        <img
+                            src={Logo}
+                            alt="Fiscal Cloud Logo"
+                            className="w-10 h-10 animate-pulse"
+                        />
+                        <span className="brand-text dark:text-white">Fiscal Cloud</span>
+                    </div>
+                    <div className="sidebar-menu-sections">
+                        {menuSections.map(({ title, items }, idx) => (
+                            <section key={idx}>
+                                {/* Показываем заголовок секции только если сайдбар не свернут */}
+                                {!collapsed && title && <div className="sidebar-section-title">{t(title)}</div>}
+                                <nav
+                                    className="nav-column"
+                                    aria-label={title || t(`Section ${idx + 1}`)}
+                                >
+                                    {items.map(({ id, key, icon, disabled }) => (
+                                        <button
+                                            key={id}
+                                            type="button"
+                                            className={`nav-link${activePage === id ? " active" : ""}${disabled ? " disabled" : ""}`}
+                                            onClick={disabled ? undefined : (e) => handleClick(id, e)}
+                                            disabled={disabled}
+                                            title={t(key)} // Используем title для Tooltip при наведении
+                                        >
+                                            {icon && <i className={`bi ${icon}`}></i>}
+                                            {/* Показываем текст пункта меню только если сайдбар не свернут */}
+                                            {!collapsed && <span>{t(key)}</span>}
+                                        </button>
+                                    ))}
+                                </nav>
+                            </section>
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={logout}
+                        aria-label={t("Logout")}
+                        title={t("Logout")}
+                        className="p-2 rounded-full transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-white"
+                    >
+                        <i className="bi bi-box-arrow-right text-xl"></i>
+                    </button>
+                </div>
+            </aside>
+        </>
+    );
 }

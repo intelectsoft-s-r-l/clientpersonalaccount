@@ -68,10 +68,10 @@ public class ProxyController : ControllerBase
 
             // Извлекаем serviceId из заголовков
             string? serviceId = null;
-            if (headers.ContainsKey("x-service-id"))
+            if (headers.ContainsKey("X-Service-Id"))
             {
-                serviceId = headers["x-service-id"];
-                headers.Remove("x-service-id");
+                serviceId = headers["X-Service-Id"];
+                headers.Remove("X-Service-Id");
             }
 
             var result = await _authProxy.Request(new ProxyRequestParams

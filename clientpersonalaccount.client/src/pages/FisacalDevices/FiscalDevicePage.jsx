@@ -236,7 +236,7 @@ export default function FiscalDevicePage() {
                             />
                         </div>
                         <div>
-                            <div className=" bg-white rounded-xl shadow-md p-4">
+                            <div className="dark:bg-gray-800 dark:text-white rounded-xl shadow-md p-4">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="space-x-4">
                                         <button
@@ -263,11 +263,11 @@ export default function FiscalDevicePage() {
                                     </div>
                                 </div>
 
-                                <div className="text-sm whitespace-pre-wrap break-words min-h-[200px]">
+                                <div className="text-sm whitespace-pre-wrap break-words min-h-[200px] dark:bg-gray-800 dark:text-white">
                                     {viewMode === "report" && reportModel ? (
-                                        <LongZReport model={reportModel} />
+                                        <LongZReport className="dark:bg-gray-800 dark:text-white" model={reportModel} />
                                     ) : (
-                                        <pre className="receipt-text" >{receiptText || t("SelectBill")}</pre>
+                                            <pre className="receipt-text dark:bg-gray-800 dark:text-white" >{receiptText || t("SelectBill")}</pre>
                                     )}
                                 </div>
                             </div>

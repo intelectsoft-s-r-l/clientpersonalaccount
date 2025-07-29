@@ -10,6 +10,8 @@
 		<SpaRoot>..\clientpersonalaccount.client</SpaRoot>
 		<SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
 		<SpaProxyServerUrl>https://localhost:3000</SpaProxyServerUrl>
+		<DockerImageName>businessaccount</DockerImageName>
+		<DockerImageTag>latest</DockerImageTag>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,7 +30,7 @@
 		<Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
 		<Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
 	</Target>
-
+	
 	<Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
 
 		<!-- Включаем собранные файлы в публикацию -->
@@ -48,12 +50,6 @@
 			<Version>8.0.18</Version>
 		</PackageReference>
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\clientpersonalaccount.client\clientpersonalaccount.client.esproj">
-			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-		</ProjectReference>
 	</ItemGroup>
 
 	<ItemGroup>

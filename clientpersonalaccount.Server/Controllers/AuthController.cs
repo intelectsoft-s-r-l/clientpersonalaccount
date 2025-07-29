@@ -26,11 +26,33 @@ public class AuthController : ControllerBase
                 Response.Cookies.Append("auth_token", token, new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.None,
+                    Secure = false,
+                    SameSite = SameSiteMode.Lax,
                     MaxAge = TimeSpan.FromHours(2)
                 });
 
+                return Ok(new { message = "Успешный вход" });
+            }
+            else
+            {
+                return StatusCode(result.Status, result.Data);
+            }
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Ошибка авторизации", error = ex.Message });
+        }
+    }
+
+    [HttpPost("forgotPassword")]
+    public async Task<IActionResult> ForgotPassword([FromBody] LoginRequest request)
+    {
+        try
+        {
+            var result = await _authProxy.ForgotPassword(request.Email);
+
+            if (result.Ok)
+            {
                 return Ok(new { message = "Успешный вход" });
             }
             else
