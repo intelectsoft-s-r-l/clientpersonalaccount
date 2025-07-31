@@ -12,6 +12,9 @@
 		<SpaProxyServerUrl>https://localhost:3000</SpaProxyServerUrl>
 		<DockerImageName>businessaccount</DockerImageName>
 		<DockerImageTag>latest</DockerImageTag>
+		<ContainerImageName>docker.edi.md/businessaccount</ContainerImageName>
+		<ContainerRegistry>docker.edi.md</ContainerRegistry>
+		<ContainerRepository>businessaccount</ContainerRepository>
 	</PropertyGroup>
 
 	<ItemGroup>

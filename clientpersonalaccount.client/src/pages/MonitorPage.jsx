@@ -303,7 +303,7 @@ export default function MonitorPage() {
                                 style={{ width: 200, maxHeight: "200px", overflowY: "auto" }}
                             >
                                 <li
-                                    className={`dropdown-item rounded mb-1 ${allDevices ? "bg-success text-white" : "text-white"} dark:hover:bg-gray-700`}
+                                    className={`dropdown-item rounded mb-1 ${allDevices ? "bg-success text-white" : "dark:text-white"} dark:hover:bg-gray-700`}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setAllDevices((prev) => {
@@ -322,7 +322,7 @@ export default function MonitorPage() {
                                     return (
                                         <li
                                             key={posID}
-                                            className={`dropdown-item border rounded mb-1 ${isSelected ? "bg-primary text-white border-primary" : "text-white border-secondary"} ${allDevices ? "disabled text-muted" : ""} dark:hover:bg-gray-700`}
+                                            className={`dropdown-item border rounded mb-1 ${isSelected ? "bg-primary text-white border-primary" : "dark:text-white border-secondary"} ${allDevices ? "disabled text-muted" : ""} dark:bg-gray-700`}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 if (!allDevices) togglePos(posID);
