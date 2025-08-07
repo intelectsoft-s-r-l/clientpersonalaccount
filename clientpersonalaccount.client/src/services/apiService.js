@@ -135,7 +135,7 @@ class ApiService {
         };
 
         if (body && ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase())) {
-            fetchOptions.body = JSON.stringify(body);
+            fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
         }
 
         const response = await fetch(`${this.baseUrl}/api/proxy${path}`, fetchOptions);

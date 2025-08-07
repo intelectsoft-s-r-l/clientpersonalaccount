@@ -54,3 +54,18 @@ export const FiscalDeviceTypeEnum = {
     value: 4
   }
 };
+
+export const CashRegisterTypes = {
+    0: {
+        label: 'Касса',
+        value: 0
+    },
+    1: {
+        label: 'Терминал',
+        value: 1
+    },
+    2: {
+        label: 'Кассовый сервис',
+        value: 2
+    },
+};

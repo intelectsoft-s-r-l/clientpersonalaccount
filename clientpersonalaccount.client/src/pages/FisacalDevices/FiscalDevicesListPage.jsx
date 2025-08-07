@@ -7,6 +7,7 @@ import { DataTable } from "../../components/DataTable"; // Импорт унив
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import apiService from '../../services/apiService';
+import FiscalDeviceModal from './FiscalDeviceModal';
 
 export default function FiscalDevicesListPage() {
     const [devices, setDevices] = useState([]);
@@ -21,7 +22,7 @@ export default function FiscalDevicesListPage() {
         try {
             setLoading(true);
             setError("");
-            const data = await apiService.proxyRequest(`/FiscalCloudManagement/GetFiscalDevices?all=true`, {
+            const data = await apiService.proxyRequest(`/FiscalCloudManagement/GetFiscalDevices?all=false&Filter=3`, {
                 method: "GET",
                 credentials: "include",
                 headers: {
@@ -75,61 +76,112 @@ export default function FiscalDevicesListPage() {
         return {
             ...device,
             statusCode: String(device.status),
-            typeCode: device.type,
-            name: (
-                <div className="flex items-center">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                    <span className="text-sm font-semibold text-gray-900">{device.name || "-"}</span>
-                </div>
-            ),
-            statusDisplay: (
-                <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${statusInfo.colorClass}`}
-                >
-                    {statusInfo.icon}
-                    <span className="ml-2">{statusInfo.label}</span>
-                </span>
-            ),
-            type: (
-                <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-md text-xs font-medium">
-                    {getDeviceTypeText(device.type)}
-                </span>
-            ),
-            activated: formatDate(device.activated),
-            actions: (
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/fiscal-devices/fiscalDevice/${device.id}`);
-                    }}
-                    className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
-                    title="Просмотреть детали"
-                >
-                    <Eye className="w-4 h-4" />
-                </button>
-            )
+            typeCode: device.type
         };
     });
 
     // Описание колонок для DataTable
     const columns = [
-        { key: "name", label: t("Name"), filterable: true, width: "14%" },
+        {
+            key: "name",
+            label: t("Name"),
+            filterable: true,
+            width: "14%",
+            render: (value, row) => (
+                <div className="flex items-center">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                    <span className="text-sm font-semibold text-gray-900">{value || "-"}</span>
+                </div>
+            ),
+        },
         { key: "address", label: t("Address"), filterable: true, width: "20%" },
         { key: "model", label: t("Model"), filterable: true, width: "10%" },
         { key: "number", label: t("NumberSTS"), filterable: true, width: "12%" },
-        { key: "type", label: t("Type"), filterable: true, width: "14%" },
         {
-            key: "statusCode", label: t("Status"), filterable: true, width: "14%", sortable: true,
+            key: "typeCode",
+            label: t("Type"),
+            filterable: true,
+            width: "14%",
+            render: (value) => (
+                <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-md text-xs font-medium">
+                    {getDeviceTypeText(value)}
+                </span>
+            ),
+        },
+        {
+            key: "statusCode",
+            label: t("Status"),
+            filterable: true,
+            width: "14%",
+            sortable: true,
             filterOptions: [
                 { value: "0", label: t("NotActivated") },
                 { value: "1", label: t("Activated") },
                 { value: "2", label: t("Disabled") },
                 { value: "3", label: t("Erased") },
             ],
-            render: (value, row) => row.statusDisplay
+            render: (value) => {
+                const statusInfo = getStatusInfo(value);
+                return (
+                    <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${statusInfo.colorClass}`}
+                    >
+                        {statusInfo.icon}
+                        <span className="ml-2">{statusInfo.label}</span>
+                    </span>
+                );
+            },
         },
-        { key: "activated", label: t("IsActive"), filterable: true, sortable: true, width: "10%" },
-        { key: "actions", label: "", filterable: false, sortable: false },
+        {
+            key: "activated",
+            label: t("IsActive"),
+            filterable: true,
+            sortable: true,
+            width: "10%",
+            render: (value) => formatDate(value),
+        },
+        {
+            key: "actions",
+            label: "",
+            filterable: false,
+            sortable: false,
+            width: "6%",
+            render: (_, row) => (
+                <div className="flex space-x-2">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/fiscal-devices/fiscalDevice/${row.id}`);
+                        }}
+                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
+                        title="Просмотреть детали"
+                    >
+                        <Eye className="w-4 h-4" />
+                    </button>
+
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDevice(row);  // Вызов модального окна с выбранным устройством
+                        }}
+                        className="text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded-full transition-all duration-200"
+                        title="Открыть модальное окно"
+                    >
+                        {/* Можно иконку добавить, например: */}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m6 0a6 6 0 11-12 0 6 6 0 0112 0z" />
+                        </svg>
+                    </button>
+                </div>
+            ),
+        },
     ];
 
     return (
@@ -165,6 +217,10 @@ export default function FiscalDevicesListPage() {
                     editable={false}
                     onRowClick={(device) => setSelectedDevice(device)}
                     selectableRow={false}
+                />
+                <FiscalDeviceModal
+                    deviceId={selectedDevice != null ? selectedDevice.id : null}
+                    onClose={() => setSelectedDevice(null)}
                 />
             </div>
         </div>

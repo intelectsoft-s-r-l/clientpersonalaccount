@@ -110,7 +110,42 @@ public class AuthProxy : BaseProxy
 
         // Добавляем токен, если его нет в параметрах
         var token = _token;
-        if (!query.AllKeys.Contains("Token") && !string.IsNullOrEmpty(token))
+        bool bodyHasToken = false;
+
+        string? bodyStr = null;
+        if (parameters.Body is string s)
+            bodyStr = s;
+        else
+            bodyStr = JsonSerializer.Serialize(parameters.Body);
+
+        if (bodyStr != null && !string.IsNullOrEmpty(bodyStr))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(bodyStr);
+                var root = doc.RootElement;
+
+                // Проверяем наличие ключа token или Token в JSON-объекте верхнего уровня
+                if (root.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (var property in root.EnumerateObject())
+                    {
+                        if (string.Equals(property.Name, "token", StringComparison.OrdinalIgnoreCase))
+                        {
+                            bodyHasToken = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (JsonException)
+            {
+                // Если не JSON, игнорируем - считаем что токена нет
+            }
+        }
+        Console.WriteLine(">>> Body: " + bodyStr);
+        // Добавляем токен в URL, если его нет в теле и он есть в _token
+        if (!bodyHasToken && !query.AllKeys.Contains("Token") && !query.AllKeys.Contains("token") && !string.IsNullOrEmpty(token))
         {
             query["Token"] = token;
         }
@@ -156,8 +191,8 @@ public class AuthProxy : BaseProxy
 
 public class ProxyRequestParams
 {
-    public string Path { get; set; } = "";
-    public string Method { get; set; } = "GET";
+    public string Path { get; set; }
+    public string Method { get; set; }
     public object? Body { get; set; }
     public Dictionary<string, string>? Headers { get; set; }
     public string? ServiceId { get; set; }

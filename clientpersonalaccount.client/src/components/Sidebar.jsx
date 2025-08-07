@@ -5,6 +5,7 @@ import { usePageNavigation } from "../context/PageNavigationContext";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
+import { useSidebar } from "../context/SidebarContext";
 
 const menuSections = [
     {
@@ -28,8 +29,7 @@ export default function Sidebar() {
     const { logout } = useAuth();
     const { t } = useTranslation();
     const navigate = useNavigate();
-
-    const [collapsed, setCollapsed] = useState(true);
+    const { collapsed, setCollapsed } = useSidebar();
 
     function handleClick(id, e) {
         e.preventDefault();
@@ -42,17 +42,19 @@ export default function Sidebar() {
         <>
             <style>{`
         .sidebar {
-          width: ${collapsed ? "72px" : "280px"};
-          flex-shrink: 0;
-          min-height: 100vh;
-          background-color: #fff;
-          border-right: 1px solid #e5e7eb;
-          display: flex;
-          flex-direction: column;
-          overflow-y: auto;
-          position: static;
-          transition: width 0.3s ease;
-        }
+  width: ${collapsed ? "72px" : "280px"};
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 50;
+  overflow-y: auto;
+  background-color: #fff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+}
         .sidebar-content {
           padding: 1rem;
           overflow-y: auto;

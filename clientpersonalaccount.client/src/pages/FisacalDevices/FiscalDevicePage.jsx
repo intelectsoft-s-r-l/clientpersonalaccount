@@ -9,6 +9,7 @@ import "../../styles/receipt.css";
 import "../../styles/receiptTypes.css";
 import { useTranslation } from "react-i18next";
 import apiService from '../../services/apiService';
+import { FiscalDeviceTypeEnum } from "../../enums/Enums";
 
 export default function FiscalDevicePage() {
     const { id } = useParams();
@@ -165,6 +166,11 @@ export default function FiscalDevicePage() {
         return null;
     };
 
+    const getDeviceTypeText = (value) => {
+        const type = Object.values(FiscalDeviceTypeEnum).find((t) => t.value === value);
+        return type?.label || "-";
+    };
+
     const formatDate = (dateString) => {
         if (!dateString) return "-";
         const date = new Date(dateString);
@@ -193,15 +199,25 @@ export default function FiscalDevicePage() {
         .sort((a, b) => priorityOrder(a) - priorityOrder(b))
         .map((bill) => ({
             ...bill,
-            reportTypeDisplay: getReportLabel(bill),
-            totalAmountDisplay: `${bill.totalAmount.toFixed(2)} MDL`,
+            reportTypeDisplay: bill.reportType,
+            totalAmountDisplay: `${bill.totalAmount.toFixed(2)} MDL`
         }));
 
     const columnsBills = [
-        { key: "reportTypeDisplay", label: "", width: "16%" },
+        { key: "reportTypeDisplay", label: "", width: "16%", render: (value, row) => getReportLabel(row), },
         { key: "fiscalReceiptID", label: t("ID"), width: "18%" },
         { key: "totalAmountDisplay", label: t("TotalAmount"), width: "35%" },
-        { key: "type", label: t("Type"), width: "32%" },
+        {
+            key: "type",
+            label: t("Type"),
+            filterable: true,
+            width: "32%",
+            render: (value) => (
+                <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-md text-xs font-medium">
+                    {getDeviceTypeText(value)}
+                </span>
+            ),
+        },
     ];
 
     return (

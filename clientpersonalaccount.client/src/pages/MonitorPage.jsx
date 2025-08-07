@@ -9,6 +9,15 @@ export default function MonitorPage() {
     //#region вспомогательные атрибуты
     const { t } = useTranslation();
     const [selectedRange, setSelectedRange] = useState("day"); // day/week/month/year
+    const [customStartDate, setCustomStartDate] = useState(() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 30);
+        return d.toISOString().slice(0, 10);
+    });
+    const [customEndDate, setCustomEndDate] = useState(() => {
+        const d = new Date();
+        return d.toISOString().slice(0, 10);
+    });
     const [posList, setPosList] = useState([]);
     const [selectedPos, setSelectedPos] = useState([]);
     const [allDevices, setAllDevices] = useState(false);
@@ -24,29 +33,35 @@ export default function MonitorPage() {
     function getDateRange(range) {
         const now = new Date();
         let start, end;
-        switch (range) {
-            case "day":
-                start = end = now;
-                break;
-            case "week":
-                start = new Date(now);
-                start.setDate(now.getDate() - 6);
-                end = now;
-                break;
-            case "month":
-                start = new Date(now.getFullYear(), now.getMonth(), 1);
-                end = now;
-                break;
-            case "year":
-                start = new Date(now.getFullYear(), 0, 1);
-                end = now;
-                break;
-            default:
-                start = end = now;
+        if (range === "custom") {
+            // Используем даты из состояния
+            start = new Date(customStartDate);
+            end = new Date(customEndDate);
+        } else {
+            switch (range) {
+                case "day":
+                    start = end = now;
+                    break;
+                case "week":
+                    start = new Date(now);
+                    start.setDate(now.getDate() - 6);
+                    end = now;
+                    break;
+                case "month":
+                    start = new Date(now.getFullYear(), now.getMonth(), 1);
+                    end = now;
+                    break;
+                case "year":
+                    start = new Date(now.getFullYear(), 0, 1);
+                    end = now;
+                    break;
+                default:
+                    start = end = now;
+            }
         }
         return {
-            startDate: start.toLocaleDateString("sv-SE"),
-            endDate: end.toLocaleDateString("sv-SE"),
+            startDate: start.toISOString().slice(0, 10),
+            endDate: end.toISOString().slice(0, 10),
         };
     }
     //#endregion
@@ -80,10 +95,7 @@ export default function MonitorPage() {
 
     const loadAllDevicesData = useCallback(async () => {
         if (!user) return;
-        const now = new Date();
-        const formatDate = (date) => date.toISOString().split("T")[0];
-        const startDate = formatDate(new Date(now.getFullYear(), now.getMonth(), 1));
-        const endDate = formatDate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+        const { startDate, endDate } = getDateRange(selectedRange);
 
         try {
             const data = await apiService.proxyRequest(`/BINavigatorAPI/ClientPortal/DailyTotalsForAllPosByDateRange?companyId=${user.CompanyID}&startDate=${startDate}&endDate=${endDate}`, {
@@ -128,7 +140,7 @@ export default function MonitorPage() {
         } catch (e) {
             console.error("Error loading All Devices chart", e);
         }
-    }, [user, selectedRange, getDateRange]);
+    }, [user, selectedRange, getDateRange, customStartDate, customEndDate]);
 
     const loadData = useCallback(async () => {
         if (!user) return;
@@ -240,7 +252,7 @@ export default function MonitorPage() {
         } finally {
             setLoading(false);
         }
-    }, [user, selectedPos, allDevices, selectedRange, loadAllDevicesData, getDateRange, posList]);
+    }, [user, selectedPos, allDevices, selectedRange, loadAllDevicesData, getDateRange, posList, customStartDate, customEndDate]);
     //#endregion
 
     //#region useEffect
@@ -249,19 +261,19 @@ export default function MonitorPage() {
             fetchPosList();
             loadAllDevicesData();
         }
-    }, [user]);
+    }, [user, customStartDate, customEndDate]);
 
     // Сброс выбора, если включаем "All Devices"
     useEffect(() => {
         if (allDevices) setSelectedPos([]);
-    }, [allDevices]);
+    }, [allDevices, customStartDate, customEndDate]);
 
     useEffect(() => {
         if (!user) return;
         if (!allDevices && selectedPos.length === 0) return;
 
         loadData();
-    }, [user?.id, allDevices, selectedPos.length, selectedRange]);
+    }, [user?.id, allDevices, selectedPos.length, selectedRange, customStartDate, customEndDate]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -281,15 +293,13 @@ export default function MonitorPage() {
                 <h4>{t("Monitoring")}</h4>
                 <div className="d-flex align-items-center">
                     <div style={{ marginRight: 40 }}>
+                        {/* Dropdown POS */}
                         <div className="dropdown" ref={dropdownRef}>
-
                             <button
                                 className="btn btn-outline-secondary dropdown-toggle text-start dark:text-white"
                                 type="button"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                style={{ width: 200 }}
                                 onClick={() => setIsOpen((prev) => !prev)}
+                                style={{ width: 200 }}
                             >
                                 {allDevices
                                     ? t("AllDevices")
@@ -336,40 +346,46 @@ export default function MonitorPage() {
                             </ul>
                         </div>
                     </div>
-                    <div className="d-flex">
-                        <button
-                            type="button"
-                            className={`btn btn-sm me-2 ${selectedRange === "day" ? "btn-primary dark:bg-blue-700 dark:border-blue-600 dark:text-white" : "btn-outline-primary dark:border-gray-600 dark:text-white"
-                                }`}
-                            onClick={() => setSelectedRange("day")}
-                        >
-                            {t("Day")}
-                        </button>
-                        <button
-                            type="button"
-                            className={`btn btn-sm me-2 ${selectedRange === "week" ? "btn-primary dark:bg-blue-700 dark:border-blue-600 dark:text-white" : "btn-outline-primary dark:border-gray-600 dark:text-white"
-                                }`}
-                            onClick={() => setSelectedRange("week")}
-                        >
-                            {t("Week")}
-                        </button>
-                        <button
-                            type="button"
-                            className={`btn btn-sm me-2 ${selectedRange === "month" ? "btn-primary dark:bg-blue-700 dark:border-blue-600 dark:text-white" : "btn-outline-primary dark:border-gray-600 dark:text-white"
-                                }`}
-                            onClick={() => setSelectedRange("month")}
-                        >
-                            {t("Month")}
-                        </button>
-                        <button
-                            type="button"
-                            className={`btn btn-sm me-3 ${selectedRange === "year" ? "btn-primary dark:bg-blue-700 dark:border-blue-600 dark:text-white" : "btn-outline-primary dark:border-gray-600 dark:text-white"
-                                }`}
-                            onClick={() => setSelectedRange("year")}
-                        >
-                            {t("Year")}
-                        </button>
+
+                    {/* Кнопки выбора периода */}
+                    <div className="d-flex align-items-center">
+                        {["day", "week", "month", "year", "custom"].map((range) => (
+                            <button
+                                key={range}
+                                type="button"
+                                className={`btn btn-sm me-2 ${selectedRange === range ? "btn-primary dark:bg-blue-700 dark:border-blue-600 dark:text-white" : "btn-outline-primary dark:border-gray-600 dark:text-white"
+                                    }`}
+                                onClick={() => setSelectedRange(range)}
+                            >
+                                {range === "custom" ? t("CustomRange") : t(range.charAt(0).toUpperCase() + range.slice(1))}
+                            </button>
+                        ))}
                     </div>
+
+                    {/* Если custom выбран — показываем выбор дат */}
+                    {selectedRange === "custom" && (
+                        <div className="d-flex gap-2 align-items-center ms-3">
+                            <label className="mb-0" htmlFor="start-date">{t("StartDate")}:</label>
+                            <input
+                                id="start-date"
+                                type="date"
+                                value={customStartDate}
+                                max={customEndDate}
+                                onChange={(e) => setCustomStartDate(e.target.value)}
+                                className="form-control form-control-sm"
+                            />
+                            <label className="mb-0" htmlFor="end-date">{t("DateEnd")}:</label>
+                            <input
+                                id="end-date"
+                                type="date"
+                                value={customEndDate}
+                                min={customStartDate}
+                                max={new Date().toISOString().slice(0, 10)}
+                                onChange={(e) => setCustomEndDate(e.target.value)}
+                                className="form-control form-control-sm"
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="flex-grow-1 row g-3 d-flex gap-4 mb-4">

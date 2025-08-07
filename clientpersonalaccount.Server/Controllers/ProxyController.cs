@@ -44,14 +44,7 @@ public class ProxyController : ControllerBase
                     var bodyString = await reader.ReadToEndAsync();
                     if (!string.IsNullOrEmpty(bodyString))
                     {
-                        try
-                        {
-                            body = JsonSerializer.Deserialize<object>(bodyString);
-                        }
-                        catch
-                        {
-                            body = bodyString;
-                        }
+                        body = bodyString;
                     }
                 }
             }

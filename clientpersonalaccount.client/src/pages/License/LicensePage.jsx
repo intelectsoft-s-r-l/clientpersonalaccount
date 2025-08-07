@@ -75,19 +75,7 @@ export default function LicensePage() {
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusInfo.colorClass}`}><span className="ml-2">{statusInfo.label}</span></span>
             ),
             lastDateUpdate: formatDate(lic.lastDateUpdate),
-            batteryDisplay: `${lic.battery} %`,
-            actions: (
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedLicense(lic);
-                    }}
-                    className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
-                    title="Просмотреть детали"
-                >
-                    <Eye className="w-4 h-4" />
-                </button>
-            ),
+            batteryDisplay: `${lic.battery} %`
         };
     });
 
@@ -107,6 +95,26 @@ export default function LicensePage() {
         },
         { key: "lastDateUpdate", label: t("LicenseActivationDate"), filterable: true, sortable: true, width: "15%" }
     ];
+
+    columns.push({
+        key: "actions",
+        label: "", // или t("Actions")
+        filterable: false,
+        sortable: false,
+        width: "6%",
+        render: (value, row) => (
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedLicense(row);
+                }}
+                className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
+                title="Просмотреть детали"
+            >
+                <Eye className="w-4 h-4" />
+            </button>
+        ),
+    });
 
     return (
         <div  className="min-h-screen bg-gradient-to-br to-indigo-100 p-0 m-0">

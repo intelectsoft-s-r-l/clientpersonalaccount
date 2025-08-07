@@ -6,6 +6,8 @@ import { useAuth } from "../../context/AuthContext";
 import { debounce } from "lodash";
 import { useTranslation } from "react-i18next";
 import apiService from '../../services/apiService';
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
 
 export default function AssortmentPage() {
     const [tabs, setTabs] = useState(assortmentConfigs);
@@ -15,6 +17,7 @@ export default function AssortmentPage() {
     const { getTokenFromServer } = useAuth();
     const [token, setToken] = useState(null);
     const { t } = useTranslation();
+    const [usersPin, setUsersPin] = useState([]);
 
     const tabsRefs = useRef({});
     const globalSettingsRef = useRef(null);
@@ -47,10 +50,23 @@ export default function AssortmentPage() {
                 const decodedSettings = {};
                 const tabsList = [];
 
+                const forceBase64 = (str) => {
+                    try {
+                        // Пробуем сразу распарсить
+                        JSON.parse(str);
+                        // Если получилось — значит не base64, нужно кодировать
+                        return btoa(unescape(encodeURIComponent(str)));
+                    } catch {
+                        // Иначе — вероятно, уже base64
+                        return str;
+                    }
+                };
+
                 ["settings1", "settings2", "settings3"].forEach((key, idx) => {
                     if (rawData[key]) {
                         try {
-                            const jsonStr = atob(rawData[key]);
+                            const base64Str = forceBase64(rawData[key]);
+                            const jsonStr = atob(base64Str);
                             const parsed = JSON.parse(jsonStr);
 
                             ["PaymentTypes", "Assortments", "Groups", "Departments", "Users"].forEach(
@@ -86,9 +102,42 @@ export default function AssortmentPage() {
                 console.error("Ошибка при получении настроек:", err);
             }
         }
-
         fetchAndDecode();
     }, [token]);
+
+    useEffect(() => {
+        async function fetchLicensesUsersPin() {
+            const data = await apiService.proxyRequest(`/MobileCashRegister/web/GetDevices?Token=${token}`, {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Service-Id": "16",
+                }
+            })
+
+            const usersPin = (data?.cashRegisters || [])
+                .filter(device => device.users && device.users != "W10=" && device.users != "1")
+                .flatMap(device => {
+                    try {
+                        const jsonStr = atob(atob(device.users));
+                        const usersArray = JSON.parse(jsonStr);
+
+                        return Array.isArray(usersArray)
+                            ? usersArray.map(u => u.PIN)
+                            : [];
+                    } catch (error) {
+                        console.error("Ошибка при декодировании пользователей:", error);
+                        return [];
+                    }
+                });
+
+            setUsersPin(usersPin);
+        }
+
+        if (activeTable === "users")
+            fetchLicensesUsersPin();
+    }, [activeTable]);
 
     // Функция сохранения на сервер настроек для текущей вкладки
     const saveSettingsForActiveId = useCallback(
@@ -114,7 +163,7 @@ export default function AssortmentPage() {
                 };
 
                 const resp = await apiService.proxyRequest(`/MobileCashRegister/web/UpsertSettings`, {
-                    method: "GET",
+                    method: "POST",
                     credentials: "include",
                     headers: {
                         "Content-Type": "application/json",
@@ -123,10 +172,9 @@ export default function AssortmentPage() {
                     body: JSON.stringify(payload),
                 })
 
-                if (!resp.ok) {
-                    const text = await resp.text();
-                    console.error("Ошибка сохранения:", text);
-                    throw new Error(`Ошибка ${resp.status}`);
+                if (resp.errorCode != 0) {
+                    console.error("Ошибка сохранения:", resp.errorMessage);
+                    throw new Error(`Ошибка ${resp.errorCode}`);
                 }
             } catch (err) {
                 console.error("Ошибка при сохранении:", err);
@@ -225,7 +273,7 @@ export default function AssortmentPage() {
             };
 
             const resp = await apiService.proxyRequest(`/MobileCashRegister/web/UpsertSettings`, {
-                method: "GET",
+                method: "POST",
                 credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
@@ -234,15 +282,160 @@ export default function AssortmentPage() {
                 body: JSON.stringify(payload),
             })
 
-            if (!resp.ok) {
-                const text = await resp.text();
-                console.error("Ошибка сохранения:", text);
-                throw new Error(`Ошибка ${resp.status}`);
+            if (resp.errorCode != 0) {
+                console.error("Ошибка сохранения:", resp.errorMessage);
+                throw new Error(`Ошибка ${resp.errorCode}`);
             }
             alert("Настройки успешно сохранены");
         } catch (err) {
             alert("Ошибка при сохранении: " + err.message);
         }
+    };
+
+    // Функция для экспорта товаров (только для таблицы products)
+    const handleExport = () => {
+        if (activeTable !== "products") {
+            alert("Экспорт доступен только для таблицы товаров");
+            return;
+        }
+
+        const currentSetting = dataBySetting[activeId] || {};
+        const products = currentSetting.Assortments || [];
+
+        if (!products || products.length === 0) {
+            alert("Нет товаров для экспорта");
+            return;
+        }
+
+        // Убираем поля, которые не нужны в экспорте
+        const cleanData = products.map(item => {
+            const cleaned = { ...item };
+            // Удаляем служебные поля
+            delete cleaned.id;
+            delete cleaned.ProviderID;
+            delete cleaned.ProviderName;
+            delete cleaned.Provide;
+            delete cleaned.FormData;
+            return cleaned;
+        });
+
+        try {
+            const worksheet = XLSX.utils.json_to_sheet(cleanData);
+
+            // Настройка ширины колонок (опционально)
+            const columnWidths = Object.keys(cleanData[0] || {}).map(() => ({ wch: 15 }));
+            worksheet['!cols'] = columnWidths;
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Товары");
+
+            // Создаем файл в формате Excel 2007+ (.xlsx)
+            const excelBuffer = XLSX.write(workbook, {
+                bookType: "xlsx",
+                type: "array",
+                bookSST: false
+            });
+
+            const data = new Blob([excelBuffer], {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+
+            const fileName = `products_${new Date().toISOString().split('T')[0]}.xlsx`;
+            saveAs(data, fileName);
+        } catch (error) {
+            console.error("Ошибка при экспорте:", error);
+            alert("Ошибка при экспорте файла");
+        }
+    };
+
+
+
+    // Функция для импорта товаров (только для таблицы products)
+    const handleImport = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (activeTable !== "products") {
+            alert("Импорт доступен только для таблицы товаров");
+            e.target.value = '';
+            return;
+        }
+
+        // Проверяем формат файла
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        if (!['xlsx', 'xls'].includes(fileExtension)) {
+            alert("Поддерживаются только файлы Excel (.xlsx, .xls)");
+            e.target.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            try {
+                const data = evt.target.result;
+                const workbook = XLSX.read(data, {
+                    type: "binary",
+                    cellDates: true,
+                    cellNF: false,
+                    cellText: false
+                });
+
+                // Берём первый лист
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                // Конвертируем в JSON с настройками для корректного чтения
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                    defval: "",
+                    raw: false,
+                    dateNF: 'yyyy-mm-dd'
+                });
+
+                if (!jsonData || !Array.isArray(jsonData) || jsonData.length === 0) {
+                    alert("Файл пуст или содержит некорректные данные");
+                    return;
+                }
+
+                // Добавляем ID для каждой записи
+                const processedData = jsonData.map((item, index) => ({
+                    ...item,
+                    id: Date.now() + index,
+                }));
+
+                // Обновляем данные товаров в состоянии
+                setDataBySetting((prev) => {
+                    const currentSetting = prev[activeId] || {};
+                    const updatedSetting = {
+                        ...currentSetting,
+                        Assortments: processedData,  // products соответствует Assortments
+                    };
+
+                    const newDataBySetting = {
+                        ...prev,
+                        [activeId]: updatedSetting,
+                    };
+
+                    // Сохраняем с дебаунсом
+                    debouncedSave(activeId, updatedSetting, saveSettingsForActiveId);
+
+                    return newDataBySetting;
+                });
+
+                alert(`Успешно импортировано ${processedData.length} товаров`);
+            } catch (error) {
+                console.error("Ошибка при импорте:", error);
+                alert("Ошибка при чтении файла. Убедитесь, что файл не поврежден и имеет правильный формат.");
+            }
+        };
+
+        reader.onerror = () => {
+            alert("Ошибка при чтении файла");
+        };
+
+        reader.readAsBinaryString(file);
+
+        // Сбрасываем значение input для возможности повторного выбора того же файла
+        e.target.value = '';
     };
 
     const settingsField = mapTableKeyToSettingsField(activeTable);
@@ -252,9 +445,10 @@ export default function AssortmentPage() {
 
     const products = currentSetting.Assortments || [];
     const groups = currentSetting.Groups || [];
+    const users = currentSetting.Users || [];
 
     const joinConfigs = {
-
+        // Здесь можете добавить конфигурации для объединения данных, если нужно
     };
 
     const config = joinConfigs[activeTable];
@@ -291,7 +485,7 @@ export default function AssortmentPage() {
             </nav>
 
             <div className="flex gap-4 px-6 py-4 border-b">
-                {["payments", "products", "groups", "departments", "users"].map((key) => (
+                {["payments", "products", "groups", "departments", "users", "global"].map((key) => (
                     <button
                         key={key}
                         onClick={() => setActiveTable(key)}
@@ -303,33 +497,80 @@ export default function AssortmentPage() {
                         {key === "groups" && t("Tabs.Groups")}
                         {key === "departments" && t("Tabs.Departments")}
                         {key === "users" && t("Tabs.Users")}
+                        {key === "global" && t("Tabs.Global")}
                     </button>
                 ))}
             </div>
 
+            {/* Блок импорта/экспорта - показывается только для таблицы products */}
+            {activeTable === "products" && (
+                <div className="flex gap-4 px-6 py-4 border-b bg-gray-50">
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="import-file" className="cursor-pointer px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                            📥 Импортировать товары
+                        </label>
+                        <input
+                            id="import-file"
+                            type="file"
+                            accept=".xlsx,.xls"
+                            onChange={handleImport}
+                            className="hidden"
+                        />
+                    </div>
+                    <button
+                        onClick={handleExport}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    >
+                        📤 Экспортировать товары
+                    </button>
+                    <div className="text-sm text-gray-600 flex items-center">
+                        Поддерживаемые форматы: .xlsx, .xls
+                    </div>
+                </div>
+            )}
+
             <main className="flex-1 p-6 overflow-auto">
                 <div className="grid grid-cols-1 md:grid-cols-1 mt-6">
-                    <AssortmentTab
-                        ref={(ref) => {
-                            if (ref) tabsRefs.current[`${activeId}-${activeTable}`] = ref;
-                        }}
-                        tableKey={activeTable}
-                        data={transformedData}
-                        extraData={{ groups, products }}
-                        onDataChange={handleTableDataUpdate}
-                    />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-1 mt-6">
-                    <GlobalSettingsForm initialSettings={currentGlobalSettings} ref={globalSettingsRef} />
+                    {activeTable === "global" ? (
+                        <GlobalSettingsForm
+                            initialSettings={currentGlobalSettings}
+                            ref={globalSettingsRef}
+                            onChange={(newSettings) => {
+                                setDataBySetting((prev) => {
+                                    const updated = {
+                                        ...prev[activeId],
+                                        GlobalSettings: newSettings,
+                                    };
+                                    const updatedAll = {
+                                        ...prev,
+                                        [activeId]: updated,
+                                    };
+                                    debouncedSave(activeId, updated, saveSettingsForActiveId);
+                                    return updatedAll;
+                                });
+                            }}
+                        />
+                    ) : (
+                        <AssortmentTab
+                            ref={(ref) => {
+                                if (ref) tabsRefs.current[`${activeId}-${activeTable}`] = ref;
+                            }}
+                            tableKey={activeTable}
+                            data={transformedData}
+                            extraData={{ groups, products, users }}
+                            onDataChange={handleTableDataUpdate}
+                            usersPin={usersPin}
+                        />
+                    )}
                 </div>
             </main>
 
             <footer className="p-6 border-t">
                 <button
                     onClick={handleSaveAll}
-                    className="px-6 py-3 bg-gradient-to-r from-[#72b827] to-green-600 text-white rounded  transition"
+                    className="px-6 py-3 bg-gradient-to-r from-[#72b827] to-green-600 text-white rounded transition"
                 >
-                    {t("SaveAll")}
+                    {t("Save")}
                 </button>
             </footer>
         </div>
