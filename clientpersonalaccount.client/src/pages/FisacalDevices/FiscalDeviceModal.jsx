@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import FiscalDeviceModalTab from "../../components/FiscalDeviceModalTab";
 import { validateDevice } from "../../validation/validationSchemas";
 import ValidationModal from "../../components/ValidationModal";
+import SuccessModal from "../../components/SuccessModal";
 
 function decodeBase64Json(base64) {
     try {
@@ -66,6 +67,8 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
     const [token, setToken] = useState(null);
     const [validationErrors, setValidationErrors] = useState({});
     const [showErrors, setShowErrors] = useState(false);
+    const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+    const [showSuccessMessage, setShowSuccessMessage] = useState(null);
     const tabsRefs = useRef({});
     const isDeviceTab = activeTab === "device";
 
@@ -96,10 +99,14 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
                 if (result && result.fiscalDevice) {
                     setDevice(result.fiscalDevice);
                 } else {
-                    console.warn("Устройство не найдено или ошибка запроса", result);
+                    const serverErrors = { _global: result.errorMessage || "Ошибка сервера" };
+                    setValidationErrors(serverErrors);
+                    setShowErrors(true);
                 }
             } catch (err) {
-                console.error("Ошибка загрузки устройства:", err);
+                const serverErrors = { _global: result.err || "Ошибка сервера" };
+                setValidationErrors(serverErrors);
+                setShowErrors(true);
             }
         };
 
@@ -156,8 +163,7 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
         if (Object.keys(errors).length > 0) {
             setValidationErrors(errors);
             setShowErrors(true);
-            alert("Пожалуйста, исправьте ошибки перед сохранением");
-            return; // не отправляем
+            return;
         } else {
             setValidationErrors({});
             setShowErrors(false);
@@ -180,10 +186,12 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
         });
 
         if (resp.errorCode !== 0) {
-            console.error("Ошибка при сохранении ставок НДС:", resp.errorMessage);
-            alert("Ошибка при сохранении ставок НДС: " + resp.errorMessage);
+            const serverErrors = { _global: resp.errorMessage || "Ошибка сервера" };
+            setValidationErrors(serverErrors);
+            setShowErrors(true);
         } else {
-            alert("Ставки НДС успешно сохранены");
+            setShowSuccessMessage("Ставки НДС успешно сохранены");
+            setIsSuccessModalVisible(true);
         }
     };
 
@@ -207,10 +215,12 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
         });
 
         if (resp.errorCode !== 0) {
-            console.error("Ошибка при сохранении тарифов:", resp.errorMessage);
-            alert("Ошибка при сохранении тарифов: " + resp.errorMessage);
+            const serverErrors = { _global: resp.errorMessage || "Ошибка сервера" };
+            setValidationErrors(serverErrors);
+            setShowErrors(true);
         } else {
-            alert("Тарифы такси успешно сохранены");
+            setShowSuccessMessage("Тарифы такси успешно сохранены");
+            setIsSuccessModalVisible(true);
         }
     };
 
@@ -220,7 +230,8 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
         } else if (activeTab === "taxiTariffs") {
             saveTaxiTariffs();
         } else {
-            alert("Нет данных для сохранения или вкладка не поддерживается.");
+            setShowSuccessMessage("Нет данных для сохранения или вкладка не поддерживается.");
+            setIsSuccessModalVisible(true);
         }
     };
 
@@ -303,7 +314,7 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
                     {!isDeviceTab && (
                         <FiscalDeviceModalTab
                             tableKey={activeTab}
-                            data={tableData[activeTab]} // гарантируем массив
+                            data={tableData[activeTab]}
                             onDataChange={(updated) => handleTableDataUpdate(activeTab, updated)}
                         />
                     )}
@@ -311,6 +322,11 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
                         errors={validationErrors}
                         visible={showErrors}
                         onClose={() => setShowErrors(false)}
+                    />
+                    <SuccessModal
+                        visible={isSuccessModalVisible}
+                        message={showSuccessMessage}
+                        onClose={() => setIsSuccessModalVisible(false)}
                     />
                 </div>
 
