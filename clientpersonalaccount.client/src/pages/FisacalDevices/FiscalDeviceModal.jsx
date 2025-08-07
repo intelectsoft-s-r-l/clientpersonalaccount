@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import apiService from "../../services/apiService";
 import { useAuth } from "../../context/AuthContext";
 import FiscalDeviceModalTab from "../../components/FiscalDeviceModalTab";
+import { validateDevice } from "../../validation/validationSchemas";
+import ValidationModal from "../../components/ValidationModal";
 
 function decodeBase64Json(base64) {
     try {
@@ -62,6 +64,8 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
         taxiTariffs: [],
     });
     const [token, setToken] = useState(null);
+    const [validationErrors, setValidationErrors] = useState({});
+    const [showErrors, setShowErrors] = useState(false);
     const tabsRefs = useRef({});
     const isDeviceTab = activeTab === "device";
 
@@ -148,12 +152,23 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
     const saveVatRates = async () => {
         if (!token) return null;
 
+        const errors = validateDevice(tableData.vatRates || [], activeTab);
+        if (Object.keys(errors).length > 0) {
+            setValidationErrors(errors);
+            setShowErrors(true);
+            alert("Пожалуйста, исправьте ошибки перед сохранением");
+            return; // не отправляем
+        } else {
+            setValidationErrors({});
+            setShowErrors(false);
+        }
+
         const payload = {
             token: token,
             id: deviceId,
             vatRates: encodeBase64Json({ VatRates: cleanRows(tableData.vatRates || []) }),
         };
-        console.log(payload); 
+
         const resp = await apiService.proxyRequest(`/FiscalCloudManagement/UpsertVATRatesFiscalDevice`, {
             method: "POST",
             credentials: "include",
@@ -292,6 +307,11 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
                             onDataChange={(updated) => handleTableDataUpdate(activeTab, updated)}
                         />
                     )}
+                    <ValidationModal
+                        errors={validationErrors}
+                        visible={showErrors}
+                        onClose={() => setShowErrors(false)}
+                    />
                 </div>
 
                 <div className="flex justify-end mt-4">

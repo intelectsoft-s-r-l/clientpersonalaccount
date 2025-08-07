@@ -11,6 +11,7 @@
     "start": "vite"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.1.1",
     "@reduxjs/toolkit": "^2.8.2",
     "axios": "^1.11.0",

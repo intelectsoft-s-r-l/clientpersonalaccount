@@ -102,7 +102,7 @@ export function validateProducts(data, tableKey, usersPin, pins) {
     return errors;
 }
 
-export const validateDevice = (data, tableKey, prevData) => {
+export const validateDevice = (data, tableKey) => {
     const errors = {};
 
     if (tableKey === "vatRates") {
@@ -124,7 +124,7 @@ export const validateDevice = (data, tableKey, prevData) => {
                     rowErrors.VatCode = "Код должен быть одной заглавной латинской буквой (A-Z)";
                 } else {
                     // Проверка уникальности среди всех кроме текущей строки
-                    const isDuplicate = prevData
+                    const isDuplicate = data
                         .filter(p => p.ID !== item.ID) // исключаем текущую строку
                         .some(p => (p.VatCode?.trim() ?? "") === vatCode);
 

@@ -12,6 +12,39 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
     const [validationErrors, setValidationErrors] = useState({});
     const [showErrors, setShowErrors] = useState(false);
 
+    const TimeSelectEditor = ({ value, onChange, onBlur }) => {
+
+        const generateHalfHourOptions = () => {
+            const times = [];
+            for (let h = 0; h < 24; h++) {
+                for (let m = 0; m < 60; m += 30) {
+                    const hour = h.toString().padStart(2, "0");
+                    const minute = m.toString().padStart(2, "0");
+                    times.push(`${hour}:${minute}`);
+                }
+            }
+            return times;
+        };
+
+        const options = generateHalfHourOptions();
+
+        return (
+            <select
+                className="border border-gray-300 rounded px-2 py-1 w-full"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                onBlur={(e) => onBlur(e.target.value)}
+            >
+                <option value="">--:--</option>
+                {options.map((time) => (
+                    <option key={time} value={time}>
+                        {time}
+                    </option>
+                ))}
+            </select>
+        );
+    };
+
     useImperativeHandle(ref, () => ({
         getData: () => tableData,
     }));
@@ -29,13 +62,13 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
         ...col,
         label: t(col.labelKey || col.key),
         editable: col.editable ?? true,
+        dateEditor: col.key === "StartOfPeriod" || col.key === "EndOfPeriod" ? TimeSelectEditor : undefined,
     }));
 
     const handleCellUpdate = (rowId, columnKey, newValue, callback) => {
         setTableData((prevData) => {
             if (!Array.isArray(prevData)) return prevData;
-            console.log('rowId:', rowId);
-            console.log('IDs:', prevData.map(row => row.ID));
+
             const newData = prevData.map((row) => {
                 if (row.ID !== rowId) return row;
 
@@ -45,7 +78,7 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
                     updatedRow.NotVat = !!newValue;
                     if (updatedRow.NotVat) {
                         updatedRow.VatValue = 0;
-                        updatedRow.VatCode = "";
+                        updatedRow.VatCode = "-";
                     }
                 } else {
                     updatedRow[columnKey] = newValue;
@@ -65,27 +98,8 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
 
             const editedRow = newData.find((row) => row.ID === rowId);
 
-            // Валидируем
-            let errors = {};
-            errors = validateDevice([editedRow], tableKey, prevData);
-
-            if (Object.keys(errors).length > 0) {
-                setValidationErrors(prev => ({ ...prev, [rowId]: errors }));
-                setShowErrors(true);
-            } else {
-                setValidationErrors(prev => {
-                    const updated = { ...prev };
-                    delete updated[rowId];
-                    return updated;
-                });
-
-                // Если строка валидна и новая — снимаем isNew
-                if (editedRow.isNew)
-                    editedRow.isNew = false;
-                console.log(newData);
-                if (onDataChange)
-                    onDataChange(newData);
-            }
+            if (onDataChange)
+                onDataChange(newData);
 
             if (callback) callback();
             return newData;
@@ -122,7 +136,7 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
                         ...row,
                         VatValue: 0,
                         NotVat: false,
-                        VatCode: "",
+                        VatCode: "-",
                     };
                 }
                 return row;

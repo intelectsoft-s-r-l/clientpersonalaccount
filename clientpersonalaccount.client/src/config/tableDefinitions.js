@@ -84,9 +84,9 @@ export const tableDefinitions = (t) => [
         title: t("VATHistory"),
         idField: "ID",
         columns: [
-            { key: "VatValue", label: t("VatValue"), width: "33%" },
-            { key: "VatCode", label: t("VatCode"), width: "33%" },
-            { key: "DateOfChange", label: t("DateOfChange"), width: "36%" },
+            { key: "VatValue", label: t("VatValue"), width: "33%", editable: false },
+            { key: "VatCode", label: t("VatCode"), width: "33%", editable: false },
+            { key: "DateOfChange", label: t("DateOfChange"), width: "36%", editable: false },
         ],
     },
     {
@@ -104,7 +104,7 @@ export const tableDefinitions = (t) => [
         title: t("TaxiTariff"),
         idField: "ID",
         columns: [
-            { key: "Name", label: t("Name"), width: "20%", editable: true, filterable: true, align: "left" },
+            { key: "Name", label: t("Name"), width: "20%", editable: true, align: "left" },
             { key: "Number", label: t("Number"), type: "number", width: "10%", editable: true },
             { key: "PricePerHour", label: t("PricePerHour"), type: "number", width: "12%", editable: true },
             { key: "PricePerKm", label: t("PricePerKm"), type: "number", width: "12%", editable: true },

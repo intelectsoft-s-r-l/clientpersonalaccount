@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { DataTable } from "../../components/DataTable"; // универсальная таблица
 import { Eye } from "lucide-react";
@@ -21,7 +21,7 @@ export default function TransactionDKVPage() {
     const [endDate, setEndDate] = useState(today);
     const { t } = useTranslation();
 
-    const fetchTransactions = async () => {
+    const fetchTransactions = useCallback(async () => {
         try {
             setLoading(true);
             setError("");
@@ -48,11 +48,11 @@ export default function TransactionDKVPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [startDate, endDate]);
 
     useEffect(() => {
         fetchTransactions();
-    }, [token]);
+    }, [token, startDate, endDate]);
 
     const decoratedTransactions = transactions.map((transaction) => {
         return {
@@ -93,13 +93,6 @@ export default function TransactionDKVPage() {
                             onChange={(e) => setEndDate(e.target.value)}
                             className="border px-2 py-1 rounded"
                         />
-                        <button
-                            onClick={fetchTransactions}
-                            disabled={loading}
-                            className="px-4 py-2 bg-gradient-to-r from-[#72b827] to-green-600 text-white rounded-lg transition"
-                        >
-                            {t("Reload")}
-                        </button>
                     </div>
                 </div>
 
@@ -114,6 +107,7 @@ export default function TransactionDKVPage() {
                     loading={loading}
                     editable={false}
                     selectableRow={false}
+                    onRefresh={fetchTransactions}
                 />
             </div>
         </div>

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
 export const formatPrice = (value) => {
     if (value === null || value === undefined || value === "") return "0,00";
@@ -30,7 +31,8 @@ export function DataTable({
     onAddRow,
     onDeleteRow,
     extraData,
-    errors = {}
+    errors = {},
+    onRefresh
 }) {
     const [editCell, setEditCell] = useState({ rowId: null, columnKey: null });
     const [editValue, setEditValue] = useState("");
@@ -47,6 +49,7 @@ export function DataTable({
     };
 
     const saveEdit = () => {
+
         if (
             onCellUpdate &&
             editCell.rowId !== null &&
@@ -192,6 +195,16 @@ export function DataTable({
                             +
                         </button>
                     )}
+                    {onRefresh && (
+                        <button
+                            onClick={onRefresh}
+                            title={t("Refresh")}
+                            className="w-6 h-6 flex items-center justify-center rounded-full bg-transparent text-blue-600 hover:text-blue-800 transition"
+                        >
+                            <ArrowPathIcon className="w-5 h-5 text-gray-500" />
+                        </button>
+                    )}
+
                     <div className="text-sm text-gray-600 dark:bg-gray-800 dark:text-white">
                         {t("Page")} {currentPage} {t("Of")} {totalPages}
                     </div>
@@ -318,34 +331,52 @@ export function DataTable({
                                                     : rawValue;
 
                                             // Рендер редактируемой ячейки для селекта
-                                            if (isEditing && col.options) {
-                                                return (
-                                                    <td
-                                                        key={col.key}
-                                                        className={`p-2 border-gray-200 text-sm text-gray-900 ${col.align === "right" ? "text-right" : col.align === "left" ? "text-left" : "text-center"
-                                                            } dark:bg-gray-800 dark:text-white`}
-                                                    // Убираем onDoubleClick, так как мы уже в режиме редактирования
-                                                    >
-                                                        <select
-                                                            autoFocus
-                                                            className="w-full p-1 border border-gray-300 rounded"
-                                                            value={String(editValue ?? "")}
-                                                            onChange={(e) => setEditValue(e.target.value)}
-                                                            onBlur={saveEdit}
-                                                            onKeyDown={handleKeyDown}
+                                            if (isEditing) {
+                                                if (col.dateEditor) {
+                                                    const EditorComponent = col.dateEditor;
+                                                    return (
+                                                        <td
+                                                            key={col.key}
+                                                            className={`p-2 border-gray-200 text-sm text-gray-900 ${col.align === "right" ? "text-right" : col.align === "left" ? "text-left" : "text-center"
+                                                                } dark:bg-gray-800 dark:text-white`}
                                                         >
-                                                            <option value="">--</option>
-                                                            {col.options.map((opt) => (
-                                                                <option
-                                                                    key={typeof opt === "object" ? opt.value : opt}
-                                                                    value={String(typeof opt === "object" ? opt.value : opt)}
-                                                                >
-                                                                    {typeof opt === "object" ? opt.label : opt}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </td>
-                                                );
+                                                            <EditorComponent
+                                                                value={String(editValue ?? "")}
+                                                                onChange={(value) => { setEditValue(value);}}
+                                                                onBlur={saveEdit}
+                                                            />
+                                                        </td>
+                                                    );
+                                                }
+
+                                                if (col.options) {
+                                                    return (
+                                                        <td
+                                                            key={col.key}
+                                                            className={`p-2 border-gray-200 text-sm text-gray-900 ${col.align === "right" ? "text-right" : col.align === "left" ? "text-left" : "text-center"
+                                                                } dark:bg-gray-800 dark:text-white`}
+                                                        >
+                                                            <select
+                                                                autoFocus
+                                                                className="w-full p-1 border border-gray-300 rounded"
+                                                                value={String(editValue ?? "")}
+                                                                onChange={(e) => setEditValue(e.target.value)}
+                                                                onBlur={saveEdit}
+                                                                onKeyDown={handleKeyDown}
+                                                            >
+                                                                <option value="">--</option>
+                                                                {col.options.map((opt) => (
+                                                                    <option
+                                                                        key={typeof opt === "object" ? opt.value : opt}
+                                                                        value={String(typeof opt === "object" ? opt.value : opt)}
+                                                                    >
+                                                                        {typeof opt === "object" ? opt.label : opt}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </td>
+                                                    );
+                                                }
                                             }
 
                                             // Рендер редактируемой boolean (чекбокс) — сразу интерактивный (без двойного клика)

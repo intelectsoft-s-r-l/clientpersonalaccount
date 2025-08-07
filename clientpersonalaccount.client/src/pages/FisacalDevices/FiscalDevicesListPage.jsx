@@ -193,16 +193,6 @@ export default function FiscalDevicesListPage() {
                             {t("FiscalDevice")}
                         </h1>
                     </div>
-                    <div className="flex items-center space-x-4">
-                        <button
-                            onClick={fetchDevices}
-                            disabled={loading}
-                            className="px-4 py-2 bg-gradient-to-r from-[#72b827] to-green-600 text-white rounded-xl transition"
-                            title="Обновить список"
-                        >
-                            {t("Reload")}
-                        </button>
-                    </div>
                 </div>
 
                 {error && (
@@ -217,6 +207,7 @@ export default function FiscalDevicesListPage() {
                     editable={false}
                     onRowClick={(device) => setSelectedDevice(device)}
                     selectableRow={false}
+                    onRefresh={fetchDevices }
                 />
                 <FiscalDeviceModal
                     deviceId={selectedDevice != null ? selectedDevice.id : null}

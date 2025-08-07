@@ -116,16 +116,6 @@ export default function BankPage() {
                             {t("Banks")}
                         </h1>
                     </div>
-                    <div className="flex items-center space-x-4">
-                        <button
-                            onClick={fetchTapxphoneSettings}
-                            disabled={loading}
-                            className="px-4 py-2 bg-gradient-to-r from-[#72b827] to-green-600 text-white rounded-xl transition"
-                            title="Обновить список"
-                        >
-                            {t("Reload")}
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -141,6 +131,7 @@ export default function BankPage() {
                 editable={false}
                 onRowDoubleClick={(tap) => setSelectedTapxphoneSettings(tap)}
                 selectableRow={false}
+                onRefresh={fetchTapxphoneSettings }
             />
 
             <BankModal
