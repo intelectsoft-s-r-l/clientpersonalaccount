@@ -79,7 +79,7 @@ export default function TransactionDKVPage() {
         <div className="min-h-screen bg-gradient-to-br to-indigo-100 p-0 m-0">
             <div className="w-full px-0">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-[#72b827] to-green-600 bg-clip-text text-transparent">{t("TransactionDKV")}</h1>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-[#72b827] to-green-600 bg-clip-text text-transparent leading-normal">{t("TransactionDKV")}</h1>
                     <div className="flex gap-4 items-center">
                         <input
                             type="date"

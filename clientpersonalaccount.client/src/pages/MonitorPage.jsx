@@ -290,7 +290,7 @@ export default function MonitorPage() {
     return (
         <div id="monitor" className="page-section active dark:bg-gray-700 dark:text-white">
             <div className="top-header mb-4 d-flex justify-content-between align-items-center dark:bg-gray-800 dark:text-white rounded shadow-sm" >
-                <h4>{t("Monitoring")}</h4>
+                <h4 className="leading-normal">{t("Monitoring")}</h4>
                 <div className="d-flex align-items-center">
                     <div style={{ marginRight: 40 }}>
                         {/* Dropdown POS */}

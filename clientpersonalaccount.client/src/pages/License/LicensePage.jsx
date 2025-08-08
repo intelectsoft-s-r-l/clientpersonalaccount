@@ -121,7 +121,7 @@ export default function LicensePage() {
             <div className="w-full px-0">
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h1 className="text-4xl font-bold bg-gradient-to-r from-[#72b827] to-green-600 bg-clip-text text-transparent">
+                        <h1 className="text-4xl font-bold bg-gradient-to-r from-[#72b827] to-green-600 bg-clip-text text-transparent leading-normal">
                             {t("Licenses")}
                         </h1>
                     </div>

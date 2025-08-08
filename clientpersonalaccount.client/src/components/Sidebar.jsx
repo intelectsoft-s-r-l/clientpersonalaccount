@@ -42,19 +42,17 @@ export default function Sidebar() {
         <>
             <style>{`
         .sidebar {
-  width: ${collapsed ? "72px" : "280px"};
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  z-index: 50;
-  overflow-y: auto;
-  background-color: #fff;
-  border-right: 1px solid #e5e7eb;
-  display: flex;
-  flex-direction: column;
-  transition: width 0.3s ease;
-}
+          width: ${collapsed ? "72px" : "280px"};
+          flex-shrink: 0;
+          min-height: 100vh;
+          background-color: #fff;
+          border-right: 1px solid #e5e7eb;
+          display: flex;
+          flex-direction: column;
+          overflow-y: auto;
+          position: static;
+          transition: width 0.3s ease;
+        }
         .sidebar-content {
           padding: 1rem;
           overflow-y: auto;
@@ -210,14 +208,8 @@ export default function Sidebar() {
 */
       `}</style>
 
-            <aside
-                id="sidebar"
-                className="sidebar"
-                role="navigation"
-                aria-label="Главное меню"
-            >
-                <div className="sidebar-content dark:bg-gray-800">
-                    {/* Кнопка сворачивания сверху */}
+            <aside className="sidebar" role="navigation" aria-label="Главное меню">
+                <div className="sidebar-content">
                     <button
                         onClick={() => setCollapsed(!collapsed)}
                         className="collapse-button"
@@ -227,24 +219,16 @@ export default function Sidebar() {
                         <i className="bi bi-list"></i>
                     </button>
 
-                    {/* Логотип и текст */}
                     <div className="brand-logo">
-                        <img
-                            src={Logo}
-                            alt="Fiscal Cloud Logo"
-                            className="w-10 h-10 animate-pulse"
-                        />
-                        <span className="brand-text dark:text-white">Fiscal Cloud</span>
+                        <img src={Logo} alt="Fiscal Cloud Logo" className="w-10 h-10 animate-pulse" />
+                        {!collapsed && <span className="brand-text">{t("Fiscal Cloud")}</span>}
                     </div>
+
                     <div className="sidebar-menu-sections">
                         {menuSections.map(({ title, items }, idx) => (
                             <section key={idx}>
-                                {/* Показываем заголовок секции только если сайдбар не свернут */}
                                 {!collapsed && title && <div className="sidebar-section-title">{t(title)}</div>}
-                                <nav
-                                    className="nav-column"
-                                    aria-label={title || t(`Section ${idx + 1}`)}
-                                >
+                                <nav className="nav-column" aria-label={title || t(`Section ${idx + 1}`)}>
                                     {items.map(({ id, key, icon, disabled }) => (
                                         <button
                                             key={id}
@@ -252,10 +236,9 @@ export default function Sidebar() {
                                             className={`nav-link${activePage === id ? " active" : ""}${disabled ? " disabled" : ""}`}
                                             onClick={disabled ? undefined : (e) => handleClick(id, e)}
                                             disabled={disabled}
-                                            title={t(key)} // Используем title для Tooltip при наведении
+                                            title={t(key)}
                                         >
                                             {icon && <i className={`bi ${icon}`}></i>}
-                                            {/* Показываем текст пункта меню только если сайдбар не свернут */}
                                             {!collapsed && <span>{t(key)}</span>}
                                         </button>
                                     ))}
@@ -268,9 +251,10 @@ export default function Sidebar() {
                         onClick={logout}
                         aria-label={t("Logout")}
                         title={t("Logout")}
-                        className="p-2 rounded-full transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-white"
+                        className="logout-button"
                     >
-                        <i className="bi bi-box-arrow-right text-xl"></i>
+                        <i className="bi bi-box-arrow-right"></i>
+                        {!collapsed && <span className="ms-2">{t("Logout")}</span>}
                     </button>
                 </div>
             </aside>
