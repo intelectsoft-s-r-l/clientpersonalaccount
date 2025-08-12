@@ -228,7 +228,6 @@ export default function FiscalDevicePage() {
         text-align: center;
         }
       `}</style>
-            <LayoutWithSidebar>
                 <div className="p-6 overflow-y-auto">
                     <div className="grid grid-cols-1 md:grid-cols-[300px_minmax(0,1fr)_400px] gap-4">
                         <div>
@@ -290,7 +289,6 @@ export default function FiscalDevicePage() {
                         </div>
                     </div>
                 </div>
-            </LayoutWithSidebar>
         </>
     );
 }

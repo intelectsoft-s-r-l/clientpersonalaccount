@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import Logo from "../styles/LOGO.png";
 import { usePageNavigation } from "../context/PageNavigationContext";
@@ -6,26 +6,36 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useSidebar } from "../context/SidebarContext";
+import { useLocation } from "react-router-dom";
 
 const menuSections = [
     {
         items: [
-            { id: "monitor", key: "Monitoring", icon: "bi-graph-up" },
+            { id: "dashboard", key: "Dashboard", icon: "bi-graph-up" },
         ],
     },
     {
         items: [
             { id: "assortement", key: "Assortment", icon: "bi-box" },
             { id: "license", key: "Licenses", icon: "bi-building" },
-            { id: "fiscal-devices", key: "FiscalDevice", icon: "bi-terminal" },
+            { id: "fiscalDevices", key: "FiscalDevice", icon: "bi-terminal" },
             { id: "banks", key: "Banks", icon: "bi-bank" },
             { id: "transactionDkv", key: "TransactionDKV", icon: "bi-cash" },
         ],
     },
 ];
 
+const pageRoutes = {
+    dashboard: "/Dashboard",
+    assortement: "/Assortement",
+    license: "/License",
+    fiscalDevices: "/fiscalDevices",
+    banks: "/Banks",
+    transactionDkv: "/TransactionDkv"
+};
+
 export default function Sidebar() {
-    const { activePage } = usePageNavigation();
+    const { activePage, setActivePage } = usePageNavigation();
     const { logout } = useAuth();
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -33,16 +43,28 @@ export default function Sidebar() {
 
     function handleClick(id, e) {
         e.preventDefault();
-        if (id !== activePage) {
-            navigate(`/Main?tab=${id}`);
+        if (pageRoutes[id]) {
+            setActivePage(id);
+            navigate(pageRoutes[id]);
         }
     }
+
+    const location = useLocation();
+
+    useEffect(() => {
+        const currentRoute = Object.keys(pageRoutes).find(
+            key => pageRoutes[key] === location.pathname
+        );
+        if (currentRoute) {
+            setActivePage(currentRoute);
+        }
+    }, [location.pathname]);
 
     return (
         <>
             <style>{`
         .sidebar {
-          width: ${collapsed ? "72px" : "280px"};
+          width: ${collapsed ? "82px" : "280px"};
           flex-shrink: 0;
           min-height: 100vh;
           background-color: #fff;
@@ -69,7 +91,7 @@ export default function Sidebar() {
           color: #111827;
           margin-bottom: 1rem;
           user-select: text;
-          justify-content: flex-start; /* убрали space-between */
+          justify-content: center; /* убрали space-between */
         }
         .brand-text {
           display: ${collapsed ? "none" : "block"};
@@ -208,22 +230,8 @@ export default function Sidebar() {
 */
       `}</style>
 
-            <aside className="sidebar" role="navigation" aria-label="Главное меню">
+            <aside className="sidebar" role="navigation" aria-label="Главное меню" >
                 <div className="sidebar-content">
-                    <button
-                        onClick={() => setCollapsed(!collapsed)}
-                        className="collapse-button"
-                        aria-label={collapsed ? "Развернуть меню" : "Свернуть меню"}
-                        title={collapsed ? "Развернуть меню" : "Свернуть меню"}
-                    >
-                        <i className="bi bi-list"></i>
-                    </button>
-
-                    <div className="brand-logo">
-                        <img src={Logo} alt="Fiscal Cloud Logo" className="w-10 h-10 animate-pulse" />
-                        {!collapsed && <span className="brand-text">{t("Fiscal Cloud")}</span>}
-                    </div>
-
                     <div className="sidebar-menu-sections">
                         {menuSections.map(({ title, items }, idx) => (
                             <section key={idx}>
@@ -246,15 +254,17 @@ export default function Sidebar() {
                             </section>
                         ))}
                     </div>
-
+                    <div className="brand-logo">
+                        <img src={Logo} alt="Fiscal Cloud Logo" className="w-12 h-12 " />
+                    </div>
                     <button
                         onClick={logout}
                         aria-label={t("Logout")}
                         title={t("Logout")}
-                        className="logout-button"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-500 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
                     >
-                        <i className="bi bi-box-arrow-right"></i>
-                        {!collapsed && <span className="ms-2">{t("Logout")}</span>}
+                        <i className="bi bi-box-arrow-right text-lg"></i>
+                        {!collapsed && <span>{t("Logout")}</span>}
                     </button>
                 </div>
             </aside>

@@ -12,7 +12,7 @@ import * as XLSX from "xlsx";
 export default function AssortmentPage() {
     const [tabs, setTabs] = useState(assortmentConfigs);
     const [activeId, setActiveId] = useState(tabs[0]?.id || 1);
-    const [activeTable, setActiveTable] = useState("payments");
+    const [activeTable, setActiveTable] = useState("products");
     const [dataBySetting, setDataBySetting] = useState({});
     const { getTokenFromServer } = useAuth();
     const [token, setToken] = useState(null);
@@ -504,10 +504,20 @@ export default function AssortmentPage() {
 
             {/* Блок импорта/экспорта - показывается только для таблицы products */}
             {activeTable === "products" && (
-                <div className="flex gap-4 px-6 py-4 border-b bg-gray-50">
+                <div className="flex items-center justify-between gap-4 px-6 py-4 border-b bg-gray-50">
+                    {/* Текст слева */}
+                    <div className="text-sm text-gray-600">
+                        Поддерживаемые форматы: .xlsx, .xls
+                    </div>
+
+                    {/* Кнопки импорта и экспорта справа */}
                     <div className="flex items-center gap-2">
-                        <label htmlFor="import-file" className="cursor-pointer px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
-                            📥 Импортировать товары
+                        <label
+                            htmlFor="import-file"
+                            className="cursor-pointer px-2 py-1 text-white bg-green-600 rounded hover:bg-green-700 transition-colors"
+                            title="Импорт"
+                        >
+                            📥
                         </label>
                         <input
                             id="import-file"
@@ -516,15 +526,13 @@ export default function AssortmentPage() {
                             onChange={handleImport}
                             className="hidden"
                         />
-                    </div>
-                    <button
-                        onClick={handleExport}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                    >
-                        📤 Экспортировать товары
-                    </button>
-                    <div className="text-sm text-gray-600 flex items-center">
-                        Поддерживаемые форматы: .xlsx, .xls
+                        <button
+                            onClick={handleExport}
+                            className="px-2 py-1 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+                            title="Экспорт"
+                        >
+                            📤
+                        </button>
                     </div>
                 </div>
             )}

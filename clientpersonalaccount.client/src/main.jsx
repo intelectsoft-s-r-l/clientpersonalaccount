@@ -66,7 +66,7 @@ const router = createBrowserRouter(
                     ),
                 },
                 {
-                    path: "Main",
+                    path: "*",
                     element: (
                         <ProtectedRoute>
                             <HomePage />
@@ -74,21 +74,10 @@ const router = createBrowserRouter(
                     ),
                 },
                 {
-                    path: "fiscal-devices/fiscalDevice/:id",
-                    element: (
-                        <ProtectedRoute>
-                            <FiscalDevicePage />
-                        </ProtectedRoute>
-                    ),
-                },
-                {
                     path: "forgot-password",
                     element: <ForgotPasswordPage />,
                 },
-                {
-                    path: "*",
-                    element: <Navigate to="/Main" replace />,
-                },
+                { path: "fiscalDevices/fiscalDevice/:id", element: <FiscalDevicePage /> },
             ],
         },
     ],

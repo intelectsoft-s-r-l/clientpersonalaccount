@@ -16,9 +16,12 @@ export default function TransactionDKVPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const { token } = useAuth();
-    const today = new Date().toISOString().split('T')[0];
-    const [startDate, setStartDate] = useState(today);
-    const [endDate, setEndDate] = useState(today);
+    const today = new Date();
+    const sixMonthsAgo = new Date(today);
+    sixMonthsAgo.setMonth(today.getMonth() - 6);
+
+    const [startDate, setStartDate] = useState(sixMonthsAgo.toISOString().split('T')[0]);
+    const [endDate, setEndDate] = useState(today.toISOString().split('T')[0]);
     const { t } = useTranslation();
 
     const fetchTransactions = useCallback(async () => {

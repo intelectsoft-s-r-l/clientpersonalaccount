@@ -784,5 +784,19 @@
   "taxiTariffs": "Тариф такси",
   "vatHistory": "История изменений НДС",
   "NotVat": "Без НДС",
-  "Success": "Успешно"
+  "Success": "Успешно",
+  "Home": "Домой",
+  "month.jan": "Январь",
+  "month.feb": "Февраль",
+  "month.mar": "Март",
+  "month.apr": "Апрель",
+  "month.may": "Май",
+  "month.jun": "Июнь",
+  "month.jul": "Июль",
+  "month.aug": "Август",
+  "month.sep": "Сентябрь",
+  "month.oct": "Октябрь",
+  "month.nov": "Ноябрь",
+  "month.dec": "Декабрь",
+  "TotalValue":  "Общее значение"
 }

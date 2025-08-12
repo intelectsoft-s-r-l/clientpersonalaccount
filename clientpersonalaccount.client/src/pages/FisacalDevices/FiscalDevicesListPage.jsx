@@ -151,23 +151,11 @@ export default function FiscalDevicesListPage() {
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/fiscal-devices/fiscalDevice/${row.id}`);
+                            navigate(`/fiscalDevices/${row.id}`);
                         }}
                         className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
                         title="Просмотреть детали"
                     >
-                        <Eye className="w-4 h-4" />
-                    </button>
-
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedDevice(row);  // Вызов модального окна с выбранным устройством
-                        }}
-                        className="text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded-full transition-all duration-200"
-                        title="Открыть модальное окно"
-                    >
-                        {/* Можно иконку добавить, например: */}
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-4 w-4"
@@ -179,13 +167,24 @@ export default function FiscalDevicesListPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m6 0a6 6 0 11-12 0 6 6 0 0112 0z" />
                         </svg>
                     </button>
+
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDevice(row);  // Вызов модального окна с выбранным устройством
+                        }}
+                        className="text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded-full transition-all duration-200"
+                        title="Открыть модальное окно"
+                    >
+                        <Eye className="w-4 h-4" />
+                    </button>
                 </div>
             ),
         },
     ];
 
     return (
-        <div id="fiscalDevicesList" className="min-h-screen bg-gradient-to-br to-indigo-100 p-0 m-0">
+        <div id="FiscalDevices" className="min-h-screen bg-gradient-to-br to-indigo-100 p-0 m-0">
             <div className="w-full px-0">
                 <div className="flex items-center justify-between mb-6">
                     <div>
