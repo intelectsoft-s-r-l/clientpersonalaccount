@@ -156,16 +156,10 @@ export default function FiscalDevicesListPage() {
                         className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
                         title="Просмотреть детали"
                     >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m6 0a6 6 0 11-12 0 6 6 0 0112 0z" />
-                        </svg>
+                        <img
+                            src="/icons/Globe.svg"
+                            className="w-6 h-6 text-black hover:scale-125"
+                        />
                     </button>
 
                     <button
@@ -176,7 +170,10 @@ export default function FiscalDevicesListPage() {
                         className="text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded-full transition-all duration-200"
                         title="Открыть модальное окно"
                     >
-                        <Eye className="w-4 h-4" />
+                        <img
+                            src="/icons/Show.svg"
+                            className="w-6 h-6 text-black hover:scale-125"
+                        />
                     </button>
                 </div>
             ),

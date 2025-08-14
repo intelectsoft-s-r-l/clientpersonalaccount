@@ -66,14 +66,10 @@ export default function LayoutWithSidebar({ children }) {
                                         to="/Dashboard"
                                         className="inline-flex items-center text-cyan-600 hover:text-cyan-400"
                                     >
-                                        <svg
-                                            className="w-4 h-4 mr-1"
-                                            fill="currentColor"
-                                            viewBox="0 0 20 20"
-                                        >
-                                            <path d="M10.707 1.293a1 1 0 00-1.414 0L2 8.586V18a2 2 0 002 2h4a1 1 0 001-1v-4h2v4a1 1 0 001 1h4a2 2 0 002-2V8.586l-7.293-7.293z" />
-                                        </svg>
-                                        {t("Home")}
+                                        <img
+                                            src="/icons/House_01.svg"
+                                            className="w-6 h-6 hover:scale-125"
+                                        />
                                     </Link>
                                 </li>
                                 {pathnames.map((value, index) => {

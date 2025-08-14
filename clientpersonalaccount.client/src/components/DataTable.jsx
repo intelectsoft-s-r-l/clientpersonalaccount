@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
@@ -41,6 +41,12 @@ export function DataTable({
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
     const { t } = useTranslation();
+
+    const [activeFilter, setActiveFilter] = useState(null);
+
+    const handleClick = (key) => {
+        setActiveFilter(key);
+    };
 
     const startEdit = (rowId, columnKey, currentValue) => {
         if (!editable) return;
@@ -182,6 +188,34 @@ export function DataTable({
         return sortedData.slice(start, start + itemsPerPage);
     }, [sortedData, currentPage]);
 
+    useEffect(() => {
+        // Таймер для автоматического скрытия через 5 секунд
+        if (activeFilter) {
+            const timer = setTimeout(() => {
+                setActiveFilter(null);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [activeFilter]);
+
+    useEffect(() => {
+        // Функция обработки клика по документу
+        const handleClickOutside = (event) => {
+            // Если activeFilter открыт и клик не по элементу фильтра
+            if (
+                activeFilter &&
+                !document.getElementById(`filter-${activeFilter}`)?.contains(event.target)
+            ) {
+                setActiveFilter(null);
+            }
+        };
+
+        document.addEventListener("click", handleClickOutside);
+        return () => {
+            document.removeEventListener("click", handleClickOutside);
+        };
+    }, [activeFilter]);
+
     return (
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden select-none dark:bg-gray-800 dark:text-white">
             <div className="p-4 border-b flex justify-between items-center dark:bg-gray-800 dark:text-white">
@@ -190,16 +224,19 @@ export function DataTable({
                     {onAddRow && (
                         <button
                             onClick={onAddRow}
-                            className="px-3 py-1 text-sm rounded bg-gradient-to-r from-[#72b827] to-green-600 text-white dark:bg-gray-800 dark:text-white"
+                            className="px-3 py-1 text-sm rounded dark:bg-gray-800 dark:text-white"
                         >
-                            +
+                            <img
+                                src="/icons/AddRow.svg"
+                                className="w-6 h-6 transform transition-transform duration-200 ease-in-out hover:scale-125"
+                            />
                         </button>
                     )}
                     {onRefresh && (
                         <button
                             onClick={onRefresh}
                             title={t("Refresh")}
-                            className="w-6 h-6 flex items-center justify-center rounded-full bg-transparent text-blue-600 hover:text-blue-800 transition"
+                            className="w-6 h-6 flex items-center justify-center rounded-full bg-transparent text-blue-600 hover:text-blue-800 transition hover:scale-125"
                         >
                             <ArrowPathIcon className="w-5 h-5 text-gray-500" />
                         </button>
@@ -218,59 +255,73 @@ export function DataTable({
                                 <th
                                     key={col.key}
                                     style={{ width: col.width || "auto" }}
-                                    className={`text-xs font-bold uppercase tracking-wider p-2 border-gray-300 ${col.align === "right"
+                                    className={`relative text-xs font-bold uppercase tracking-wider p-2 border-gray-300 ${col.align === "right"
                                         ? "text-right"
                                         : col.align === "left"
                                             ? "text-left"
-                                            : "text-center"
-                                        } dark:text-white`}
-                                    onClick={() =>
-                                        col.sortable !== false && handleSort(col.key)
-                                    }
+                                            : "text-center"} dark:text-white`}
                                 >
-                                    <div className="flex flex-col dark:bg-gray-800 dark:text-white">
-                                        <div className="flex items-center justify-center dark:bg-gray-800 dark:text-white">
-                                            <span className="truncate">{col.label}</span>
-                                            {sortConfig.key === col.key && (
-                                                <span className="ml-1 text-xs">
-                                                    {sortConfig.direction === "asc" ? "▲" : "▼"}
-                                                </span>
-                                            )}
-                                        </div>
+                                    {/* Заголовок + сортировка + SVG */}
+                                    <div className="flex items-center justify-center space-x-1">
+                                        <span className="truncate">{col.label}</span>
+                                        {sortConfig.key === col.key && (
+                                            <span className="ml-1 text-xs">
+                                                {sortConfig.direction === "asc" ? "▲" : "▼"}
+                                            </span>
+                                        )}
                                         {col.filterable && (
                                             <>
-                                                {col.filterOptions ? (
-                                                    <select
-                                                        value={filters[col.key] ?? ""}
-                                                        onChange={(e) => handleFilterChange(col.key, e.target.value)}
-                                                        className="mt-1 p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
-                                                        onClick={(e) => e.stopPropagation()}
+                                                {!activeFilter || activeFilter !== col.key ? (
+                                                    <div
+                                                        className="w-6 h-6 cursor-pointer flex items-center justify-center"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleClick(col.key);
+                                                        }}
                                                     >
-                                                        <option value="">{t("All")}</option>
-                                                        {(col.filterOptions || []).map((opt) => (
-                                                            <option
-                                                                key={typeof opt === "object" ? opt.value : opt}
-                                                                value={typeof opt === "object" ? opt.value : opt}
-                                                            >
-                                                                {typeof opt === "object" ? opt.label : opt}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                ) : (
-                                                    <input
-                                                        type="text"
-                                                        value={filters[col.key] || ""}
-                                                        onChange={(e) =>
-                                                            handleFilterChange(col.key, e.target.value)
-                                                        }
-                                                        placeholder={`${t("Filter")}...`}
-                                                        className="mt-1 p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
-                                                )}
+                                                        <img
+                                                            src="/icons/Filter.svg"
+                                                            alt="Filter"
+                                                            className="w-full h-full"
+                                                        />
+                                                    </div>
+                                                ) : null}
                                             </>
                                         )}
                                     </div>
+
+                                    {/* Поле фильтра */}
+                                    {col.filterable && activeFilter === col.key && (
+                                        <div id={`filter-${col.key}`} onClick={(e) => e.stopPropagation()} className="absolute top-full left-0 mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-300 rounded shadow-lg">
+                                            {col.filterOptions ? (
+                                                <select
+                                                    value={filters[col.key] ?? ""}
+                                                    onChange={(e) => handleFilterChange(col.key, e.target.value)}
+                                                    className="w-full p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <option value="">{t("All")}</option>
+                                                    {(col.filterOptions || []).map((opt) => (
+                                                        <option
+                                                            key={typeof opt === "object" ? opt.value : opt}
+                                                            value={typeof opt === "object" ? opt.value : opt}
+                                                        >
+                                                            {typeof opt === "object" ? opt.label : opt}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    value={filters[col.key] || ""}
+                                                    onChange={(e) => handleFilterChange(col.key, e.target.value)}
+                                                    placeholder={`${t("Filter")}...`}
+                                                    className="w-full p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            )}
+                                        </div>
+                                    )}
                                 </th>
                             ))}
                             {onDeleteRow && <th className="w-12 dark:bg-gray-800 dark:text-white"></th>}
@@ -342,7 +393,7 @@ export function DataTable({
                                                         >
                                                             <EditorComponent
                                                                 value={String(editValue ?? "")}
-                                                                onChange={(value) => { setEditValue(value);}}
+                                                                onChange={(value) => { setEditValue(value); }}
                                                                 onBlur={saveEdit}
                                                             />
                                                         </td>
@@ -466,7 +517,10 @@ export function DataTable({
                                                     className="text-red-600 hover:text-red-800 dark:bg-gray-800 dark:text-white"
                                                     title="Удалить строку"
                                                 >
-                                                    🗑️
+                                                    <img
+                                                    src="/icons/Trash.svg"
+                                                        className="w-6 h-6 hover:scale-125"
+                                                    />
                                                 </button>
                                             </td>
                                         )}

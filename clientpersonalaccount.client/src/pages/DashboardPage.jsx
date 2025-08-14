@@ -336,7 +336,7 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen">
             {/* Header */}
-            <header className="sticky top-0 z-50 bg-white backdrop-blur-md border-b border-gray-200 shadow-sm rounded-xl">
+            <header className="top-0 z-50 bg-white backdrop-blur-md border-b border-gray-200 shadow-sm rounded-xl">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap justify-between items-center gap-4">
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-400 bg-clip-text text-transparent">
                     </h1>

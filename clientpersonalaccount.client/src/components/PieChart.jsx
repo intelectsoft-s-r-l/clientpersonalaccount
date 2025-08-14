@@ -109,7 +109,7 @@ export function PieChart({ data, t, title }) {
                                     <Cell
                                         key={`cell-${index}`}
                                         fill={`url(#gradient-${index % COLORS.length})`}
-                                        stroke="white"
+                                        stroke="currentColor" 
                                         strokeWidth={3}
                                     />
                                 ))}

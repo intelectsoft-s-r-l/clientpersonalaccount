@@ -111,7 +111,10 @@ export default function LicensePage() {
                 className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
                 title="Просмотреть детали"
             >
-                <Eye className="w-4 h-4" />
+                <img
+                    src="/icons/Show.svg"
+                    className="w-6 h-6 text-black hover:scale-125"
+                />
             </button>
         ),
     });

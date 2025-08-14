@@ -485,15 +485,15 @@ export default function AssortmentPage() {
             </nav>
 
             <div className="flex gap-4 px-6 py-4 border-b">
-                {["payments", "products", "groups", "departments", "users", "global"].map((key) => (
+                {["products", "payments", "groups", "departments", "users", "global"].map((key) => (
                     <button
                         key={key}
                         onClick={() => setActiveTable(key)}
                         className={`px-4 py-2 border-b-2 ${key === activeTable ? " border-green-600 text-green-600" : "border-transparent text-gray-600 dark:text-white"
                             }`}
                     >
-                        {key === "payments" && t("Tabs.Payments")}
                         {key === "products" && t("Tabs.Products")}
+                        {key === "payments" && t("Tabs.Payments")}
                         {key === "groups" && t("Tabs.Groups")}
                         {key === "departments" && t("Tabs.Departments")}
                         {key === "users" && t("Tabs.Users")}
@@ -517,7 +517,10 @@ export default function AssortmentPage() {
                             className="cursor-pointer px-2 py-1 text-white bg-green-600 rounded hover:bg-green-700 transition-colors"
                             title="Импорт"
                         >
-                            📥
+                            <img
+                                src="/icons/File_Download.svg"
+                                className="w-6 h-6 transform transition-transform duration-200 ease-in-out hover:scale-125"
+                            />
                         </label>
                         <input
                             id="import-file"
@@ -531,7 +534,10 @@ export default function AssortmentPage() {
                             className="px-2 py-1 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
                             title="Экспорт"
                         >
-                            📤
+                            <img
+                                src="/icons/File_Upload.svg"
+                                className="w-6 h-6 transform transition-transform duration-200 ease-in-out hover:scale-125"
+                            />
                         </button>
                     </div>
                 </div>

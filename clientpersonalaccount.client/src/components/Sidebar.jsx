@@ -7,20 +7,26 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useSidebar } from "../context/SidebarContext";
 import { useLocation } from "react-router-dom";
+import DashboardIcon from "../../public/sideBarIcons/dashboard.svg";
+import AssortmentIcon from "../../public/sideBarIcons/Asortiment.svg";
+import LicensesIcon from "../../public/sideBarIcons/Licente.svg";
+import FiscalDeviceIcon from "../../public/sideBarIcons/AparateFiscale.svg";
+import BanksIcon from "../../public/sideBarIcons/Banca.svg";
+import TransactionDKVIcon from "../../public/sideBarIcons/Tranzactii.svg";
 
 const menuSections = [
     {
         items: [
-            { id: "dashboard", key: "Dashboard", icon: "bi-graph-up" },
+            { id: "dashboard", key: "Dashboard", icon: DashboardIcon },
         ],
     },
     {
         items: [
-            { id: "assortement", key: "Assortment", icon: "bi-box" },
-            { id: "license", key: "Licenses", icon: "bi-building" },
-            { id: "fiscalDevices", key: "FiscalDevice", icon: "bi-terminal" },
-            { id: "banks", key: "Banks", icon: "bi-bank" },
-            { id: "transactionDkv", key: "TransactionDKV", icon: "bi-cash" },
+            { id: "assortement", key: "Assortment", icon: AssortmentIcon },
+            { id: "license", key: "Licenses", icon: LicensesIcon },
+            { id: "fiscalDevices", key: "FiscalDevice", icon: FiscalDeviceIcon },
+            { id: "banks", key: "Banks", icon: BanksIcon },
+            { id: "transactionDkv", key: "TransactionDKV", icon: TransactionDKVIcon },
         ],
     },
 ];
@@ -246,7 +252,10 @@ export default function Sidebar() {
                                             disabled={disabled}
                                             title={t(key)}
                                         >
-                                            {icon && <i className={`bi ${icon}`}></i>}
+                                            <img
+                                                src={icon}
+                                                className="w-6 h-6 text-black"
+                                            />
                                             {!collapsed && <span>{t(key)}</span>}
                                         </button>
                                     ))}
@@ -254,18 +263,24 @@ export default function Sidebar() {
                             </section>
                         ))}
                     </div>
-                    <div className="brand-logo">
-                        <img src={Logo} alt="Fiscal Cloud Logo" className="w-12 h-12 " />
+                    <div className="flex flex-col items-center mb-1 space-y-1">
+                        <div className="brand-logo">
+                            <img src={Logo} alt="Fiscal Cloud Logo" className="w-10 h-10" />
+                        </div>
+
+                        <button
+                            onClick={logout}
+                            aria-label={t("Logout")}
+                            title={t("Logout")}
+                            className="flex items-center justify-center w-10 h-10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform duration-200 ease-in-out hover:scale-110"
+                        >
+                            <object
+                                type="image/svg+xml"
+                                data="/icons/Log_Out.svg"
+                                className="w-6 h-6"
+                            />
+                        </button>
                     </div>
-                    <button
-                        onClick={logout}
-                        aria-label={t("Logout")}
-                        title={t("Logout")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-500 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
-                    >
-                        <i className="bi bi-box-arrow-right text-lg"></i>
-                        {!collapsed && <span>{t("Logout")}</span>}
-                    </button>
                 </div>
             </aside>
         </>
