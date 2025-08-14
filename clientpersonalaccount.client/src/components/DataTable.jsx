@@ -260,6 +260,8 @@ export function DataTable({
                                         : col.align === "left"
                                             ? "text-left"
                                             : "text-center"} dark:text-white`}
+                                    onClick={() =>
+                                        col.sortable !== false && handleSort(col.key)}
                                 >
                                     {/* Заголовок + сортировка + SVG */}
                                     <div className="flex items-center justify-center space-x-1">
@@ -282,7 +284,7 @@ export function DataTable({
                                                         <img
                                                             src="/icons/Filter.svg"
                                                             alt="Filter"
-                                                            className="w-full h-full"
+                                                            className="w-5 h-5 hover:scale-110"
                                                         />
                                                     </div>
                                                 ) : null}

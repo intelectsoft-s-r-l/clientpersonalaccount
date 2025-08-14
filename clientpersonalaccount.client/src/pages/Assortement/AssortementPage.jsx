@@ -473,7 +473,7 @@ export default function AssortmentPage() {
                         <button
                             key={tab.id}
                             onClick={() => setActiveId(tab.id)}
-                            className={`px-4 py-2 rounded whitespace-nowrap ${tab.id === activeId
+                            className={`hover:scale-110 px-4 py-2 rounded whitespace-nowrap ${tab.id === activeId
                                 ? "bg-gradient-to-r from-[#72b827] to-green-600 text-white"
                                 : "hover:bg-gray-200"
                                 }`}
@@ -489,7 +489,7 @@ export default function AssortmentPage() {
                     <button
                         key={key}
                         onClick={() => setActiveTable(key)}
-                        className={`px-4 py-2 border-b-2 ${key === activeTable ? " border-green-600 text-green-600" : "border-transparent text-gray-600 dark:text-white"
+                        className={`hover:scale-110 px-4 py-2 border-b-2 ${key === activeTable ? " border-green-600 text-green-600" : "border-transparent text-gray-600 dark:text-white"
                             }`}
                     >
                         {key === "products" && t("Tabs.Products")}

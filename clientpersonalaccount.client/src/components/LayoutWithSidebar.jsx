@@ -47,12 +47,13 @@ export default function LayoutWithSidebar({ children }) {
                 <div className="flex justify-between items-center mb-3">
                     <div className="flex items-center gap-2">
                         <button
+                            type="button" // ← важно, чтобы не было submit по умолчанию
                             onClick={() => setCollapsed(!collapsed)}
                             className="collapse-button"
                             aria-label={collapsed ? "Развернуть меню" : "Свернуть меню"}
                             title={collapsed ? "Развернуть меню" : "Свернуть меню"}
                         >
-                            <i className="bi bi-list"></i>
+                            <i className="bi bi-list" aria-hidden="true"></i>
                         </button>
 
                         {/* Breadcrumbs */}

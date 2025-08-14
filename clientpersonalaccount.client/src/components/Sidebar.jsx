@@ -70,7 +70,7 @@ export default function Sidebar() {
         <>
             <style>{`
         .sidebar {
-          width: ${collapsed ? "82px" : "280px"};
+          width: ${collapsed ? "86px" : "280px"};
           flex-shrink: 0;
           min-height: 100vh;
           background-color: #fff;
@@ -160,7 +160,7 @@ export default function Sidebar() {
         }
         .nav-link i {
           font-size: 1.25rem;
-          margin-right: ${collapsed ? "0" : "0.5rem"};
+          margin-right: ${collapsed ? "0" : "0.25rem"};
           flex-shrink: 0;
           text-align: center;
           width: 24px;
@@ -247,7 +247,7 @@ export default function Sidebar() {
                                         <button
                                             key={id}
                                             type="button"
-                                            className={`nav-link${activePage === id ? " active" : ""}${disabled ? " disabled" : ""}`}
+                                            className={`hover:scale-110 nav-link${activePage === id ? " active" : ""}${disabled ? " disabled" : ""}`}
                                             onClick={disabled ? undefined : (e) => handleClick(id, e)}
                                             disabled={disabled}
                                             title={t(key)}
@@ -272,12 +272,11 @@ export default function Sidebar() {
                             onClick={logout}
                             aria-label={t("Logout")}
                             title={t("Logout")}
-                            className="flex items-center justify-center w-10 h-10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform duration-200 ease-in-out hover:scale-110"
+                            className="flex items-center justify-center w-10 h-10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform hover:scale-110"
                         >
-                            <object
-                                type="image/svg+xml"
-                                data="/icons/Log_Out.svg"
-                                className="w-6 h-6"
+                            <img
+                                src="/icons/Log_Out.svg"
+                                className="w-6 h-6 text-black hover:scale-110"
                             />
                         </button>
                     </div>

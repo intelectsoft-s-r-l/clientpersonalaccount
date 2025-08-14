@@ -336,17 +336,14 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen">
             {/* Header */}
-            <header className="top-0 z-50 bg-white backdrop-blur-md border-b border-gray-200 shadow-sm rounded-xl">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap justify-between items-center gap-4">
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-400 bg-clip-text text-transparent">
-                    </h1>
-
+            <header className="bg-white border border-gray-100 rounded-2xl">
+                <div className="w-full px-2 py-2 flex flex-wrap justify-start items-center gap-2">
                     <div className="flex flex-wrap items-center gap-4">
                         {/* Device Selector */}
-                        <div className="relative">
+                        <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setIsOpen(!isOpen)}
-                                className="flex items-center gap-2 bg-white border border-gray-300 rounded-xl px-4 py-2 text-sm font-medium text-gray-700 hover:border-cyan-400 hover:shadow-md transition"
+                                className="flex items-center gap-2 bg-white border rounded-xl px-4 py-2 text-sm font-medium text-gray-700 hover:border-cyan-400 hover:shadow-md transition"
                             >
                                 {allDevices
                                     ? t("AllDevices")
@@ -357,11 +354,11 @@ export default function DashboardPage() {
                             </button>
 
                             {isOpen && (
-                                <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl max-h-64 overflow-y-auto p-2">
+                                <div className="absolute mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl max-h-64 overflow-y-auto p-2 z-[9999]">
                                     <div
                                         className={`px-3 py-2 rounded-lg cursor-pointer transition ${allDevices
-                                                ? "bg-cyan-50 text-cyan-700 font-semibold"
-                                                : "hover:bg-gray-50"
+                                            ? "bg-cyan-50 text-cyan-700 font-semibold"
+                                            : "hover:bg-gray-50"
                                             }`}
                                         onClick={() => {
                                             setAllDevices(!allDevices);
@@ -377,10 +374,10 @@ export default function DashboardPage() {
                                             <div
                                                 key={posID}
                                                 className={`px-3 py-2 rounded-lg cursor-pointer transition ${allDevices
-                                                        ? "text-gray-400 cursor-not-allowed"
-                                                        : isSelected
-                                                            ? "bg-cyan-50 text-cyan-700 font-semibold"
-                                                            : "hover:bg-gray-50"
+                                                    ? "text-gray-400 cursor-not-allowed"
+                                                    : isSelected
+                                                        ? "bg-cyan-50 text-cyan-700 font-semibold"
+                                                        : "hover:bg-gray-50"
                                                     }`}
                                                 onClick={() => !allDevices && togglePos(posID)}
                                             >
@@ -398,9 +395,9 @@ export default function DashboardPage() {
                                 <button
                                     key={range}
                                     onClick={() => setSelectedRange(range)}
-                                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${selectedRange === range
-                                            ? "bg-white shadow text-gray-900"
-                                            : "text-gray-600 hover:text-gray-900"
+                                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors hover:scale-105 ${selectedRange === range
+                                        ? "bg-white shadow text-gray-900"
+                                        : "text-gray-600 hover:text-gray-900"
                                         }`}
                                 >
                                     {range === "custom"
@@ -409,34 +406,34 @@ export default function DashboardPage() {
                                 </button>
                             ))}
                         </div>
+
+                        {selectedRange === "custom" && (
+                            <div className="max-w-2xl mx-2 px-2 py-1 flex flex-wrap gap-2">
+                                <div className="flex items-center gap-2">
+                                    <label className="text-sm font-medium text-gray-700">{t("StartDate")}:</label>
+                                    <input
+                                        type="date"
+                                        value={customStartDate}
+                                        max={customEndDate}
+                                        onChange={(e) => setCustomStartDate(e.target.value)}
+                                        className="border border-gray-300 rounded-lg px-4 py-1 text-sm focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200 hover:scale-105"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <label className="text-sm font-medium text-gray-700">{t("DateEnd")}:</label>
+                                    <input
+                                        type="date"
+                                        value={customEndDate}
+                                        min={customStartDate}
+                                        max={new Date().toISOString().slice(0, 10)}
+                                        onChange={(e) => setCustomEndDate(e.target.value)}
+                                        className="border border-gray-300 rounded-lg px-4 py-1 text-sm focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200 hover:scale-105"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
-
-                {selectedRange === "custom" && (
-                    <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap gap-4">
-                        <div className="flex items-center gap-2">
-                            <label className="text-sm font-medium text-gray-700">{t("StartDate")}:</label>
-                            <input
-                                type="date"
-                                value={customStartDate}
-                                max={customEndDate}
-                                onChange={(e) => setCustomStartDate(e.target.value)}
-                                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <label className="text-sm font-medium text-gray-700">{t("DateEnd")}:</label>
-                            <input
-                                type="date"
-                                value={customEndDate}
-                                min={customStartDate}
-                                max={new Date().toISOString().slice(0, 10)}
-                                onChange={(e) => setCustomEndDate(e.target.value)}
-                                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
-                            />
-                        </div>
-                    </div>
-                )}
             </header>
 
             {/* Main */}

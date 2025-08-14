@@ -22,7 +22,7 @@ export default function SalesChart({ title, data, t }) {
             const name = payload[0].dataKey === "value" ? (t ? t("Value") : "Value") : payload[0].dataKey;
 
             return (
-                <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100">
+                <div className="bg-white p-4 rounded-xl border border-gray-100">
                     <p className="font-semibold text-gray-800 mb-2">{label}</p>
                     <p className="text-cyan-600 font-medium text-lg">
                         {`${name}: ${value.toLocaleString()}`}
@@ -35,7 +35,7 @@ export default function SalesChart({ title, data, t }) {
 
     if (!data || data.length === 0) {
         return (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 w-full max-w-md h-40 flex items-center justify-center">
+            <div className="bg-white rounded-2xl border border-gray-100 w-full max-w-md h-40 flex items-center justify-center">
                 <p className="text-gray-500 text-lg">
                     {t ? t("No data available to display chart.") : "No data available to display chart."}
                 </p>
@@ -48,7 +48,7 @@ export default function SalesChart({ title, data, t }) {
         const maxValue = Math.max(100, data[0].value * 2); // максимум для прогресса, например в 2 раза больше значения
         console.log(data);
         return (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 w-full max-w-[260px] flex flex-col items-center py-4 px-4">
+            <div className="bg-white rounded-2xl border border-gray-100 w-full max-w-[260px] flex flex-col items-center py-4 px-4">
                 <h6 className="text-md font-semibold text-gray-800 mb-2">{title}</h6>
                 <ProgressCircle value={data[0].value} max={maxValue} />
                 <p className="mt-2 text-gray-600 text-xs">{data[0].date}</p>
@@ -58,7 +58,7 @@ export default function SalesChart({ title, data, t }) {
 
     // Остальной код отрисовки графиков
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 w-full max-w-xl flex flex-col">
+        <div className="bg-white rounded-2xl border border-gray-100 w-full max-w-xl flex flex-col">
             {/* Header */}
             <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                 <h6 className="text-lg font-semibold text-gray-800 mb-0">{title}</h6>

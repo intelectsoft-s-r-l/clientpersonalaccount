@@ -56,7 +56,7 @@ const CustomTooltip = ({ active, payload, label, t }) => {
 export default function YearlySalesChart({ title, data, t }) {
     if (!data || data.length === 0) {
         return (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 w-full h-40 flex items-center justify-center">
+            <div className="bg-white rounded-2xl border border-gray-100 w-full h-40 flex items-center justify-center">
                 <p className="text-gray-500 text-lg">
                     {t ? t("No data available to display chart.") : "No data available"}
                 </p>
@@ -86,7 +86,7 @@ export default function YearlySalesChart({ title, data, t }) {
         });
 
     return (
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 w-full max-w-full flex flex-col">
+        <div className="bg-white rounded-2xl border border-gray-100 w-full max-w-full flex flex-col">
             <div className="px-6 py-3 border-b border-gray-100 flex items-center justify-between">
                 <h6 className="text-xl font-semibold text-gray-800">{title}</h6>
             </div>

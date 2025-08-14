@@ -783,5 +783,20 @@
   "vatRates": "Setări TVA",
   "taxiTariffs": "Tarif Taxi",
   "vatHistory": "Istoricul modificărilor TVA",
-  "NotVat": "Fara TVA"
+  "NotVat": "Fara TVA",
+  "Success": "Succes",
+  "Home": "Acasă",
+  "month.jan": "Ianuarie",
+  "month.feb": "Februarie",
+  "month.mar": "Martie",
+  "month.apr": "Aprilie",
+  "month.may": "Mai",
+  "month.jun": "Iunie",
+  "month.jul": "Iulie",
+  "month.aug": "August",
+  "month.sep": "Septembrie",
+  "month.oct": "Octombrie",
+  "month.nov": "Noiembrie",
+  "month.dec": "Decembrie",
+  "TotalValue": "Valoare generală"
 }

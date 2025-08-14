@@ -782,5 +782,20 @@
   "vatRates": "VAT Settings",
   "taxiTariffs": "Taxi fare",
   "vatHistory": "History of VAT changes",
-  "NotVat": "Without VAT"
+  "NotVat": "Without VAT",
+  "Success": "Success",
+  "Home": "Home",
+  "month.jan": "January",
+  "month.feb": "February",
+  "month.mar": "March",
+  "month.apr": "April",
+  "month.may": "May",
+  "month.jun": "June",
+  "month.jul": "July",
+  "month.aug": "August",
+  "month.sep": "September",
+  "month.oct": "October",
+  "month.nov": "November",
+  "month.dec": "December",
+  "TotalValue": "General value"
 }

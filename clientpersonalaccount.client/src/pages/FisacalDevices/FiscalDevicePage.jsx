@@ -11,8 +11,7 @@ import { useTranslation } from "react-i18next";
 import apiService from '../../services/apiService';
 import { FiscalDeviceTypeEnum } from "../../enums/Enums";
 
-export default function FiscalDevicePage() {
-    const { id } = useParams();
+export default function FiscalDevicePage({id }) {
     const { token } = useAuth();
     const [shifts, setShifts] = useState([]);
     const [bills, setBills] = useState([]);
@@ -210,7 +209,6 @@ export default function FiscalDevicePage() {
         {
             key: "type",
             label: t("Type"),
-            filterable: true,
             width: "32%",
             render: (value) => (
                 <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-md text-xs font-medium">
