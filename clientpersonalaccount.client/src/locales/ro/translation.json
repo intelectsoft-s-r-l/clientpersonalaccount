@@ -798,5 +798,8 @@
   "month.oct": "Octombrie",
   "month.nov": "Noiembrie",
   "month.dec": "Decembrie",
-  "TotalValue": "Valoare generală"
+  "TotalValue": "Valoare",
+  "TopProducts": "Top 5 produse pentru perioada respectivă",
+  "TotalSales": "Total vândut",
+  "POSForYear": "Statistici de vânzări pe dispozitive pentru anul în curs"
 }

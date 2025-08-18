@@ -88,7 +88,7 @@ export default function YearlySalesChart({ title, data, t }) {
     return (
         <div className="bg-white rounded-2xl border border-gray-100 w-full max-w-full flex flex-col">
             <div className="px-6 py-3 border-b border-gray-100 flex items-center justify-between">
-                <h6 className="text-xl font-semibold text-gray-800">{title}</h6>
+                <h6 className="text-xl font-semibold text-gray-800">{t("POSForYear")}</h6>
             </div>
 
             <div className="p-4 h-[320px] md:h-[360px]">

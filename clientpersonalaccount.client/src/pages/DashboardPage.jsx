@@ -30,6 +30,7 @@ export default function DashboardPage() {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
     const [yearlyAllDevicesData, setYearlyAllDevicesData] = useState(null);
+    const [topProducts, setTopProducts] = useState([]);
     //#endregion
 
     //#region  Расчет startDate и endDate по выбранному диапазону
@@ -262,6 +263,28 @@ export default function DashboardPage() {
             setLoading(false);
         }
     }, [user, selectedPos, allDevices, selectedRange, loadAllDevicesData, getDateRange, posList, customStartDate, customEndDate]);
+
+    const loadTopProducts = useCallback(async () => {
+        if (!user) return;
+
+        try {
+            const data = await apiService.proxyRequest(
+                `/BINavigatorAPI/ClientPortal/top-products?companyId=${user.CompanyID}&dateFrom=${getDateRange(selectedRange).startDate}&dateTo=${getDateRange(selectedRange).endDate}&top=${5}`,
+                {
+                    method: "GET",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Service-Id": "58",
+                    },
+                }
+            );
+
+            setTopProducts(data.companyTopProducts || []);
+        } catch (e) {
+            console.error("Error loading top products", e);
+        }
+    }, [user, selectedRange, customStartDate, customEndDate]);
     //#endregion
 
     //#region useEffect
@@ -269,8 +292,9 @@ export default function DashboardPage() {
         if (user) {
             fetchPosList();
             loadAllDevicesData();
+            loadTopProducts();
         }
-    }, [user, customStartDate, customEndDate]);
+    }, [user, selectedRange, customStartDate, customEndDate]);
 
     useEffect(() => {
         if (allDevices) setSelectedPos([]);
@@ -332,6 +356,8 @@ export default function DashboardPage() {
             if (a.data.length !== 1 && b.data.length === 1) return 1;
             return 0;
         });
+
+    const sortedTopProducts = [...topProducts].sort((a, b) => b.totalSales - a.totalSales);
 
     return (
         <div className="min-h-screen">
@@ -438,21 +464,57 @@ export default function DashboardPage() {
 
             {/* Main */}
             <main className="max-w-12xl mx-auto px-6 py-8">
+                {/* Top Products */}
+                {sortedTopProducts.length > 0 && (
+                    <div className="mb-2 p-4 rounded-2xl ">
+                        <h2 className="text-xl font-bold mb-2">{t("TopProducts")}</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:grid-cols-5 gap-6">
+                            {sortedTopProducts.map((product, index) => {
+                                const bgClass =
+                                    index === 0
+                                        ? "bg-yellow-400 text-white"
+                                        : index === 1
+                                            ? "bg-green-400 text-white"
+                                            : index === 2
+                                                ? "bg-purple-400 text-white"
+                                                : index === 3
+                                                    ? "bg-blue-400 text-white"
+                                                    : index === 4
+                                                        ? "bg-cyan-400 text-white"
+                                                        : "bg-gray-50 text-gray-900";
+
+                                return (
+                                    <div
+                                        key={product.code || `product-${index}`}
+                                        className={`${bgClass} p-3 rounded-2xl shadow-lg relative transform hover:scale-105 transition-all duration-300 flex flex-col justify-between`}
+                                    >
+                                        {index < 5 && (
+                                            <div className="absolute -top-3 -right-3 bg-white text-black font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md">
+                                                {index + 1}
+                                            </div>
+                                        )}
+                                        <p className="font-semibold text-lg mb-2 line-clamp-2">{product.name}</p>
+                                        <p className="text-xl font-bold">{t("TotalSales")}: {product.totalSales}</p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
                 {/* Верхний ряд с PieChart и годовым графиком */}
                 <div className="flex flex-col xl:flex-row gap-8 mb-8">
-                    <div className="flex-shrink-0 w-full xl:w-60 p-4 rounded-2xl">
+                    <div className="flex-shrink-0 w-full xl:w-60 p-4 rounded-2xl hover:scale-105 transition-all">
                         <SimplePieChart data={allDevicesChartData} t={t} />
                     </div>
 
                     {yearlyAllDevicesData && (
-                        <div className="flex-1 p-4 rounded-2xl">
+                        <div className="flex-1 p-4 rounded-2xl hover:scale-105 transition-all">
                             <YearlySalesChart
                                 data={yearlyAllDevicesData.data}
                                 t={t}
                             />
                         </div>
                     )}
-
                 </div>
 
                 {/* Ниже — остальные графики в сетке */}
@@ -462,7 +524,7 @@ export default function DashboardPage() {
                         {Object.entries(sortedChartEntries)
                             .filter(([_, { data }]) => data.length === 1)
                             .map(([posID, { title, data }]) => (
-                                <div key={posID} className="col-span-1">
+                                <div key={posID} className="col-span-1 hover:scale-105 transition-all">
                                     <SalesChart title={title} data={data} t={t} />
                                 </div>
                             ))}
@@ -473,7 +535,7 @@ export default function DashboardPage() {
                         {Object.entries(sortedChartEntries)
                             .filter(([_, { data }]) => data.length > 1)
                             .map(([posID, { title, data }]) => (
-                                <div key={posID} className="col-span-2">
+                                <div key={posID} className="col-span-2 hover:scale-105 transition-all">
                                     <SalesChart title={title} data={data} t={t} />
                                 </div>
                             ))}
