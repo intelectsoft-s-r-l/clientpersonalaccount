@@ -464,6 +464,73 @@ export default function AssortmentPage() {
         }))
         : currentTableData;
 
+    function CollapsibleHint() {
+        const [open, setOpen] = useState(false);
+
+        return (
+            <div className="px-6 pb-4 text-xs text-gray-700">
+                <button
+                    onClick={() => setOpen(!open)}
+                    className="text-blue-600 underline hover:text-blue-800 transition-colors"
+                >
+                    {open ? "Скрыть пример формата" : "Показать пример формата"}
+                </button>
+
+                {open && (
+                    <div className="mt-2">
+                        <p className="mb-2 font-medium">Формат для файла с ассортиментом:</p>
+                        <p className="italic text-gray-600">
+                            ID, PLU, Код, Наименование, Цена, Штрих-код, Код НДС, Группа (для МСР), TME
+                        </p>
+                        <p className="text-gray-500">Файл должен быть меньше 2 МБ</p>
+
+                        <div className="overflow-x-auto mt-2">
+                            <table className="min-w-full text-xs border border-gray-300">
+                                <thead className="bg-gray-100">
+                                    <tr>
+                                        <th className="border px-2 py-1">ID</th>
+                                        <th className="border px-2 py-1">PLU</th>
+                                        <th className="border px-2 py-1">Code</th>
+                                        <th className="border px-2 py-1">Name</th>
+                                        <th className="border px-2 py-1">Price</th>
+                                        <th className="border px-2 py-1">Barcode</th>
+                                        <th className="border px-2 py-1">TVA</th>
+                                        <th className="border px-2 py-1">GROUP</th>
+                                        <th className="border px-2 py-1">TME</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td className="border px-2 py-1">1</td>
+                                        <td className="border px-2 py-1">1</td>
+                                        <td className="border px-2 py-1">11111</td>
+                                        <td className="border px-2 py-1">tomatoes</td>
+                                        <td className="border px-2 py-1">12,00</td>
+                                        <td className="border px-2 py-1">484000144087</td>
+                                        <td className="border px-2 py-1">A</td>
+                                        <td className="border px-2 py-1">test</td>
+                                        <td className="border px-2 py-1">1</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border px-2 py-1">2</td>
+                                        <td className="border px-2 py-1">2</td>
+                                        <td className="border px-2 py-1">22222</td>
+                                        <td className="border px-2 py-1">tomatoes</td>
+                                        <td className="border px-2 py-1">13,00</td>
+                                        <td className="border px-2 py-1">484000144089</td>
+                                        <td className="border px-2 py-1">A</td>
+                                        <td className="border px-2 py-1">test</td>
+                                        <td className="border px-2 py-1">0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div id="assortement" className="flex flex-col min-h-screen">
             <nav className="border-b p-3 overflow-x-auto whitespace-nowrap">
@@ -504,44 +571,107 @@ export default function AssortmentPage() {
 
             {/* Блок импорта/экспорта - показывается только для таблицы products */}
             {activeTable === "products" && (
-                <div className="flex items-center justify-between gap-4 px-6 py-4 border-b bg-gray-50">
-                    {/* Текст слева */}
-                    <div className="text-sm text-gray-600">
-                        Поддерживаемые форматы: .xlsx, .xls
-                    </div>
+                <div className="flex flex-col border-b bg-gray-50">
+                    {/* Верхняя панель */}
+                    <div className="flex items-center justify-between gap-4 px-6 py-4">
+                        {/* Текст слева */}
+                        <div className="text-sm text-gray-600">
+                            Поддерживаемые форматы: .xlsx, .xls
+                        </div>
 
-                    {/* Кнопки импорта и экспорта справа */}
-                    <div className="flex items-center gap-2">
-                        <label
-                            htmlFor="import-file"
-                            className="cursor-pointer px-2 py-1 text-white bg-green-600 rounded hover:bg-green-700 transition-colors"
-                            title="Импорт"
-                        >
-                            <img
-                                src="/icons/File_Download.svg"
-                                className="w-6 h-6 transform transition-transform duration-200 ease-in-out hover:scale-125"
+                        {/* Кнопки справа + знак вопроса */}
+                        <div className="flex items-center gap-3">
+                            {/* Знак вопроса */}
+                            <div className="relative group">
+                                <div className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-300 text-xs font-bold text-gray-700 cursor-pointer">
+                                    ?
+                                </div>
+
+                                {/* Подсказка */}
+                                <div className="absolute right-0 top-6 z-50 hidden group-hover:block w-[600px] bg-white shadow-lg border border-gray-200 rounded-lg p-3 text-xs text-gray-700">
+                                    <p className="mb-1 font-medium">Формат для файла с ассортиментом:</p>
+                                    <p className="italic text-gray-600 mb-1">
+                                        ID, PLU, Код, Наименование, Цена, Штрих-код, Код НДС, Группа (для МСР), TME
+                                    </p>
+                                    <p className="text-gray-500">Файл должен быть меньше 2 МБ</p>
+
+                                    <div className="overflow-x-auto mt-2">
+                                        <table className="min-w-full text-xs border border-gray-300">
+                                            <thead className="bg-gray-100">
+                                                <tr>
+                                                    <th className="border px-2 py-1">ID</th>
+                                                    <th className="border px-2 py-1">PLU</th>
+                                                    <th className="border px-2 py-1">Code</th>
+                                                    <th className="border px-2 py-1">Name</th>
+                                                    <th className="border px-2 py-1">Price</th>
+                                                    <th className="border px-2 py-1">Barcode</th>
+                                                    <th className="border px-2 py-1">TVA</th>
+                                                    <th className="border px-2 py-1">GROUP</th>
+                                                    <th className="border px-2 py-1">TME</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td className="border px-2 py-1">1</td>
+                                                    <td className="border px-2 py-1">1</td>
+                                                    <td className="border px-2 py-1">11111</td>
+                                                    <td className="border px-2 py-1">tomatoes</td>
+                                                    <td className="border px-2 py-1">12,00</td>
+                                                    <td className="border px-2 py-1">484000144087</td>
+                                                    <td className="border px-2 py-1">A</td>
+                                                    <td className="border px-2 py-1">test</td>
+                                                    <td className="border px-2 py-1">1</td>
+                                                </tr>
+                                                <tr>
+                                                    <td className="border px-2 py-1">2</td>
+                                                    <td className="border px-2 py-1">2</td>
+                                                    <td className="border px-2 py-1">22222</td>
+                                                    <td className="border px-2 py-1">tomatoes</td>
+                                                    <td className="border px-2 py-1">13,00</td>
+                                                    <td className="border px-2 py-1">484000144089</td>
+                                                    <td className="border px-2 py-1">A</td>
+                                                    <td className="border px-2 py-1">test</td>
+                                                    <td className="border px-2 py-1">0</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Импорт/экспорт */}
+                            <label
+                                htmlFor="import-file"
+                                className="cursor-pointer px-2 py-1 text-white bg-green-600 rounded hover:bg-green-700 transition-colors"
+                                title="Импорт"
+                            >
+                                <img
+                                    src="/icons/File_Download.svg"
+                                    className="w-6 h-6 transform transition-transform duration-200 ease-in-out hover:scale-125"
+                                />
+                            </label>
+                            <input
+                                id="import-file"
+                                type="file"
+                                accept=".xlsx,.xls"
+                                onChange={handleImport}
+                                className="hidden"
                             />
-                        </label>
-                        <input
-                            id="import-file"
-                            type="file"
-                            accept=".xlsx,.xls"
-                            onChange={handleImport}
-                            className="hidden"
-                        />
-                        <button
-                            onClick={handleExport}
-                            className="px-2 py-1 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
-                            title="Экспорт"
-                        >
-                            <img
-                                src="/icons/File_Upload.svg"
-                                className="w-6 h-6 transform transition-transform duration-200 ease-in-out hover:scale-125"
-                            />
-                        </button>
+                            <button
+                                onClick={handleExport}
+                                className="px-2 py-1 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+                                title="Экспорт"
+                            >
+                                <img
+                                    src="/icons/File_Upload.svg"
+                                    className="w-6 h-6 transform transition-transform duration-200 ease-in-out hover:scale-125"
+                                />
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
+
 
             <main className="flex-1 p-6 overflow-auto">
                 <div className="grid grid-cols-1 md:grid-cols-1 mt-6">

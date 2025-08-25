@@ -96,7 +96,7 @@ const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
                         onChange={handleChange}
                         className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     >
-                        <option value="">{t("PlaceholderVisualInterface")}</option>
+                        <option value="">{t("Type")}</option>
                         {cashRegisterTypes.map((opt) => (
                             <option key={opt.value} value={opt.value}>
                                 {opt.label}
@@ -113,7 +113,7 @@ const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
                         onChange={handleChange}
                         className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     >
-                        <option value="">{t("PlaceholderVisualInterface")}</option>
+                        <option value="">{t("SistemPaymentSmart")}</option>
                         {options.map((opt) => (
                             <option key={opt.id} value={opt.id}>
                                 {opt.posID + `(${opt.address})`}
@@ -152,7 +152,7 @@ const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
                         type="text"
                         name="MIA"
                         value={settings.MIA || ""}
-                        onChange={handleChange}
+                        readOnly={true}
                         className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                         placeholder={t("PlaceholderMIA")}
                     />

@@ -46,7 +46,7 @@ export default function SalesChart({ title, data, t }) {
     // Если одна точка — показать прогресс
     if (data.length === 1) {
         const maxValue = Math.max(100, data[0].value * 2); // максимум для прогресса, например в 2 раза больше значения
-        console.log(data);
+
         return (
             <div className="bg-white rounded-2xl border border-gray-100 w-full max-w-[260px] flex flex-col items-center py-4 px-4">
                 <h6 className="text-md font-semibold text-gray-800 mb-2">{title}</h6>

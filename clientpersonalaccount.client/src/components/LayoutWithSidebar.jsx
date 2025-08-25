@@ -1,4 +1,4 @@
-﻿import React from "react";
+﻿import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { usePageNavigation } from "../context/PageNavigationContext";
@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import ThemeToggle from "./ThemeToggle";
 import { useSidebar } from "../context/SidebarContext";
 import { Link, useLocation } from "react-router-dom";
+import apiService from "../services/apiService";
 
 export default function LayoutWithSidebar({ children }) {
     const { user } = useAuth();
@@ -14,7 +15,7 @@ export default function LayoutWithSidebar({ children }) {
     const { t } = useTranslation();
     const { collapsed, setCollapsed } = useSidebar();
     const location = useLocation();
-
+    const [fiscalDevice, setFiscalDevice] = useState(null);
     const fullName = user?.FirstName || user?.LastName
         ? `${user?.FirstName ?? ""} ${user?.LastName ?? ""}`.trim()
         : "User";
@@ -29,6 +30,38 @@ export default function LayoutWithSidebar({ children }) {
 
     // --- Генерация Breadcrumbs ---
     const pathnames = location.pathname.split("/").filter((x) => x);
+    const currentDeviceId = pathnames[0] === "fiscalDevices" ? pathnames[1] : null;
+
+    useEffect(() => {
+        const fetchDevice = async () => {
+            try {
+                const result = await apiService.proxyRequest(`/FiscalCloudManagement/GetFiscalDevice?ID=${currentDeviceId}`,
+                    {
+                        method: "GET",
+                        credentials: "include",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-Service-Id": "29",
+                        }
+                    }
+                );
+
+                if (result)
+                    setFiscalDevice(result.fiscalDevice);
+                else
+                    setFiscalDevice(null);
+            } catch (err) {
+                setFiscalDevice(null);
+            }
+        };
+
+        // Проверяем, находимся ли на странице fiscalDevices/:id
+        if (pathnames[0] === "fiscalDevices" && pathnames[1]) {
+            fetchDevice();
+        } else {
+            setFiscalDevice(null);
+        }
+    }, [currentDeviceId]);
 
     const breadcrumbNameMap = {
         "Dashboard": t("Dashboard"),
@@ -39,15 +72,30 @@ export default function LayoutWithSidebar({ children }) {
         "TransactionDkv": t("TransactionDKV")
     };
 
+    const formatBreadcrumb = (text, value) => {
+        if (!text) return "";
+
+        // Специально для fiscalDevices выводим имя + номер НГС
+        if (value === "fiscalDevices" && fiscalDevice) {
+            console.log(fiscalDevice);
+            return `${fiscalDevice.name} (${fiscalDevice.fiscalCode})`;
+        }
+
+        // Для остальных — делаем заглавную первую букву
+        const lower = text.toLowerCase();
+        return lower.charAt(0).toUpperCase() + lower.slice(1);
+    };
+
     return (
         <div className="flex h-screen overflow-hidden">
-            <Sidebar onNavigate={setActivePage}/>
+            <Sidebar onNavigate={setActivePage} />
             <main className={`transition-[margin] duration-300 overflow-y-auto w-full p-4 dark:bg-gray-700`}>
                 {/* Верхняя панель */}
-                <div className="flex justify-between items-center mb-3">
+                <div className="flex justify-between items-center w-full mb-3">
+                    {/* Левая часть: кнопка + breadcrumbs */}
                     <div className="flex items-center gap-2">
                         <button
-                            type="button" // ← важно, чтобы не было submit по умолчанию
+                            type="button"
                             onClick={() => setCollapsed(!collapsed)}
                             className="collapse-button"
                             aria-label={collapsed ? "Развернуть меню" : "Свернуть меню"}
@@ -56,64 +104,39 @@ export default function LayoutWithSidebar({ children }) {
                             <i className="bi bi-list" aria-hidden="true"></i>
                         </button>
 
-                        {/* Breadcrumbs */}
-                        <nav
-                            className="flex text-sm text-gray-600 dark:text-gray-300 mb-1"
-                            aria-label="Breadcrumb"
-                        >
+                        <nav className="flex text-sm text-gray-600 dark:text-gray-300 ml-2" aria-label="Breadcrumb">
                             <ol className="inline-flex items-center space-x-1 md:space-x-2">
                                 <li className="inline-flex items-center">
-                                    <Link
-                                        to="/Dashboard"
-                                        className="inline-flex items-center text-cyan-600 hover:text-cyan-400"
-                                    >
-                                        <img
-                                            src="/icons/House_01.svg"
-                                            className="w-6 h-6 hover:scale-125"
-                                        />
+                                    <Link to="/Dashboard" className="inline-flex items-center text-cyan-600 hover:text-cyan-400">
+                                        <img src="/icons/House_01.svg" className="w-6 h-6 hover:scale-125" />
                                     </Link>
                                 </li>
                                 {pathnames.map((value, index) => {
-                                    const to = `/${pathnames
-                                        .slice(0, index + 1)
-                                        .join("/")}`;
-                                    const isLast =
-                                        index === pathnames.length - 1;
+                                    const to = `/${pathnames.slice(0, index + 1).join("/")}`;
+                                    const isLast = index === pathnames.length - 1;
+
+                                    let text = breadcrumbNameMap[value] || decodeURIComponent(value);
+
+                                    if (isLast && value === currentDeviceId && fiscalDevice) {
+                                        text = `${fiscalDevice.name} (${fiscalDevice.number})`;
+                                    }
+
                                     return (
-                                        <li
-                                            key={to}
-                                            className="inline-flex items-center"
-                                        >
-                                            <svg
-                                                className="w-4 h-4 text-gray-400 mx-1"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    d="M9 5l7 7-7 7"
-                                                />
+                                        <li key={to} className="inline-flex items-center">
+                                            <svg className="w-4 h-4 text-gray-400 mx-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                             </svg>
-                                            {isLast ? (
-                                                <span className="capitalize">
-                                                    {breadcrumbNameMap[value] || decodeURIComponent(value)}
-                                                </span>
-                                            ) : (
-                                                <Link
-                                                    to={to}
-                                                    className="capitalize hover:text-blue-600"
-                                                >
-                                                    {breadcrumbNameMap[value] || decodeURIComponent(value)}
-                                                </Link>
-                                            )}
+                                            {isLast ? <span>{text}</span> : <Link to={to} className="hover:text-blue-600">{text}</Link>}
                                         </li>
                                     );
                                 })}
                             </ol>
                         </nav>
+
+                        {/* Адрес устройства */}
+                        {fiscalDevice && (
+                            <div className="text-sm text-gray-500 ml-16 mb-3">{fiscalDevice.address}</div>
+                        )}
                     </div>
 
                     {/* Панель пользователя */}
@@ -121,11 +144,7 @@ export default function LayoutWithSidebar({ children }) {
                         <LanguageSwitcher />
                         <div className="w-9 h-9 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-sm overflow-hidden">
                             {hasPhoto ? (
-                                <img
-                                    src={userPhoto}
-                                    alt="Avatar"
-                                    className="w-full h-full object-cover rounded-full"
-                                />
+                                <img src={userPhoto} alt="Avatar" className="w-full h-full object-cover rounded-full" />
                             ) : (
                                 initials || "U"
                             )}

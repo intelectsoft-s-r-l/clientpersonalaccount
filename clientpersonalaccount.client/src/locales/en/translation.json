@@ -755,7 +755,7 @@
   "LoginButton": "Enter",
   "LogInProcess": "We're coming in...",
   "AllDevices": "All Devices",
-  "SelectPOSdevices": "Select POS devices",
+  "SelectPOSdevices": "Select fiscal devices",
   "Selected": "Selected",
   "Day": "Day",
   "Week": "Week",
@@ -800,5 +800,7 @@
   "TotalValue": "General",
   "TopProducts": "Top 5 products for the period",
   "TotalSales": "Total Sales",
-  "POSForYear": "Sales statistics by device for the current year"
+  "POSForYear": "Sales statistics by device for the current year",
+  "SelectDevicesToViewAnalytics": "Select fiscal devices to view analytics",
+  "SelectDateRange": "Specify the date period"
 }

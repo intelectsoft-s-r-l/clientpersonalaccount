@@ -756,7 +756,7 @@
   "LoginButton": "Intră",
   "LogInProcess": "Venim în...",
   "AllDevices": "Toate dispozitivele",
-  "SelectPOSdevices": "Selectați un dispozitiv",
+  "SelectPOSdevices": "Selectați dispozitivele fiscale",
   "Selected": "Selectat",
   "Day": "Zi",
   "Week": "O săptămână",
@@ -801,5 +801,7 @@
   "TotalValue": "Valoare",
   "TopProducts": "Top 5 produse pentru perioada respectivă",
   "TotalSales": "Total vândut",
-  "POSForYear": "Statistici de vânzări pe dispozitive pentru anul în curs"
+  "POSForYear": "Statistici de vânzări pe dispozitive pentru anul curent",
+  "SelectDevicesToViewAnalytics": "Selectați dispozitivele fiscale pentru a vizualiza analitica",
+  "SelectDateRange": "Specificați perioada de dată"
 }

@@ -32,7 +32,8 @@ export function DataTable({
     onDeleteRow,
     extraData,
     errors = {},
-    onRefresh
+    onRefresh,
+    customHeader
 }) {
     const [editCell, setEditCell] = useState({ rowId: null, columnKey: null });
     const [editValue, setEditValue] = useState("");
@@ -216,19 +217,33 @@ export function DataTable({
         };
     }, [activeFilter]);
 
+    const getAlignment = (col) => {
+        if (col.type === "boolean") return "text-center";
+        if (col.key.toLowerCase().includes("id")) return "text-left";
+        if (["int", "decimal", "float", "number"].includes(col.type)) return "text-right";
+        return "text-left";
+    };
+
     return (
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden select-none dark:bg-gray-800 dark:text-white">
-            <div className="p-4 border-b flex justify-between items-center dark:bg-gray-800 dark:text-white">
-                <h2 className="text-xl font-semibold dark:bg-gray-800 dark:text-white">{title}</h2>
-                <div className="flex items-center gap-2 dark:bg-gray-800 dark:text-white">
+        <div className="bg-white rounded-2xl shadow-xl overflow-visible  select-none dark:bg-gray-800 dark:text-white">
+            <div className="p-4 border-b flex justify-between items-center">
+                <h2 className="text-xl font-semibold">{title}</h2>
+                <div className="flex items-center gap-2">
+                    {customHeader && (
+                        <div className="mr-2">
+                            {typeof customHeader === "function"
+                                ? customHeader()
+                                : customHeader}
+                        </div>
+                    )}
                     {onAddRow && (
                         <button
                             onClick={onAddRow}
-                            className="px-3 py-1 text-sm rounded dark:bg-gray-800 dark:text-white"
+                            className="px-3 py-1 text-sm rounded text-white"
                         >
                             <img
                                 src="/icons/AddRow.svg"
-                                className="w-6 h-6 transform transition-transform duration-200 ease-in-out hover:scale-125"
+                                className="w-8 h-8 transform transition-transform duration-200 ease-in-out hover:scale-125"
                             />
                         </button>
                     )}
@@ -247,10 +262,24 @@ export function DataTable({
                     </div>
                 </div>
             </div>
-            <div className="overflow-x-auto w-full dark:bg-gray-800 dark:text-white">
-                <table className="w-full border-collapse table-fixed min-w-full dark:bg-gray-800 dark:text-white">
+            <div className="overflow-x-auto w-full">
+
+                {/* Строка поиска */}
+                <div className="flex justify-start p-6">
+                    <input
+                        type="text"
+                        placeholder={t("Search...")}
+                        className="border border-gray-300 rounded px-2 py-1 text-sm text-right"
+                        value={filters["_global"] || ""}
+                        onChange={(e) =>
+                            handleFilterChange("_global", e.target.value)
+                        }
+                    />
+                </div>
+
+                <table className="w-full border border-[#787f88] border-collapse table-auto min-w-full">
                     <thead>
-                        <tr className="bg-gray-100 border-b border-gray-300 dark:bg-gray-800 dark:text-white">
+                        <tr className="bg-gray-100 border-b border-[#787f88]">
                             {columns.map((col) => (
                                 <th
                                     key={col.key}
@@ -326,10 +355,10 @@ export function DataTable({
                                     )}
                                 </th>
                             ))}
-                            {onDeleteRow && <th className="w-12 dark:bg-gray-800 dark:text-white"></th>}
+                            {onDeleteRow && <th className="w-12 border border-[#787f88]"></th>}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:bg-gray-800 dark:text-white">
+                    <tbody>
                         {loading ? (
                             <tr>
                                 <td
@@ -535,50 +564,33 @@ export function DataTable({
                 </table>
             </div>
             {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-2 p-4 dark:bg-gray-800 dark:text-white">
+                <div className="flex justify-center items-center gap-2 p-4">
                     <button
                         onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
-                        className="px-3 py-1 text-sm rounded-full border border-gray-300 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-white"
+                        className="p-2 disabled:opacity-50"
                     >
-                        ⬅
+                        <img src="https://www.svgrepo.com/show/533620/arrow-sm-left.svg" className="w-5 h-5" style={{ fill: "#333333" }} />
                     </button>
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                        .filter((page) => {
-                            if (page === 1 || page === totalPages) return true;
-                            if (currentPage <= 5) return page <= 5;
-                            if (currentPage >= totalPages - 4) return page >= totalPages - 4;
-                            return Math.abs(currentPage - page) <= 2;
-                        })
-                        .map((page, i, arr) => {
-                            const prevPage = arr[i - 1];
-                            const showDots = prevPage && page - prevPage > 1;
-
-                            return (
-                                <React.Fragment key={page}>
-                                    {showDots && (
-                                        <span className="px-2 text-gray-500">...</span>
-                                    )}
-                                    <button
-                                        onClick={() => setCurrentPage(page)}
-                                        className={`px-3 py-1 text-sm rounded-full ${currentPage === page
-                                            ? "bg-blue-500 text-white"
-                                            : " border border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-white"
-                                            }`}
-                                    >
-                                        {page}
-                                    </button>
-                                </React.Fragment>
-                            );
-                        })}
+                    {/* Номера страниц */}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-3 py-1 text-sm rounded-full ${currentPage === page ? "bg-blue-500 text-white" : "border border-gray-300"
+                                }`}
+                        >
+                            {page}
+                        </button>
+                    ))}
 
                     <button
                         onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                         disabled={currentPage === totalPages}
-                        className="px-3 py-1 text-sm rounded-full border border-gray-300 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-white"
+                        className="p-2 disabled:opacity-50"
                     >
-                        ➡
+                        <img src="https://www.svgrepo.com/show/533621/arrow-sm-right.svg" className="w-5 h-5" style={{ fill: "#333333" }} />
                     </button>
                 </div>
             )}

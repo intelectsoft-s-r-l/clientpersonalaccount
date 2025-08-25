@@ -5,7 +5,6 @@ import './index.css';
 import './styles/themes.css';
 import store from './store.js';
 import "./i18n";
-
 import {
     createBrowserRouter,
     RouterProvider,

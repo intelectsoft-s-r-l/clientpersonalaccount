@@ -78,7 +78,10 @@ export function validateProducts(data, tableKey, usersPin, pins) {
                 codeSet.add(item.Code);
             }
 
-            if ((item.Price === undefined || item.Price === null || isNaN(item.Price) || Number(item.Price) <= 0)) {
+            let normalizedPrice = Number(item.Price?.toString().replace(",", "."));
+
+            if (!normalizedPrice || normalizedPrice <= 0) {
+                console.log(item.Price);
                 rowErrors.Price = "Цена должна быть больше 0";
             }
 

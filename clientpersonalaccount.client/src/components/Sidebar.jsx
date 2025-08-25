@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import Logo from "../styles/LOGO.png";
+import LongLogo from "../styles/IS_LOGO_LONG.png";
 import { usePageNavigation } from "../context/PageNavigationContext";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -240,7 +241,7 @@ export default function Sidebar() {
                 <div className="sidebar-content">
                     <div className="sidebar-menu-sections">
                         {menuSections.map(({ title, items }, idx) => (
-                            <section key={idx}>
+                            <section key={idx} className={!collapsed ? "mb-[10px]" : ""}>
                                 {!collapsed && title && <div className="sidebar-section-title">{t(title)}</div>}
                                 <nav className="nav-column" aria-label={title || t(`Section ${idx + 1}`)}>
                                     {items.map(({ id, key, icon, disabled }) => (
@@ -265,19 +266,23 @@ export default function Sidebar() {
                     </div>
                     <div className="flex flex-col items-center mb-1 space-y-1">
                         <div className="brand-logo">
-                            <img src={Logo} alt="Fiscal Cloud Logo" className="w-10 h-10" />
+                            {!collapsed ? (
+                                <img src={LongLogo} alt="Fiscal Cloud Logo" className="w-32 h-10" />
+                            ) : (
+                                <img src={Logo} alt="Fiscal Cloud Logo" className="w-10 h-10" />
+                            )}
                         </div>
 
                         <button
                             onClick={logout}
                             aria-label={t("Logout")}
                             title={t("Logout")}
-                            className="flex items-center justify-center w-10 h-10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform hover:scale-110"
+                            className={`flex items-center justify-center ${!collapsed ? "w-10 h-10" : "w-full px-3 py-2"} text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform hover:scale-110`}
                         >
-                            <img
-                                src="/icons/Log_Out.svg"
-                                className="w-6 h-6 text-black hover:scale-110"
-                            />
+                            {!collapsed && (
+                                <span className="ml-2 text-sm font-medium text-black">{t("Logout")}</span>
+                            )}
+                            <img src="/icons/Log_Out.svg" className="w-6 h-6 text-black" />
                         </button>
                     </div>
                 </div>

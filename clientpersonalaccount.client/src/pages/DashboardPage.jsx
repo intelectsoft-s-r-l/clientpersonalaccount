@@ -6,20 +6,14 @@ import SalesChart from "../components/SalesChart";
 import YearlySalesChart from "../components/YearlySalesChart";
 import apiService from '../services/apiService';
 import { ChevronDown, Calendar, Download, TrendingUp, Mail, MessageSquare } from 'lucide-react';
+import Datepicker from "react-tailwindcss-datepicker";
 
 export default function DashboardPage() {
     //#region вспомогательные атрибуты
     const { t } = useTranslation();
     const [selectedRange, setSelectedRange] = useState("day");
-    const [customStartDate, setCustomStartDate] = useState(() => {
-        const d = new Date();
-        d.setDate(d.getDate() - 30);
-        return d.toISOString().slice(0, 10);
-    });
-    const [customEndDate, setCustomEndDate] = useState(() => {
-        const d = new Date();
-        return d.toISOString().slice(0, 10);
-    });
+    const [customStartDate, setCustomStartDate] = useState(null);
+    const [customEndDate, setCustomEndDate] = useState(null);
     const [posList, setPosList] = useState([]);
     const [selectedPos, setSelectedPos] = useState([]);
     const [allDevices, setAllDevices] = useState(false);
@@ -434,28 +428,22 @@ export default function DashboardPage() {
                         </div>
 
                         {selectedRange === "custom" && (
-                            <div className="max-w-2xl mx-2 px-2 py-1 flex flex-wrap gap-2">
-                                <div className="flex items-center gap-2">
-                                    <label className="text-sm font-medium text-gray-700">{t("StartDate")}:</label>
-                                    <input
-                                        type="date"
-                                        value={customStartDate}
-                                        max={customEndDate}
-                                        onChange={(e) => setCustomStartDate(e.target.value)}
-                                        className="border border-gray-300 rounded-lg px-4 py-1 text-sm focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200 hover:scale-105"
-                                    />
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <label className="text-sm font-medium text-gray-700">{t("DateEnd")}:</label>
-                                    <input
-                                        type="date"
-                                        value={customEndDate}
-                                        min={customStartDate}
-                                        max={new Date().toISOString().slice(0, 10)}
-                                        onChange={(e) => setCustomEndDate(e.target.value)}
-                                        className="border border-gray-300 rounded-lg px-4 py-1 text-sm focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200 hover:scale-105"
-                                    />
-                                </div>
+                            <div className="max-w-md mx-2 px-2 py-1">
+                                <label className="text-sm font-medium text-gray-700">
+                                    {t("SelectDateRange")}:
+                                </label>
+                                <Datepicker
+                                    value={{ startDate: customStartDate, endDate: customEndDate }}
+                                    onChange={(newValue) => {
+                                        setCustomStartDate(newValue.startDate);
+                                        setCustomEndDate(newValue.endDate);
+                                    }}
+                                    primaryColor="cyan"
+                                    useRange={true}
+                                    displayFormat="DD.MM.YYYY"
+                                    maxDate={new Date()}
+                                    inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
+                                />
                             </div>
                         )}
                     </div>
@@ -550,7 +538,7 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-center h-64 bg-white rounded-2xl shadow-md col-span-full">
                                 <div className="text-center">
                                     <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                    <p className="text-gray-500 text-lg">{t("Select devices to view analytics")}</p>
+                                    <p className="text-gray-500 text-lg">{t("SelectDevicesToViewAnalytics")}</p>
                                 </div>
                             </div>
                         )}
