@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiService from '../services/apiService';
-
+import { useTranslation } from "react-i18next";
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState(null);
     const [refreshTimer, setRefreshTimer] = useState(null);
+    const { t } = useTranslation();
 
     // Запланировать обновление токена с правильным ожиданием
     const scheduleTokenRefresh = () => {
@@ -72,7 +73,7 @@ export const AuthProvider = ({ children }) => {
             console.error('Ошибка входа:', error);
             return {
                 success: false,
-                error: error.message || 'Ошибка авторизации'
+                error: t("errors.loginFailed")
             };
         }
     };

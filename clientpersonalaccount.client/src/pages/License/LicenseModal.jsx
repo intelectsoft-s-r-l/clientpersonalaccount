@@ -105,38 +105,38 @@ export default function LicenseModal({ license, onClose }) {
                 </button>
 
                 <h2 className="text-2xl font-semibold text-indigo-700 mb-6">
-                    Информация о лицензии
+                    {t("LicenseInfo") }
                 </h2>
 
                 <div className="grid grid-cols-2 gap-4 text-sm mb-6">
                     <div className="bg-gray-100 p-3 rounded-lg">
-                        <span className="font-semibold block text-gray-600">Имя:</span>
+                        <span className="font-semibold block text-gray-600">{t("Name")}:</span>
                         <div className="text-gray-900">{license.name}</div>
                     </div>
                     <div className="bg-gray-100 p-3 rounded-lg">
-                        <span className="font-semibold block text-gray-600">Устройство:</span>
+                        <span className="font-semibold block text-gray-600">{t("device") }:</span>
                         <div className="text-gray-900">{license.deviceName}</div>
                     </div>
                     <div className="bg-gray-100 p-3 rounded-lg">
-                        <span className="font-semibold block text-gray-600">Адрес:</span>
+                        <span className="font-semibold block text-gray-600">{t("Contract_Adress") }:</span>
                         <div className="text-gray-900">{license.address}</div>
                     </div>
                     <div className="bg-gray-100 p-3 rounded-lg">
-                        <span className="font-semibold block text-gray-600">Батарея:</span>
+                        <span className="font-semibold block text-gray-600">{t("Battery") }:</span>
                         <div className="text-gray-900">{license.battery}%</div>
                     </div>
                     <div className="bg-gray-100 p-3 rounded-lg col-span-2">
-                        <span className="font-semibold block text-gray-600">Последнее обновление:</span>
+                        <span className="font-semibold block text-gray-600">{t("LastUpdate") }:</span>
                         <div className="text-gray-900">{formatDate(license.lastDateUpdate)}</div>
                     </div>
                 </div>
 
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">Пользователи</h3>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">{t("Users") }</h3>
 
                 {loadingUsers ? (
-                    <div className="text-gray-500 text-sm">Загрузка пользователей...</div>
+                    <div className="text-gray-500 text-sm">{t("LoadingUsers")}</div>
                 ) : users.length === 0 ? (
-                    <div className="text-gray-500 text-sm">Нет данных о пользователях.</div>
+                        <div className="text-gray-500 text-sm">{t("NoUsers")}</div>
                 ) : (
                     <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
                         <thead className="bg-gray-100">

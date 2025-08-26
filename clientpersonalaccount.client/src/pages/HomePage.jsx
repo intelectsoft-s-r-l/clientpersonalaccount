@@ -28,21 +28,23 @@ export default function HomePage() {
 
     // Синхронизируем activePage с URL
     useEffect(() => {
-        const path = location.pathname.replace(/^\/Main\/?/, "").replace(/^\/+/, "");
-        setActivePage(path || "dashboard");
+        const path = location.pathname.replace(/^\/+/, ""); // убираем ведущий /
+
+        // Если путь пустой, оставляем Dashboard
+        setActivePage(path || "Dashboard");
     }, [location.pathname, setActivePage]);
 
     const renderPage = () => {
-        if (activePage === "dashboard") return <DashboardPage />;
-        if (activePage === "license") return <LicensePage />;
-        if (activePage === "assortement") return <AssortementPage />;
-        if (activePage === "fiscalDevices") return <FiscalDevicesListPage />;
-        if (activePage.startsWith("fiscalDevices/")) {
+        if (activePage === "Dashboard") return <DashboardPage />;
+        if (activePage === "License") return <LicensePage />;
+        if (activePage === "Assortement") return <AssortementPage />;
+        if (activePage === "FiscalDevices") return <FiscalDevicesListPage />;
+        if (activePage.startsWith("FiscalDevices/")) {
             const id = activePage.split("/")[1];
             return <FiscalDevicePage id={id} />;
         }
-        if (activePage === "banks") return <BankPage />;
-        if (activePage === "transactionDkv") return <TransactionDKVPage />;
+        if (activePage === "Banks") return <BankPage />;
+        if (activePage === "TransactionDkv") return <TransactionDKVPage />;
         return <DashboardPage />;
     }
 

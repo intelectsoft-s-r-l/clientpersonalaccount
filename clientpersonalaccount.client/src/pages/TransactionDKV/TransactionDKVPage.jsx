@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { DataTable } from "../../components/DataTable"; // универсальная таблица
-import { Eye } from "lucide-react";
+import { DataTable } from "../../components/DataTable";
 import { useTranslation } from "react-i18next";
 import apiService from '../../services/apiService';
+import Datepicker from "react-tailwindcss-datepicker";
+import dayjs from "dayjs";
 
 function formatDate(dateStr) {
     if (!dateStr) return "-";
@@ -12,31 +13,35 @@ function formatDate(dateStr) {
 }
 
 export default function TransactionDKVPage() {
-    const [transactions, setTransactions] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+    const { t } = useTranslation();
     const { token } = useAuth();
+
     const today = new Date();
     const sixMonthsAgo = new Date(today);
     sixMonthsAgo.setMonth(today.getMonth() - 6);
 
-    const [startDate, setStartDate] = useState(sixMonthsAgo.toISOString().split('T')[0]);
-    const [endDate, setEndDate] = useState(today.toISOString().split('T')[0]);
-    const { t } = useTranslation();
+    const [startDate, setStartDate] = useState({ startDate: sixMonthsAgo });
+    const [endDate, setEndDate] = useState({ startDate: today });
+
+    const [transactions, setTransactions] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const fetchTransactions = useCallback(async () => {
         try {
             setLoading(true);
             setError("");
 
-            const data = await apiService.proxyRequest(`/ISDKVManagement/GetTransactions?startDate=${startDate}&endDate=${endDate}`, {
-                method: "GET",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Service-Id": "43",
-                }
-            })
+            const startStr = startDate.startDate ? dayjs(startDate.startDate) : null;
+            const endStr = endDate.startDate ? dayjs(endDate.startDate) : null;
+
+            const start = startStr?.format("YYYY-MM-DD");
+            const end = endStr?.format("YYYY-MM-DD");
+
+            const data = await apiService.proxyRequest(
+                `/ISDKVManagement/GetTransactions?startDate=${start}&endDate=${end}`,
+                { method: "GET", credentials: "include", headers: { "Content-Type": "application/json", "X-Service-Id": "43" } }
+            );
 
             if (data?.errorMessage) {
                 setError(`${data.errorName || "Ошибка"}: ${data.errorMessage}`);
@@ -57,14 +62,12 @@ export default function TransactionDKVPage() {
         fetchTransactions();
     }, [token, startDate, endDate]);
 
-    const decoratedTransactions = transactions.map((transaction) => {
-        return {
-            ...transaction,
-            dateCreated: formatDate(transaction.dateCreated),
-            amountMDLFormatted: `${transaction.amountMDL?.toFixed(2)} MDL`,
-            productPriceFormatted: `${transaction.productPrice?.toFixed(2)} MDL`
-        };
-    });
+    const decoratedTransactions = transactions.map((transaction) => ({
+        ...transaction,
+        dateCreated: formatDate(transaction.dateCreated),
+        amountMDLFormatted: `${transaction.amountMDL?.toFixed(2)} MDL`,
+        productPriceFormatted: `${transaction.productPrice?.toFixed(2)} MDL`
+    }));
 
     const columns = [
         { key: "dateCreated", label: t("CreateDate"), filterable: true, sortable: true, width: "15%" },
@@ -81,27 +84,43 @@ export default function TransactionDKVPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br to-indigo-100 p-0 m-0">
             <div className="w-full px-0">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-[#72b827] to-green-600 bg-clip-text text-transparent leading-normal">{t("TransactionDKV")}</h1>
+                <div className="flex justify-between items-center mb-6 gap-4">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-[#72b827] to-green-600 bg-clip-text text-transparent leading-normal">
+                        {t("TransactionDKV")}
+                    </h1>
+
                     <div className="flex gap-4 items-center">
-                        <input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="border px-2 py-1 rounded"
-                        />
-                        <input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="border px-2 py-1 rounded"
-                        />
+                        {/* От */}
+                        <div className="flex-1">
+                            <label className="text-xs text-gray-500">{t("StartDate")}</label>
+                            <Datepicker
+                                asSingle={true}
+                                value={{ startDate: startDate.startDate, endDate: startDate.startDate }}
+                                onChange={setStartDate}
+                                primaryColor="cyan"
+                                displayFormat="DD.MM.YYYY"
+                                maxDate={startDate?.endDate || new Date()}
+                                minDate={new Date(2000, 0, 1)}
+                                inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
+                            />
+                        </div>
+
+                        {/* До */}
+                        <div className="flex-1">
+                            <label className="text-xs text-gray-500">{t("DateEnd")}</label>
+                            <Datepicker
+                                asSingle={true}
+                                value={{ startDate: endDate.startDate, endDate: endDate.startDate }}
+                                onChange={setEndDate}
+                                primaryColor="cyan"
+                                displayFormat="DD.MM.YYYY"
+                                minDate={startDate?.startDate || new Date()}
+                                inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
+                            />
+                        </div>
                     </div>
                 </div>
 
-                {error && (
-                    <div className="mb-4 text-red-600 font-semibold text-center">{error}</div>
-                )}
 
                 <DataTable
                     title={`${t("TransactionDKV")} (${transactions.length})`}
@@ -115,4 +134,4 @@ export default function TransactionDKVPage() {
             </div>
         </div>
     );
-};
+}

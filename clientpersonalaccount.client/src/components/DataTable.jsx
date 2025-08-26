@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from "react-i18next";
 
 export const formatPrice = (value) => {
     if (value === null || value === undefined || value === "") return "0,00";
@@ -38,6 +38,7 @@ export function DataTable({
     const [editCell, setEditCell] = useState({ rowId: null, columnKey: null });
     const [editValue, setEditValue] = useState("");
     const [filters, setFilters] = useState({});
+    const [globalFilter, setGlobalFilter] = useState(""); // Состояние для глобального поиска
     const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
@@ -56,7 +57,6 @@ export function DataTable({
     };
 
     const saveEdit = () => {
-
         if (
             onCellUpdate &&
             editCell.rowId !== null &&
@@ -80,6 +80,11 @@ export function DataTable({
 
     const handleFilterChange = (key, value) => {
         setFilters((prev) => ({ ...prev, [key]: value }));
+        setCurrentPage(1);
+    };
+
+    const handleGlobalFilterChange = (value) => {
+        setGlobalFilter(value);
         setCurrentPage(1);
     };
 
@@ -107,8 +112,9 @@ export function DataTable({
 
     const filteredData = useMemo(() => {
         if (!data) return [];
-        return data.filter((row) =>
-            columns.every((col) => {
+        return data.filter((row) => {
+            // Фильтрация по колонкам
+            const columnFiltered = columns.every((col) => {
                 if (!filters[col.key]) return true;
                 const filterValue = filters[col.key].toLowerCase();
                 const cellRaw = row[col.key];
@@ -131,9 +137,32 @@ export function DataTable({
                 return col.filterOptions
                     ? cellValue === filterValue
                     : cellValue.includes(filterValue);
-            })
-        );
-    }, [data, filters, columns]);
+            });
+
+            // Глобальный поиск
+            if (!globalFilter) return columnFiltered;
+            const globalFilterValue = globalFilter.toLowerCase();
+            const rowValues = columns.map(col => {
+                const cellRaw = row[col.key];
+                let cellValue = "";
+                if (Array.isArray(cellRaw)) {
+                    cellValue = cellRaw.map(extractTextFromReactElement).join(" ");
+                } else if (
+                    typeof cellRaw === "string" ||
+                    typeof cellRaw === "number"
+                ) {
+                    cellValue = cellRaw.toString();
+                } else if (cellRaw && typeof cellRaw === "object" && cellRaw.props) {
+                    cellValue = extractTextFromReactElement(cellRaw);
+                } else {
+                    cellValue = String(cellRaw);
+                }
+                return cellValue.toLowerCase();
+            }).join(" ");
+
+            return columnFiltered && rowValues.includes(globalFilterValue);
+        });
+    }, [data, filters, columns, globalFilter]);
 
     const sortedData = useMemo(() => {
         if (!sortConfig.key) return filteredData;
@@ -179,6 +208,9 @@ export function DataTable({
 
             if (aVal < bVal) return direction === "asc" ? -1 : 1;
             if (aVal > bVal) return direction === "asc" ? 1 : -1;
+            if (aVal === bVal && typeof a.ID === 'number' && typeof b.ID === 'number') {
+                return a.ID - b.ID;
+            }
             return 0;
         });
     }, [filteredData, sortConfig]);
@@ -218,35 +250,44 @@ export function DataTable({
     }, [activeFilter]);
 
     const getAlignment = (col) => {
-        if (col.type === "boolean") return "text-center";
+        // ID-шки всегда по левому краю
         if (col.key.toLowerCase().includes("id")) return "text-left";
-        if (["int", "decimal", "float", "number"].includes(col.type)) return "text-right";
+        // Булевы значения по центру
+        if (col.type === "boolean") return "text-center";
+        // Числовые типы по правому краю
+        if (["int", "decimal", "float", "number", "price"].includes(col.type)) return "text-right";
+        // Строки и даты по левому краю по умолчанию
         return "text-left";
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-xl overflow-visible  select-none dark:bg-gray-800 dark:text-white">
-            <div className="p-4 border-b flex justify-between items-center">
-                <h2 className="text-xl font-semibold">{title}</h2>
-                <div className="flex items-center gap-2">
+        <div className="bg-white rounded-2xl shadow-xl overflow-visible select-none dark:bg-gray-800 dark:text-white">
+            {/* Заголовок и кнопки */}
+            <div className="p-4 border-b border-[#787f88] flex flex-wrap justify-between items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-semibold truncate max-w-[70%]">
+                    {title}
+                </h2>
+
+                <div className="flex items-center gap-2 flex-wrap">
                     {customHeader && (
                         <div className="mr-2">
-                            {typeof customHeader === "function"
-                                ? customHeader()
-                                : customHeader}
+                            {typeof customHeader === "function" ? customHeader() : customHeader}
                         </div>
                     )}
+
                     {onAddRow && (
                         <button
                             onClick={onAddRow}
-                            className="px-3 py-1 text-sm rounded text-white"
+                            className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm rounded text-white"
                         >
                             <img
                                 src="/icons/AddRow.svg"
-                                className="w-8 h-8 transform transition-transform duration-200 ease-in-out hover:scale-125"
+                                className="w-6 h-6 sm:w-8 sm:h-8 transform transition-transform duration-200 ease-in-out hover:scale-125"
+                                alt={t("Add Row")}
                             />
                         </button>
                     )}
+
                     {onRefresh && (
                         <button
                             onClick={onRefresh}
@@ -257,126 +298,85 @@ export function DataTable({
                         </button>
                     )}
 
-                    <div className="text-sm text-gray-600 dark:bg-gray-800 dark:text-white">
+                    <div className="text-xs sm:text-sm text-gray-600 dark:text-white">
                         {t("Page")} {currentPage} {t("Of")} {totalPages}
                     </div>
                 </div>
             </div>
-            <div className="overflow-x-auto w-full">
 
-                {/* Строка поиска */}
-                <div className="flex justify-start p-6">
+            {/* Поиск */}
+            <div className="overflow-x-auto w-full">
+                <div className="flex justify-end p-2 sm:p-4">
                     <input
                         type="text"
-                        placeholder={t("Search...")}
-                        className="border border-gray-300 rounded px-2 py-1 text-sm text-right"
-                        value={filters["_global"] || ""}
-                        onChange={(e) =>
-                            handleFilterChange("_global", e.target.value)
-                        }
+                        placeholder={t("Search")}
+                        className="w-full sm:w-64 border border-[#787f88] rounded px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm text-right dark:bg-gray-700 dark:text-white"
+                        value={globalFilter}
+                        onChange={(e) => handleGlobalFilterChange(e.target.value)}
                     />
                 </div>
 
-                <table className="w-full border border-[#787f88] border-collapse table-auto min-w-full">
+                {/* Таблица */}
+                <table className="w-full border border-[#787f88] border-solid border-collapse table-auto text-xs sm:text-sm">
                     <thead>
-                        <tr className="bg-gray-100 border-b border-[#787f88]">
-                            {columns.map((col) => (
-                                <th
-                                    key={col.key}
-                                    style={{ width: col.width || "auto" }}
-                                    className={`relative text-xs font-bold uppercase tracking-wider p-2 border-gray-300 ${col.align === "right"
-                                        ? "text-right"
-                                        : col.align === "left"
-                                            ? "text-left"
-                                            : "text-center"} dark:text-white`}
-                                    onClick={() =>
-                                        col.sortable !== false && handleSort(col.key)}
-                                >
-                                    {/* Заголовок + сортировка + SVG */}
-                                    <div className="flex items-center justify-center space-x-1">
-                                        <span className="truncate">{col.label}</span>
-                                        {sortConfig.key === col.key && (
-                                            <span className="ml-1 text-xs">
-                                                {sortConfig.direction === "asc" ? "▲" : "▼"}
+                        <tr className="bg-gray-100">
+                            {columns.map((col) => {
+                                const isActions = col.key === "actions"; // ⭐ определяем столбец действий
+                                return (
+                                    <th
+                                        key={col.key}
+                                        style={{ width: col.width || "auto" }}
+                                        className={`relative font-bold uppercase tracking-wider p-1 sm:p-2 border border-[#787f88] ${getAlignment(col)} dark:text-white ${isActions
+                                                ? "sticky right-0 bg-white dark:bg-gray-800 z-20 w-[84px] sm:w-[96px] text-center" // ⭐ фиксируем справа + ширина
+                                                : ""
+                                            }`}
+                                        onClick={() =>
+                                            col.sortable !== false && handleSort(col.key)
+                                        }
+                                    >
+                                        <div
+                                            className={`flex items-center space-x-1 ${getAlignment(col).includes("right")
+                                                    ? "justify-end"
+                                                    : getAlignment(col).includes("center")
+                                                        ? "justify-center"
+                                                        : "justify-start"
+                                                } ${isActions ? "justify-center" : ""}`} // ⭐ центруем actions
+                                        >
+                                            <span className="flex-grow min-w-0 overflow-hidden whitespace-nowrap text-ellipsis">
+                                                {col.label}
                                             </span>
-                                        )}
-                                        {col.filterable && (
-                                            <>
-                                                {!activeFilter || activeFilter !== col.key ? (
-                                                    <div
-                                                        className="w-6 h-6 cursor-pointer flex items-center justify-center"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleClick(col.key);
-                                                        }}
-                                                    >
-                                                        <img
-                                                            src="/icons/Filter.svg"
-                                                            alt="Filter"
-                                                            className="w-5 h-5 hover:scale-110"
-                                                        />
-                                                    </div>
-                                                ) : null}
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* Поле фильтра */}
-                                    {col.filterable && activeFilter === col.key && (
-                                        <div id={`filter-${col.key}`} onClick={(e) => e.stopPropagation()} className="absolute top-full left-0 mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-300 rounded shadow-lg">
-                                            {col.filterOptions ? (
-                                                <select
-                                                    value={filters[col.key] ?? ""}
-                                                    onChange={(e) => handleFilterChange(col.key, e.target.value)}
-                                                    className="w-full p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    <option value="">{t("All")}</option>
-                                                    {(col.filterOptions || []).map((opt) => (
-                                                        <option
-                                                            key={typeof opt === "object" ? opt.value : opt}
-                                                            value={typeof opt === "object" ? opt.value : opt}
-                                                        >
-                                                            {typeof opt === "object" ? opt.label : opt}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            ) : (
-                                                <input
-                                                    type="text"
-                                                    value={filters[col.key] || ""}
-                                                    onChange={(e) => handleFilterChange(col.key, e.target.value)}
-                                                    placeholder={`${t("Filter")}...`}
-                                                    className="w-full p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
+                                            {sortConfig.key === col.key && (
+                                                <span className="ml-1 text-[10px] sm:text-xs flex-shrink-0">
+                                                    {sortConfig.direction === "asc" ? "▲" : "▼"}
+                                                </span>
                                             )}
                                         </div>
-                                    )}
-                                </th>
-                            ))}
-                            {onDeleteRow && <th className="w-12 border border-[#787f88]"></th>}
+                                    </th>
+                                );
+                            })}
+                            {onDeleteRow && <th className="w-10 sm:w-12 border border-[#787f88] flex-shrink-0"></th>}
                         </tr>
                     </thead>
+
                     <tbody>
                         {loading ? (
                             <tr>
                                 <td
-                                    colSpan={columns.length + 1}
-                                    className="text-center py-8 text-gray-500 dark:bg-gray-800 dark:text-white"
+                                    colSpan={columns.length}
+                                    className="text-center py-8 text-gray-500 dark:bg-gray-800 dark:text-white border border-[#787f88] border-solid"
                                 >
-                                    <div className="flex items-center justify-center h-64 dark:bg-gray-800 dark:text-white">
-                                        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid dark:bg-gray-800 dark:text-white"></div>
+                                    <div className="flex items-center justify-center h-64">
+                                        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid"></div>
                                     </div>
                                 </td>
                             </tr>
                         ) : pagedData.length === 0 ? (
                             <tr>
                                 <td
-                                    colSpan={columns.length + 1}
-                                    className="text-center py-8 text-gray-400 dark:bg-gray-800 dark:text-white"
+                                    colSpan={columns.length}
+                                    className="text-center py-8 text-gray-400 dark:bg-gray-800 dark:text-white border border-[#787f88] border-solid"
                                 >
-                                    Нет данных для отображения
+                                    {t("No data to display")}
                                 </td>
                             </tr>
                         ) : (
@@ -386,8 +386,10 @@ export function DataTable({
                                 return (
                                     <tr
                                         key={row.ID || index}
-                                        className={`${onRowClick ? "cursor-pointer" : ""} ${isSelected ? "bg-blue-100" : "hover:bg-gray-50"
-                                            }`}
+                                        className={`${onRowClick ? "cursor-pointer" : ""} ${isSelected
+                                                ? "bg-blue-100 dark:bg-blue-700"
+                                                : "hover:bg-gray-50 dark:hover:bg-gray-700"
+                                            } border-b border-[#787f88]`}
                                         onClick={
                                             onRowClick
                                                 ? () => {
@@ -397,34 +399,43 @@ export function DataTable({
                                                 : undefined
                                         }
                                         onDoubleClick={
-                                            onRowDoubleClick
-                                                ? () => onRowDoubleClick(row)
-                                                : undefined
+                                            onRowDoubleClick ? () => onRowDoubleClick(row) : undefined
                                         }
                                         style={{ userSelect: "none" }}
                                     >
                                         {columns.map((col) => {
-                                            const isEditing = editCell.rowId === row.ID && editCell.columnKey === col.key;
+                                            const isEditing =
+                                                editCell.rowId === row.ID &&
+                                                editCell.columnKey === col.key;
 
                                             const rawValue = row[col.key];
                                             const cellValue =
-                                                typeof rawValue === "object" && rawValue !== null
+                                                typeof rawValue === "object" &&
+                                                    rawValue !== null &&
+                                                    col.type !== "select"
                                                     ? rawValue.Price ?? JSON.stringify(rawValue)
                                                     : rawValue;
 
-                                            // Рендер редактируемой ячейки для селекта
+                                            const isActions = col.key === "actions"; // ⭐
+
                                             if (isEditing) {
                                                 if (col.dateEditor) {
                                                     const EditorComponent = col.dateEditor;
                                                     return (
                                                         <td
                                                             key={col.key}
-                                                            className={`p-2 border-gray-200 text-sm text-gray-900 ${col.align === "right" ? "text-right" : col.align === "left" ? "text-left" : "text-center"
-                                                                } dark:bg-gray-800 dark:text-white`}
+                                                            className={`p-2 border border-[#787f88] text-sm text-gray-900 ${getAlignment(
+                                                                col
+                                                            )} dark:bg-gray-800 dark:text-white ${isActions
+                                                                    ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
+                                                                    : ""
+                                                                }`}
                                                         >
                                                             <EditorComponent
                                                                 value={String(editValue ?? "")}
-                                                                onChange={(value) => { setEditValue(value); }}
+                                                                onChange={(value) => {
+                                                                    setEditValue(value);
+                                                                }}
                                                                 onBlur={saveEdit}
                                                             />
                                                         </td>
@@ -435,12 +446,16 @@ export function DataTable({
                                                     return (
                                                         <td
                                                             key={col.key}
-                                                            className={`p-2 border-gray-200 text-sm text-gray-900 ${col.align === "right" ? "text-right" : col.align === "left" ? "text-left" : "text-center"
-                                                                } dark:bg-gray-800 dark:text-white`}
+                                                            className={`p-2 border border-[#787f88] text-sm text-gray-900 ${getAlignment(
+                                                                col
+                                                            )} dark:bg-gray-800 dark:text-white ${isActions
+                                                                    ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
+                                                                    : ""
+                                                                }`}
                                                         >
                                                             <select
                                                                 autoFocus
-                                                                className="w-full p-1 border border-gray-300 rounded"
+                                                                className="w-full p-1 border border-gray-300 rounded dark:bg-gray-700 dark:text-white"
                                                                 value={String(editValue ?? "")}
                                                                 onChange={(e) => setEditValue(e.target.value)}
                                                                 onBlur={saveEdit}
@@ -449,8 +464,12 @@ export function DataTable({
                                                                 <option value="">--</option>
                                                                 {col.options.map((opt) => (
                                                                     <option
-                                                                        key={typeof opt === "object" ? opt.value : opt}
-                                                                        value={String(typeof opt === "object" ? opt.value : opt)}
+                                                                        key={
+                                                                            typeof opt === "object" ? opt.value : opt
+                                                                        }
+                                                                        value={String(
+                                                                            typeof opt === "object" ? opt.value : opt
+                                                                        )}
                                                                     >
                                                                         {typeof opt === "object" ? opt.label : opt}
                                                                     </option>
@@ -461,35 +480,46 @@ export function DataTable({
                                                 }
                                             }
 
-                                            // Рендер редактируемой boolean (чекбокс) — сразу интерактивный (без двойного клика)
                                             if (col.type === "boolean") {
                                                 return (
                                                     <td
                                                         key={col.key}
-                                                        className={`p-2 border-gray-200 text-sm text-gray-900 ${col.align === "right" ? "text-right" : col.align === "left" ? "text-left" : "text-center"
-                                                            } dark:bg-gray-800 dark:text-white`}
-                                                    // Без onDoubleClick — сразу интерактивный
+                                                        className={`p-2 border border-[#787f88] text-sm text-gray-900 ${getAlignment(
+                                                            col
+                                                        )} dark:bg-gray-800 dark:text-white ${isActions
+                                                                ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
+                                                                : ""
+                                                            }`}
                                                     >
                                                         <input
                                                             type="checkbox"
                                                             checked={!!row[col.key]}
-                                                            onChange={(e) => onCellUpdate(row.ID, col.key, e.target.checked)}
+                                                            onChange={(e) =>
+                                                                onCellUpdate(row.ID, col.key, e.target.checked)
+                                                            }
                                                             className="m-2"
                                                         />
                                                     </td>
                                                 );
                                             }
 
-                                            // Рендер редактируемой ячейки (текст/число)
                                             if (isEditing) {
                                                 const inputType =
-                                                    col.type === "boolean" ? "checkbox" : col.type === "price" ? "text" : col.type || "text";
+                                                    col.type === "boolean"
+                                                        ? "checkbox"
+                                                        : col.type === "price"
+                                                            ? "text"
+                                                            : col.type || "text";
 
                                                 return (
                                                     <td
                                                         key={col.key}
-                                                        className={`p-2 border-gray-200 text-sm text-gray-900 ${col.align === "right" ? "text-right" : col.align === "left" ? "text-left" : "text-center"
-                                                            } dark:bg-gray-800 dark:text-white`}
+                                                        className={`p-2 border border-[#787f88] text-sm text-gray-900 ${getAlignment(
+                                                            col
+                                                        )} dark:bg-gray-800 dark:text-white ${isActions
+                                                                ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
+                                                                : ""
+                                                            }`}
                                                     >
                                                         <input
                                                             type={inputType}
@@ -498,24 +528,28 @@ export function DataTable({
                                                             onBlur={saveEdit}
                                                             onKeyDown={handleKeyDown}
                                                             autoFocus
-                                                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                                                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white"
                                                         />
                                                     </td>
                                                 );
                                             }
 
-                                            // Не редактируемая ячейка — запускаем редактирование по одному клику, если editable
                                             return (
                                                 <td
                                                     key={col.key}
-                                                    className={`p-2 border-gray-200 text-sm text-gray-900 ${col.align === "right" ? "text-right" : col.align === "left" ? "text-left" : "text-center"
-                                                        } dark:bg-gray-800 dark:text-white`}
-                                                    onClick={() => col.editable && startEdit(row.ID, col.key, cellValue)}
-                                                    title={col.editable ? "Клик для редактирования" : undefined}
+                                                    className={`p-2 border border-[#787f88] text-sm text-gray-900 ${getAlignment(
+                                                        col
+                                                    )} overflow-hidden whitespace-nowrap text-ellipsis dark:bg-gray-800 dark:text-white ${isActions
+                                                            ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
+                                                            : ""
+                                                        }`}
+                                                    onClick={() =>
+                                                        col.editable && startEdit(row.ID, col.key, cellValue)
+                                                    }
+                                                    title={col.editable ? t("Click to edit") : undefined}
                                                     style={{
                                                         cursor: col.editable ? "pointer" : "default",
                                                         userSelect: "text",
-                                                        whiteSpace: "nowrap",
                                                     }}
                                                 >
                                                     {col.render
@@ -523,7 +557,9 @@ export function DataTable({
                                                         : col.type === "select" && col.options
                                                             ? (() => {
                                                                 const selectedOption = col.options.find(
-                                                                    (opt) => (typeof opt === "object" ? opt.value : opt) === cellValue
+                                                                    (opt) =>
+                                                                        (typeof opt === "object" ? opt.value : opt) ===
+                                                                        cellValue
                                                                 );
                                                                 return selectedOption
                                                                     ? typeof selectedOption === "object"
@@ -539,61 +575,113 @@ export function DataTable({
                                         })}
 
                                         {onDeleteRow && (
-                                            <td className="text-center">
+                                            <td className="text-center border border-[#787f88] dark:bg-gray-800 dark:text-white flex-shrink-0">
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         onDeleteRow(row.ID);
                                                     }}
-                                                    className="text-red-600 hover:text-red-800 dark:bg-gray-800 dark:text-white"
-                                                    title="Удалить строку"
+                                                    className="text-red-600 hover:text-red-800 dark:text-white"
+                                                    title={t("Delete row")} /* Используем t() */
                                                 >
                                                     <img
-                                                    src="/icons/Trash.svg"
+                                                        src="/icons/Trash.svg"
                                                         className="w-6 h-6 hover:scale-125"
+                                                        alt={t("Delete")} /* Добавлен alt */
                                                     />
                                                 </button>
                                             </td>
                                         )}
                                     </tr>
-
                                 );
                             })
                         )}
                     </tbody>
                 </table>
             </div>
+
+            {/* Пагинация */}
             {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-2 p-4">
+                <div className="flex flex-wrap justify-center items-center gap-1 sm:gap-2 p-2 sm:p-4 border-t border-[#787f88]">
+                    {/* Кнопка назад */}
                     <button
                         onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
-                        className="p-2 disabled:opacity-50"
+                        className="p-1 sm:p-2 disabled:opacity-50"
                     >
-                        <img src="https://www.svgrepo.com/show/533620/arrow-sm-left.svg" className="w-5 h-5" style={{ fill: "#333333" }} />
+                        <img
+                            src="https://www.svgrepo.com/show/533620/arrow-sm-left.svg"
+                            className="w-4 h-4 sm:w-5 sm:h-5"
+                            alt={t("Previous Page")}
+                        />
                     </button>
 
-                    {/* Номера страниц */}
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                        <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            className={`px-3 py-1 text-sm rounded-full ${currentPage === page ? "bg-blue-500 text-white" : "border border-gray-300"
-                                }`}
-                        >
-                            {page}
-                        </button>
-                    ))}
+                    {/* Пагинация */}
+                    {(() => {
+                        const pages = [];
+                        const maxVisible = 5;
+                        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+                        let endPage = startPage + maxVisible - 1;
 
+                        if (endPage > totalPages - 1) {
+                            endPage = totalPages - 1;
+                            startPage = Math.max(1, endPage - maxVisible + 1);
+                        }
+
+                        for (let i = startPage; i <= endPage; i++) {
+                            pages.push(
+                                <button
+                                    key={i}
+                                    onClick={() => setCurrentPage(i)}
+                                    className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-full ${currentPage === i
+                                            ? "bg-blue-500 text-white"
+                                            : "border border-gray-300 dark:border-gray-600 dark:text-white"
+                                        }`}
+                                >
+                                    {i}
+                                </button>
+                            );
+                        }
+
+                        // Добавляем последнюю страницу, если она не в видимом диапазоне
+                        if (totalPages > maxVisible) {
+                            if (endPage < totalPages - 1) {
+                                pages.push(<span key="dots" className="px-2">...</span>);
+                            }
+                            pages.push(
+                                <button
+                                    key={totalPages}
+                                    onClick={() => setCurrentPage(totalPages)}
+                                    className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-full ${currentPage === totalPages
+                                            ? "bg-blue-500 text-white"
+                                            : "border border-gray-300 dark:border-gray-600 dark:text-white"
+                                        }`}
+                                >
+                                    {totalPages}
+                                </button>
+                            );
+                        }
+
+                        return pages;
+                    })()}
+
+                    {/* Кнопка вперед */}
                     <button
-                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                        onClick={() =>
+                            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                        }
                         disabled={currentPage === totalPages}
-                        className="p-2 disabled:opacity-50"
+                        className="p-1 sm:p-2 disabled:opacity-50"
                     >
-                        <img src="https://www.svgrepo.com/show/533621/arrow-sm-right.svg" className="w-5 h-5" style={{ fill: "#333333" }} />
+                        <img
+                            src="https://www.svgrepo.com/show/533621/arrow-sm-right.svg"
+                            className="w-4 h-4 sm:w-5 sm:h-5"
+                            alt={t("Next Page")}
+                        />
                     </button>
                 </div>
             )}
         </div>
     );
+
 }

@@ -7,6 +7,7 @@ import YearlySalesChart from "../components/YearlySalesChart";
 import apiService from '../services/apiService';
 import { ChevronDown, Calendar, Download, TrendingUp, Mail, MessageSquare } from 'lucide-react';
 import Datepicker from "react-tailwindcss-datepicker";
+import dayjs from "dayjs";
 
 export default function DashboardPage() {
     //#region вспомогательные атрибуты
@@ -25,41 +26,49 @@ export default function DashboardPage() {
     const dropdownRef = useRef(null);
     const [yearlyAllDevicesData, setYearlyAllDevicesData] = useState(null);
     const [topProducts, setTopProducts] = useState([]);
+    const [period, setPeriod] = useState({ startDate: null, endDate: null });
     //#endregion
 
     //#region  Расчет startDate и endDate по выбранному диапазону
     function getDateRange(range) {
-        const now = new Date();
+        const now = dayjs();
         let start, end;
         if (range === "custom") {
-            start = new Date(customStartDate);
-            end = new Date(customEndDate);
+            start = period.startDate ? dayjs(period.startDate) : null;
+            end = period.endDate ? dayjs(period.endDate) : null;
+
+            // Если одна дата пустая, используем другую
+            if (!start && end) start = dayjs(end);
+            if (!end && start) end = dayjs(start);
+            if (!start && !end) start = end = now;
         } else {
             switch (range) {
                 case "day":
                     start = end = now;
                     break;
                 case "week":
-                    start = new Date(now);
-                    start.setDate(now.getDate() - 6);
+                    start = now.subtract(6, "day");
                     end = now;
                     break;
                 case "month":
-                    start = new Date(now.getFullYear(), now.getMonth(), 1);
+                    start = now.startOf("month");
                     end = now;
                     break;
                 case "year":
-                    start = new Date(now.getFullYear(), 0, 1);
+                    start = now.startOf("year");
                     end = now;
                     break;
                 default:
                     start = end = now;
             }
         }
-        return {
-            startDate: start.toISOString().slice(0, 10),
-            endDate: end.toISOString().slice(0, 10),
+
+        const date = {
+            startDate: start.format("YYYY-MM-DD"),
+            endDate: end.format("YYYY-MM-DD"),
         };
+
+        return date;
     }
     //#endregion
 
@@ -256,7 +265,7 @@ export default function DashboardPage() {
         } finally {
             setLoading(false);
         }
-    }, [user, selectedPos, allDevices, selectedRange, loadAllDevicesData, getDateRange, posList, customStartDate, customEndDate]);
+    }, [user, selectedPos, allDevices, selectedRange, loadAllDevicesData, getDateRange, posList, period]);
 
     const loadTopProducts = useCallback(async () => {
         if (!user) return;
@@ -278,7 +287,7 @@ export default function DashboardPage() {
         } catch (e) {
             console.error("Error loading top products", e);
         }
-    }, [user, selectedRange, customStartDate, customEndDate]);
+    }, [user, selectedRange, period]);
     //#endregion
 
     //#region useEffect
@@ -288,18 +297,18 @@ export default function DashboardPage() {
             loadAllDevicesData();
             loadTopProducts();
         }
-    }, [user, selectedRange, customStartDate, customEndDate]);
+    }, [user, selectedRange, period]);
 
     useEffect(() => {
         if (allDevices) setSelectedPos([]);
-    }, [allDevices, customStartDate, customEndDate]);
+    }, [allDevices, period]);
 
     useEffect(() => {
         if (!user) return;
         if (!allDevices && selectedPos.length === 0) return;
 
         loadData();
-    }, [user?.id, allDevices, selectedPos.length, selectedRange, customStartDate, customEndDate]);
+    }, [user?.id, allDevices, selectedPos.length, selectedRange,period]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -352,7 +361,7 @@ export default function DashboardPage() {
         });
 
     const sortedTopProducts = [...topProducts].sort((a, b) => b.totalSales - a.totalSales);
-
+    const formatDate = (date) => { if (!date) return ""; const d = dayjs(date); const format = d.format("DD.MM.YYYY"); return format; };
     return (
         <div className="min-h-screen">
             {/* Header */}
@@ -428,22 +437,44 @@ export default function DashboardPage() {
                         </div>
 
                         {selectedRange === "custom" && (
-                            <div className="max-w-md mx-2 px-2 py-1">
-                                <label className="text-sm font-medium text-gray-700">
-                                    {t("SelectDateRange")}:
-                                </label>
-                                <Datepicker
-                                    value={{ startDate: customStartDate, endDate: customEndDate }}
-                                    onChange={(newValue) => {
-                                        setCustomStartDate(newValue.startDate);
-                                        setCustomEndDate(newValue.endDate);
-                                    }}
-                                    primaryColor="cyan"
-                                    useRange={true}
-                                    displayFormat="DD.MM.YYYY"
-                                    maxDate={new Date()}
-                                    inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
-                                />
+                            <div className="max-w-md mx-2 px-2 py-1 space-y-2">
+
+                                <div className="flex gap-2">
+                                    {/* От */}
+                                    <div className="flex-1">
+                                        <label className="text-xs text-gray-500">{t("StartDate")}</label>
+                                        <Datepicker
+                                            asSingle={true}
+                                            value={{ startDate: period.startDate, endDate: period.startDate }}
+                                            onChange={(newValue) =>
+                                                setPeriod(prev => ({
+                                                    ...prev, startDate: newValue.startDate
+                                                }))
+                                            }
+                                            primaryColor="cyan"
+                                            displayFormat="DD.MM.YYYY"
+                                            maxDate={period?.endDate || new Date()}
+                                            minDate={new Date(2000, 0, 1)}
+                                            inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
+                                        />
+                                    </div>
+
+                                    {/* До */}
+                                    <div className="flex-1">
+                                        <label className="text-xs text-gray-500">{t("DateEnd")}</label>
+                                        <Datepicker
+                                            asSingle={true}
+                                            value={{ startDate: period.endDate, endDate: period.endDate }}
+                                            onChange={(newValue) =>
+                                                setPeriod(prev => ({ ...prev, endDate: newValue.startDate }))
+                                            }
+                                            primaryColor="cyan"
+                                            displayFormat="DD.MM.YYYY"
+                                            minDate={period?.startDate || new Date()}
+                                            inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>

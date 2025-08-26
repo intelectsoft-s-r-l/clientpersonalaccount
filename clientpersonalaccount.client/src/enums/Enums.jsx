@@ -27,10 +27,10 @@ export const StatusEnum = (t) => ({
     }
 });
 
-export const FiscalDeviceTypeEnum = {
+export const FiscalDeviceTypeEnum = (t) => ({
     0: {
         code: 'NotFiscal',
-        label: 'Не фискальное',
+        label: t("NotFiscal"),
         value: 0
     },
     1: {
@@ -53,19 +53,52 @@ export const FiscalDeviceTypeEnum = {
         label: 'Кассовая машина и контроль',
         value: 4
     }
-};
+});
 
 export const CashRegisterTypes = {
     0: {
-        label: 'Касса',
+        label: 'Cash register',
         value: 0
     },
     1: {
-        label: 'Терминал',
+        label: 'Terminal',
         value: 1
     },
     2: {
-        label: 'Кассовый сервис',
+        label: 'Cash service',
         value: 2
     },
 };
+
+export const FiscalDeviceBusinessTypeEnum = (t) => ( {
+    0: {
+        code: 'NotSet',
+        label: t("NotSet"),
+        value: 0
+    },
+    1: {
+        code: 'Petrol',
+        label: 'Petrol',
+        value: 1
+    },
+    2: {
+        code: 'Sales',
+        label: 'Sales',
+        value: 2
+    },
+    3: {
+        code: 'PetrolAndSales',
+        label: 'PetrolAndSales',
+        value: 3
+    },
+    4: {
+        code: 'Taxi',
+        label: 'Taxi',
+        value: 4
+    },
+    5: {
+        code: 'Gambling',
+        label: 'Gambling',
+        value: 5
+    }
+});

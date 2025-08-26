@@ -3,12 +3,12 @@ import { useSearchParams } from "react-router-dom";
 import { usePageNavigation } from "../context/PageNavigationContext";
 
 const validTabs = [
-  "monitor",
-  "license",
-  "assortement",
-  "fiscal-devices",
-  "banks",
-  "transactionDkv",
+  "Dashboard",
+  "License",
+  "Assortement",
+  "FiscalDevices",
+  "Banks",
+  "TransactionDkv",
 ];
 
 export function useSyncPageFromQuery() {
@@ -20,7 +20,7 @@ export function useSyncPageFromQuery() {
     if (tab && validTabs.includes(tab)) {
       setActivePage(tab);
     } else {
-      setActivePage("monitor");
+        setActivePage("Dashboard");
     }
   }, [searchParams, setActivePage]);
 }

@@ -19,8 +19,12 @@
 
 	<ItemGroup>
 		<!-- Удаляем статические файлы React при очистке -->
+		<Compile Remove="wwwroot\NewFolder\**" />
 		<Content Remove="$(SpaRoot)**" />
+		<Content Remove="wwwroot\NewFolder\**" />
+		<EmbeddedResource Remove="wwwroot\NewFolder\**" />
 		<None Remove="$(SpaRoot)**" />
+		<None Remove="wwwroot\NewFolder\**" />
 		<None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
 	</ItemGroup>
 
@@ -59,7 +63,6 @@
 
 	<ItemGroup>
 	  <Folder Include="app\publish\" />
-	  <Folder Include="wwwroot\" />
 	</ItemGroup>
 
 </Project>

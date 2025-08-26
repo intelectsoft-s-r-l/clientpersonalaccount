@@ -74,7 +74,7 @@ export default function AssortmentPage() {
                                     if (parsed[field] && Array.isArray(parsed[field])) {
                                         parsed[field] = parsed[field].map((item) => ({
                                             ...item,
-                                            id: item.ID !== undefined ? item.ID : item.id ?? Date.now() + Math.random(),
+                                            ID: item.ID !== undefined ? item.ID : Date.now() + Math.random(),
                                         }));
                                     }
                                 }
@@ -142,13 +142,15 @@ export default function AssortmentPage() {
     // Функция сохранения на сервер настроек для текущей вкладки
     const saveSettingsForActiveId = useCallback(
         async (settingId, settingData) => {
+            console.log(settingData);
             if (!token) {
                 console.warn("Токен не получен, сохранение невозможно");
                 return;
             }
 
             try {
-                const encodedSettings = btoa(JSON.stringify(settingData));
+                console.log(settingData);
+                const encodedSettings = btoa(encodeURIComponent(JSON.stringify(settingData)));
                 const typeMap = {
                     settings1: 1,
                     settings2: 2,
@@ -234,26 +236,14 @@ export default function AssortmentPage() {
     const handleSaveAll = async () => {
         if (!activeId) return;
 
-        const allTables = ["payments", "products", "groups", "departments", "users"];
-        let collectedData = {};
-
-        for (const key of allTables) {
-            if (tabsRefs.current[`${activeId}-${key}`]?.getData) {
-                collectedData[key] = tabsRefs.current[`${activeId}-${key}`].getData();
-            } else {
-                collectedData[key] = [];
-            }
-        }
-
-        const globalSettings = globalSettingsRef.current?.getGlobalSettings() || {};
-
+        const currentSetting = dataBySetting[activeId] || {};
         const Settings = {
-            PaymentTypes: collectedData.payments,
-            Assortments: collectedData.products,
-            Groups: collectedData.groups,
-            Departments: collectedData.departments,
-            Users: collectedData.users,
-            GlobalSettings: globalSettings,
+            PaymentTypes: currentSetting.PaymentTypes || [],
+            Assortments: currentSetting.Assortments || [],
+            Groups: currentSetting.Groups || [],
+            Departments: currentSetting.Departments || [],
+            Users: currentSetting.Users || [],
+            GlobalSettings: currentSetting.GlobalSettings || {},
         };
 
         const typeMap = {
@@ -271,7 +261,6 @@ export default function AssortmentPage() {
                 settings: encodedSettings,
                 type: type,
             };
-
             const resp = await apiService.proxyRequest(`/MobileCashRegister/web/UpsertSettings`, {
                 method: "POST",
                 credentials: "include",
@@ -398,8 +387,7 @@ export default function AssortmentPage() {
 
                 // Добавляем ID для каждой записи
                 const processedData = jsonData.map((item, index) => ({
-                    ...item,
-                    id: Date.now() + index,
+                    ...item
                 }));
 
                 // Обновляем данные товаров в состоянии
@@ -531,6 +519,54 @@ export default function AssortmentPage() {
         );
     }
 
+    const handleDownloadTemplate = () => {
+        const link = document.createElement("a");
+        link.href = "/templates/AssortmentTemplate.xlsx";
+        link.download = "AssortmentTemplate.xlsx";
+        link.click();
+    };
+
+    const handleResetPayments = () => {
+        const defaultPayments = [
+            { ID: 1, Name: "NUMERAR", MaxPaymentAmount: 100000, IsActive: true },
+            { ID: 2, Name: "CARD", MaxPaymentAmount: 2000000, IsActive: true },
+            { ID: 5, Name: "TME", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 6, Name: "ABONAMENT", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 7, Name: "ALT_IP", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 9, Name: "MIA", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 31, Name: "VAUCHER", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 32, Name: "CEC_CERTIFICAT_VALORIC", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 33, Name: "TICHET", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 34, Name: "RETURNARE_MIZE", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 35, Name: "IMPOZIT", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 36, Name: "CÂȘTIG", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 81, Name: "CREDIT", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 82, Name: "LEASING", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 83, Name: "AVANS", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 84, Name: "ARVUNA", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 85, Name: "GAJ", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 86, Name: "CARD_VALORIC_CORPORATIV", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 87, Name: "TESTARE_METROLOGICA", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 88, Name: "ALT_MOD", MaxPaymentAmount: 0, IsActive: false }
+        ];
+
+        setDataBySetting((prev) => {
+            const currentSetting = prev[activeId] || {};
+            const updatedSetting = {
+                ...currentSetting,
+                PaymentTypes: defaultPayments,
+            };
+
+            const newDataBySetting = {
+                ...prev,
+                [activeId]: updatedSetting,
+            };
+
+            debouncedSave(activeId, updatedSetting, saveSettingsForActiveId);
+            return newDataBySetting;
+        });
+    };
+
     return (
         <div id="assortement" className="flex flex-col min-h-screen">
             <nav className="border-b p-3 overflow-x-auto whitespace-nowrap">
@@ -568,6 +604,30 @@ export default function AssortmentPage() {
                     </button>
                 ))}
             </div>
+            {activeTable === "payments" && (
+                <div className="flex flex-col border-b bg-gray-50">
+                    <div className="flex items-center justify-end gap-4 px-6 py-4">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleResetPayments}
+                                className="p-2 bg-gray-200 hover:scale-110 rounded-full transition flex items-center justify-center"
+                                title="Сбросить способы оплаты"
+                            >
+                                {/* Простой SVG иконки ластика */}
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-6 w-6 text-red-600"
+                                    fill="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    {/* Рисуем более реалистичный ластик */}
+                                    <path d="M16.24 3.56a2 2 0 0 0-2.83 0L4 13.97a2 2 0 0 0 0 2.83l3.17 3.17a2 2 0 0 0 2.83 0l9.41-9.41a2 2 0 0 0 0-2.83l-3.17-3.17zM6.5 18.5l-2.5-2.5 7.59-7.59 2.5 2.5L6.5 18.5z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Блок импорта/экспорта - показывается только для таблицы products */}
             {activeTable === "products" && (
@@ -581,13 +641,12 @@ export default function AssortmentPage() {
 
                         {/* Кнопки справа + знак вопроса */}
                         <div className="flex items-center gap-3">
-                            {/* Знак вопроса */}
+                            {/* Знак вопроса с подсказкой */}
                             <div className="relative group">
                                 <div className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-300 text-xs font-bold text-gray-700 cursor-pointer">
                                     ?
                                 </div>
 
-                                {/* Подсказка */}
                                 <div className="absolute right-0 top-6 z-50 hidden group-hover:block w-[600px] bg-white shadow-lg border border-gray-200 rounded-lg p-3 text-xs text-gray-700">
                                     <p className="mb-1 font-medium">Формат для файла с ассортиментом:</p>
                                     <p className="italic text-gray-600 mb-1">
@@ -605,8 +664,8 @@ export default function AssortmentPage() {
                                                     <th className="border px-2 py-1">Name</th>
                                                     <th className="border px-2 py-1">Price</th>
                                                     <th className="border px-2 py-1">Barcode</th>
-                                                    <th className="border px-2 py-1">TVA</th>
-                                                    <th className="border px-2 py-1">GROUP</th>
+                                                    <th className="border px-2 py-1">VATCode</th>
+                                                    <th className="border px-2 py-1">Group</th>
                                                     <th className="border px-2 py-1">TME</th>
                                                 </tr>
                                             </thead>
@@ -639,16 +698,23 @@ export default function AssortmentPage() {
                                 </div>
                             </div>
 
-                            {/* Импорт/экспорт */}
+                            {/* Кнопка для скачивания шаблона */}
+                            <button
+                                onClick={handleDownloadTemplate}
+                                className="px-2 py-1 text-white bg-indigo-600 rounded hover:bg-indigo-700 transition-colors flex items-center gap-1"
+                                title="Скачать шаблон"
+                            >
+                                <img src="/icons/File_Download.svg" className="w-5 h-5" />
+                                <span className="text-xs">Шаблон</span>
+                            </button>
+
+                            {/* Импорт */}
                             <label
                                 htmlFor="import-file"
-                                className="cursor-pointer px-2 py-1 text-white bg-green-600 rounded hover:bg-green-700 transition-colors"
+                                className="cursor-pointer px-2 py-1 text-white bg-green-600 rounded hover:bg-green-700 transition-colors flex items-center gap-1"
                                 title="Импорт"
                             >
-                                <img
-                                    src="/icons/File_Download.svg"
-                                    className="w-6 h-6 transform transition-transform duration-200 ease-in-out hover:scale-125"
-                                />
+                                <img src="/icons/File_Upload.svg" className="w-5 h-5" />
                             </label>
                             <input
                                 id="import-file"
@@ -657,20 +723,20 @@ export default function AssortmentPage() {
                                 onChange={handleImport}
                                 className="hidden"
                             />
+
+                            {/* Экспорт */}
                             <button
                                 onClick={handleExport}
-                                className="px-2 py-1 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+                                className="px-2 py-1 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors flex items-center gap-1"
                                 title="Экспорт"
                             >
-                                <img
-                                    src="/icons/File_Upload.svg"
-                                    className="w-6 h-6 transform transition-transform duration-200 ease-in-out hover:scale-125"
-                                />
+                                <img src="/icons/File_Download.svg" className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
                 </div>
             )}
+
 
 
             <main className="flex-1 p-6 overflow-auto">
@@ -712,7 +778,7 @@ export default function AssortmentPage() {
             <footer className="p-6 border-t">
                 <button
                     onClick={handleSaveAll}
-                    className="px-6 py-3 bg-gradient-to-r from-[#72b827] to-green-600 text-white rounded transition"
+                    className="px-4 py-2 bg-gradient-to-r from-[#72b827] to-green-600 text-white rounded transition"
                 >
                     {t("Save")}
                 </button>

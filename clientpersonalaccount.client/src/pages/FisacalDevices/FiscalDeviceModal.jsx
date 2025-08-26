@@ -7,6 +7,7 @@ import FiscalDeviceModalTab from "../../components/FiscalDeviceModalTab";
 import { validateDevice } from "../../validation/validationSchemas";
 import ValidationModal from "../../components/ValidationModal";
 import SuccessModal from "../../components/SuccessModal";
+import { FiscalDeviceBusinessTypeEnum, FiscalDeviceTypeEnum } from "../../enums/Enums";
 
 function decodeBase64Json(base64) {
     try {
@@ -247,21 +248,42 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
             return dt.toLocaleDateString("ru-RU");
         };
 
+        const getDeviceTypeText = (value) => {
+            const type = Object.values(FiscalDeviceTypeEnum(t)).find((t) => t.value === value);
+            return type?.label || "-";
+        };
+
+        const getDeviceBusinessTypeText = (value) => {
+            const type = Object.values(FiscalDeviceBusinessTypeEnum(t)).find((t) => t.value === value);
+            return type?.label || "-";
+        };
+
         const fields = [
             { label: t("Name"), value: d.name },
             { label: t("ActivationCode"), value: d.activationCode },
             { label: t("SerialNumber"), value: d.serialNumber ?? "-" },  // возможно отсутствует
             { label: t("Model"), value: d.model },
-            { label: t("Type"), value: d.type },
+            {
+                label: t("Type"),
+                value: getDeviceTypeText(d.type)
+            },
             { label: t("Address"), value: d.address },
-            { label: t("BusinessType"), value: d.businessType },
-            { label: t("Coefficient"), value: d.coefficient },
-            { label: t("OperatorPhone"), value: d.operatorPhone },
-            { label: t("OperatorFax"), value: d.operatorFax },
-            { label: t("AuthorizationNumber"), value: d.authorizationNumber },
-            { label: t("AuthorizationDate"), value: formatDate(d.authorizationDate) },
-            { label: t("CarNumber"), value: d.carNumber },
-            { label: t("CarModel"), value: d.carModel },
+            {
+                label: t("BusinessType"),
+                value: getDeviceBusinessTypeText(d.businessType)
+            },
+            ...(d.businessType === 4
+                ? [
+                    { label: t("Coefficient"), value: d.coefficient },
+                    { label: t("OperatorPhone"), value: d.operatorPhone },
+                    { label: t("OperatorFax"), value: d.operatorFax },
+                    { label: t("AuthorizationNumber"), value: d.authorizationNumber },
+                    { label: t("AuthorizationDate"), value: formatDate(d.authorizationDate) },
+                    { label: t("CarNumber"), value: d.carNumber },
+                    { label: t("CarModel"), value: d.carModel },
+                ]
+                : []
+            ),
         ];
 
         return (
@@ -284,9 +306,14 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
 
     if (!deviceId) return <></>;
 
+    const filteredTabs = tableKeys.filter((tab) => {
+        if (tab === "taxiTariffs") return device?.businessType === 4;
+        return true; // остальные вкладки показываем всегда
+    });
+
     return (
         <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]"
             onClick={onClose}
         >
             <div
@@ -294,7 +321,7 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex space-x-4 mb-6 border-b">
-                    {tableKeys.map((tab) => (
+                    {filteredTabs.map((tab) => (
                         <button
                             key={tab}
                             className={`pb-2 border-b-2 font-semibold ${activeTab === tab

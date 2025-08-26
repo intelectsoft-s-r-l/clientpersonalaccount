@@ -1,111 +1,80 @@
 import * as yup from "yup";
 
-export const commonValidation = {
-    username: yup.string().required("Имя пользователя обязательно"),
+export const commonValidation = (t) => ({
+    username: yup.string().required(t("validation.usernameRequired")),
     password: yup
         .string()
-        .min(6, "Минимум 6 символов")
-        .required("Пароль обязателен"),
-};
-
-export const loginSchema = yup.object({
-    ...commonValidation,
+        .min(6, t("validation.passwordMin"))
+        .required(t("validation.passwordRequired")),
 });
 
-export const registerSchema = yup.object({
-    ...commonValidation,
-    email: yup.string().email("Неверный email").required("Email обязателен"),
+export const loginSchema = (t) => yup.object({ ...commonValidation(t) });
+
+export const registerSchema = (t) => yup.object({
+    ...commonValidation(t),
+    email: yup.string().email(t("validation.invalidEmail")).required(t("validation.emailRequired")),
 });
 
-export function validateProducts(data, tableKey, usersPin, pins) {
+export const validateProducts = (data, tableKey, usersPin, pins, t) => {
     const errors = {};
+    const pluSet = new Set();
+    const codeSet = new Set();
+    const barcodeSet = new Set();
+    const seenPins = new Set(pins);
+    const usersPinList = new Set(usersPin);
+
+    if (tableKey === "products" && data.length > 1000) {
+        errors.general = [t("validation.maxRows", { count: 1000 })];
+    }
 
     data.forEach((item, idx) => {
         const rowErrors = {};
+        const id = item.ID || idx;
+
         if (!item.Name || item.Name.trim() === "" || item.Name === "undefined") {
-            rowErrors.Name = "Наименование обязательно";
+            rowErrors.Name = t("validation.nameRequired");
         }
 
-        if (tableKey == "users") {
-            const seenPins = new Set(pins);
-            const usersPinList = new Set(usersPin);
-
-            const pin = item.Pin?.toString();
-
-            // Проверка обязательного заполнения PIN
+        if (tableKey === "users") {
+            const pin = item.PIN?.toString();
             if (!pin || pin.trim() === "" || pin === "undefined") {
-                rowErrors.PIN = "PIN обязателен";
+                rowErrors.PIN = t("validation.pinRequired");
             } else {
-                // Если PIN заполнен, проверяем формат: только 5 цифр
-                if (!/^\d{5}$/.test(pin)) {
-                    rowErrors.PIN = "PIN должен содержать ровно 5 цифр";
-                }
-                // Проверка на дублирование с уже существующими PIN (из usersPin)
-                if (usersPinList.has(pin)) {
-                    rowErrors.PIN = "Этот PIN уже используется";
-                }
-                // Проверка на дублирование в текущем массиве
-                if (seenPins.has(pin)) {
-                    rowErrors.PIN = "Дублирующийся PIN в таблице";
-                } else {
-                    seenPins.add(pin);
-                }
+                if (!/^\d{5}$/.test(pin)) rowErrors.PIN = t("validation.pinFiveDigits");
+                if (usersPinList.has(pin)) rowErrors.PIN = t("validation.pinUsed");
+                if (seenPins.has(pin)) rowErrors.PIN = t("validation.pinDuplicate");
+                else seenPins.add(pin);
             }
         }
 
-        if (tableKey == "products") {
-            const pluSet = new Set();
-            const codeSet = new Set();
-            const barcodeSet = new Set();
+        if (tableKey === "products") {
+            if (!item.PLU || item.PLU.trim() === "") rowErrors.PLU = t("validation.pluRequired");
+            else if (pluSet.has(item.PLU)) rowErrors.PLU = t("validation.pluDuplicate");
+            else pluSet.add(item.PLU);
 
-            if (data.length > 1000) {
-                errors.general = ["Максимальное количество строк — 1000"];
-            }
+            if (!item.Code || item.Code.trim() === "") rowErrors.Code = t("validation.codeRequired");
+            else if (codeSet.has(item.Code)) rowErrors.Code = t("validation.codeDuplicate");
+            else codeSet.add(item.Code);
 
-            if ((!item.PLU || item.PLU.trim() === "")) {
-                rowErrors.PLU = "PLU обязательно";
-            } else if (pluSet.has(item.PLU)) {
-                rowErrors.PLU = "Дублирование PLU";
-            } else {
-                pluSet.add(item.PLU);
-            }
+            const normalizedPrice = Number(item.Price?.toString().replace(",", "."));
+            if (!normalizedPrice || normalizedPrice <= 0) rowErrors.Price = t("validation.pricePositive");
 
-            if ((!item.Code || item.Code.trim() === "")) {
-                rowErrors.Code = "Code обязательно";
-            } else if (codeSet.has(item.Code)) {
-                rowErrors.Code = "Дублирование Code";
-            } else {
-                codeSet.add(item.Code);
-            }
+            if (!item.Barcode || item.Barcode.trim() === "") rowErrors.Barcode = t("validation.barcodeRequired");
+            else if (barcodeSet.has(item.Barcode)) rowErrors.Barcode = t("validation.barcodeDuplicate");
+            else barcodeSet.add(item.Barcode);
 
-            let normalizedPrice = Number(item.Price?.toString().replace(",", "."));
-
-            if (!normalizedPrice || normalizedPrice <= 0) {
-                console.log(item.Price);
-                rowErrors.Price = "Цена должна быть больше 0";
-            }
-
-            if ((!item.Barcode || item.Barcode.trim() === "")) {
-                rowErrors.Barcode = "Barcode обязательно";
-            } else if (barcodeSet.has(item.Barcode)) {
-                rowErrors.Barcode = "Дублирование Barcode";
-            } else {
-                barcodeSet.add(item.Barcode);
-            }
-
-            if ((!item.VATCode || item.VATCode.trim() === "")) {
-                rowErrors.VATCode = "VATCode обязательно";
-            }
+            if (!item.VATCode || item.VATCode.trim() === "") rowErrors.VATCode = t("validation.vatRequired");
         }
 
-        if (Object.keys(rowErrors).length > 0)
-            errors[item.ID || idx] = rowErrors;
-    })
+        if (Object.keys(rowErrors).length > 0) {
+            errors[id] = rowErrors;
+        }
+    });
 
     return errors;
-}
+};
 
-export const validateDevice = (data, tableKey) => {
+export const validateDevice = (data, tableKey, t) => {
     const errors = {};
 
     if (tableKey === "vatRates") {
@@ -117,46 +86,26 @@ export const validateDevice = (data, tableKey) => {
             const vatValue = parseFloat(item.VatValue ?? "0");
             const notVat = !!item.NotVat;
 
-            // === Валидация VatCode ===
             if (notVat) {
                 if (vatCode !== "" && vatCode !== "-" && vatCode !== "_") {
-                    rowErrors.VatCode = "Для неплательщика НДС код должен быть '_'";
+                    rowErrors.VatCode = t("validation.notVatCodeUnderscore");
                 }
             } else {
-                if (!/^[A-Z]$/.test(vatCode)) {
-                    rowErrors.VatCode = "Код должен быть одной заглавной латинской буквой (A-Z)";
-                } else {
-                    // Проверка уникальности среди всех кроме текущей строки
-                    const isDuplicate = data
-                        .filter(p => p.ID !== item.ID) // исключаем текущую строку
-                        .some(p => (p.VatCode?.trim() ?? "") === vatCode);
-
-                    if (isDuplicate) {
-                        rowErrors.VatCode = "Код НДС должен быть уникальным";
-                    }
-                }
-
-                if (vatCode.includes("_")) {
-                    rowErrors.VatCode = "Код не должен содержать нижнее подчеркивание";
-                }
+                if (!/^[A-Z]$/.test(vatCode)) rowErrors.VatCode = t("validation.vatCodeLetter");
+                const isDuplicate = data.filter(p => p.ID !== item.ID)
+                    .some(p => (p.VatCode?.trim() ?? "") === vatCode);
+                if (isDuplicate) rowErrors.VatCode = t("validation.vatCodeUnique");
+                if (vatCode.includes("_")) rowErrors.VatCode = t("validation.vatCodeNoUnderscore");
             }
 
-            // === Валидация VatValue ===
             if (notVat) {
-                if (vatValue !== 0) {
-                    rowErrors.VatValue = "Значение должно быть 0.00 при включенном NotVat";
-                }
+                if (vatValue !== 0) rowErrors.VatValue = t("validation.vatValueZero");
             } else {
-                if (isNaN(vatValue) || vatValue < 0 || vatValue > 99) {
-                    rowErrors.VatValue = "Значение должно быть от 0.00 до 99.00";
-                } else if (!/^\d{1,2}(\.\d{1,2})?$/.test(String(item.VatValue))) {
-                    rowErrors.VatValue = "Введите значение с двумя знаками после запятой";
-                }
+                if (isNaN(vatValue) || vatValue < 0 || vatValue > 99) rowErrors.VatValue = t("validation.vatValueRange");
+                else if (!/^\d{1,2}(\.\d{1,2})?$/.test(String(item.VatValue))) rowErrors.VatValue = t("validation.vatValueTwoDecimals");
             }
 
-            if (Object.keys(rowErrors).length > 0) {
-                errors[id] = rowErrors;
-            }
+            if (Object.keys(rowErrors).length > 0) errors[id] = rowErrors;
         });
     }
 

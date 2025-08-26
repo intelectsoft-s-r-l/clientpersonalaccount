@@ -15,6 +15,8 @@ import ProgressCircle from "./ProgressCircle";
 export default function SalesChart({ title, data, t }) {
     const [chartType, setChartType] = useState("area");
 
+    const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+
     // Custom tooltip component
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
@@ -44,14 +46,14 @@ export default function SalesChart({ title, data, t }) {
     }
 
     // Если одна точка — показать прогресс
-    if (data.length === 1) {
-        const maxValue = Math.max(100, data[0].value * 2); // максимум для прогресса, например в 2 раза больше значения
+    if (sortedData.length === 1) {
+        const maxValue = Math.max(100, sortedData[0].value * 2); // максимум для прогресса, например в 2 раза больше значения
 
         return (
             <div className="bg-white rounded-2xl border border-gray-100 w-full max-w-[260px] flex flex-col items-center py-4 px-4">
                 <h6 className="text-md font-semibold text-gray-800 mb-2">{title}</h6>
-                <ProgressCircle value={data[0].value} max={maxValue} />
-                <p className="mt-2 text-gray-600 text-xs">{data[0].date}</p>
+                <ProgressCircle value={sortedData[0].value} max={maxValue} />
+                <p className="mt-2 text-gray-600 text-xs">{sortedData[0].date}</p>
             </div>
         );
     }
@@ -78,7 +80,7 @@ export default function SalesChart({ title, data, t }) {
                     <ResponsiveContainer width="100%" height="100%">
                         {chartType === "area" ? (
                             <AreaChart
-                                data={data}
+                                data={sortedData}
                                 margin={{ top: 15, right: 20, left: 15, bottom: 15 }}
                             >
                                 <defs>
@@ -96,8 +98,13 @@ export default function SalesChart({ title, data, t }) {
                                     dataKey="date"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fill: "#6B7280", fontSize: 12 }}
-                                    tickFormatter={(value) => value.slice(0, 5)}
+                                    tick={{ fill: "#6B7280", fontSize: 10 }}
+                                    tickFormatter={(value) => {
+                                        if (!value) return "";
+                                        const dt = new Date(value);
+                                        if (isNaN(dt)) return value; // если не дата
+                                        return `${String(dt.getMonth() + 1).padStart(2, "0")}.${dt.getFullYear()}`;
+                                    }}
                                     padding={{ left: 20, right: 20 }}
                                 />
                                 <YAxis
@@ -133,7 +140,7 @@ export default function SalesChart({ title, data, t }) {
                             </AreaChart>
                         ) : (
                             <BarChart
-                                data={data}
+                                    data={sortedData}
                                 margin={{ top: 15, right: 20, left: 15, bottom: 15 }}
                                 barCategoryGap="20%"
                             >
@@ -148,8 +155,13 @@ export default function SalesChart({ title, data, t }) {
                                     dataKey="date"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fill: "#6B7280", fontSize: 12 }}
-                                    tickFormatter={(value) => value.slice(0, 5)}
+                                    tick={{ fill: "#6B7280", fontSize: 10 }}
+                                    tickFormatter={(value) => {
+                                        if (!value) return "";
+                                        const dt = new Date(value);
+                                        if (isNaN(dt)) return value; // если не дата
+                                        return `${String(dt.getMonth() + 1).padStart(2, "0")}.${dt.getFullYear()}`;
+                                    }}
                                     padding={{ left: 20, right: 20 }}
                                 />
                                 <YAxis

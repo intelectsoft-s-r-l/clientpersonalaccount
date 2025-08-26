@@ -28,7 +28,7 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
         }
     }, [data, usersPin]);
 
-    const table = tableDefinitions(t);
+    const table = tableDefinitions(t, data);
     const tableDef = table.find((t) => t.key === tableKey);
     if (!tableDef) return null;
 
@@ -63,9 +63,9 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
 
             let errors = {};
             if (tableKey === "users")
-                errors = validateProducts([editedRow], tableKey, usersPinData, pinData);
+                errors = validateProducts([editedRow], tableKey, usersPinData, pinData,t);
             else
-                errors = validateProducts([editedRow], tableKey);
+                errors = validateProducts([editedRow], tableKey, null, null,t);
 
             if (Object.keys(errors).length > 0) {
                 setValidationErrors(prev => ({ ...prev, [rowId]: errors }));
@@ -107,7 +107,7 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
             isNew: true,
         };
 
-        setTableData(prev => [...prev, newRow]);
+        setTableData(prev => [newRow, ...prev]);
     };
 
     const handleDeleteRow = (rowId) => {

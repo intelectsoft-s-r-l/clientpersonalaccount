@@ -1,4 +1,4 @@
-import React, { useState, useImperativeHandle, forwardRef, useEffect } from "react";
+﻿import React, { useState, useImperativeHandle, forwardRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import apiService from '../services/apiService';
 import { CashRegisterTypes } from "../enums/Enums";
@@ -36,7 +36,7 @@ const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
                 })
                 setOptions(data.items);
             } catch (error) {
-                console.error("������ ��� �������� �����", error);
+                console.error("Ошибка при загрузке опций", error);
             }
         }
 
@@ -55,9 +55,28 @@ const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
 
     const handleChange = (e) => {
         const { name, type, value, checked } = e.target;
+
+        // если меняем SistemPaymentSmart (VisualInterface)
+        if (name === "VisualInterface") {
+            const selectedOpt = options.find((opt) => opt.id === value);
+
+            setSettings((prev) => ({
+                ...prev,
+                VisualInterface: value,
+                MIA: selectedOpt?.apyKey || "", // ставим apiKey в MIA
+            }));
+            return;
+        }
+
+        // дефолтное поведение
         setSettings((prev) => ({
             ...prev,
-            [name]: type === "checkbox" ? checked : type === "number" ? +value || 0 : value || "",
+            [name]:
+                type === "checkbox"
+                    ? checked
+                    : type === "number"
+                        ? +value || 0
+                        : value || "",
         }));
     };
 
@@ -96,7 +115,7 @@ const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
                         onChange={handleChange}
                         className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     >
-                        <option value="">{t("Type")}</option>
+                        <option value="">{"Type"}</option>
                         {cashRegisterTypes.map((opt) => (
                             <option key={opt.value} value={opt.value}>
                                 {opt.label}
@@ -116,7 +135,7 @@ const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
                         <option value="">{t("SistemPaymentSmart")}</option>
                         {options.map((opt) => (
                             <option key={opt.id} value={opt.id}>
-                                {opt.posID + `(${opt.address})`}
+                                {opt.posID + ` (${opt.address})`}
                             </option>
                         ))}
                     </select>
@@ -135,6 +154,18 @@ const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
                 </label>
 
                 <label className="flex flex-col space-y-1 text-gray-700">
+                    <span>{t("MIA")}</span>
+                    <input
+                        type="text"
+                        name="MIA"
+                        value={settings.MIA || ""}
+                        readOnly={true}
+                        className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        placeholder={t("MIA")}
+                    />
+                </label>
+
+                <label className="flex flex-col space-y-1 text-gray-700">
                     <span>{t("MaxServiceAmount")}</span>
                     <input
                         type="number"
@@ -143,18 +174,6 @@ const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
                         onChange={handleChange}
                         className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                         min={0}
-                    />
-                </label>
-
-                <label className="flex flex-col space-y-1 text-gray-700">
-                    <span>{t("MIA")}</span>
-                    <input
-                        type="text"
-                        name="MIA"
-                        value={settings.MIA || ""}
-                        readOnly={true}
-                        className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        placeholder={t("PlaceholderMIA")}
                     />
                 </label>
             </div>

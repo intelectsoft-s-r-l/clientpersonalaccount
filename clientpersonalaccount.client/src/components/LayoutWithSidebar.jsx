@@ -30,7 +30,7 @@ export default function LayoutWithSidebar({ children }) {
 
     // --- Генерация Breadcrumbs ---
     const pathnames = location.pathname.split("/").filter((x) => x);
-    const currentDeviceId = pathnames[0] === "fiscalDevices" ? pathnames[1] : null;
+    const currentDeviceId = pathnames[0] === "FiscalDevices" ? pathnames[1] : null;
 
     useEffect(() => {
         const fetchDevice = async () => {
@@ -56,7 +56,7 @@ export default function LayoutWithSidebar({ children }) {
         };
 
         // Проверяем, находимся ли на странице fiscalDevices/:id
-        if (pathnames[0] === "fiscalDevices" && pathnames[1]) {
+        if (pathnames[0] === "FiscalDevices" && pathnames[1]) {
             fetchDevice();
         } else {
             setFiscalDevice(null);
@@ -65,7 +65,7 @@ export default function LayoutWithSidebar({ children }) {
 
     const breadcrumbNameMap = {
         "Dashboard": t("Dashboard"),
-        "fiscalDevices": t("FiscalDevice"),
+        "FiscalDevices": t("FiscalDevice"),
         "Assortement": t("Assortment"),
         "License": t("Licenses"),
         "Banks": t("Banks"),
@@ -76,7 +76,7 @@ export default function LayoutWithSidebar({ children }) {
         if (!text) return "";
 
         // Специально для fiscalDevices выводим имя + номер НГС
-        if (value === "fiscalDevices" && fiscalDevice) {
+        if (value === "FiscalDevices" && fiscalDevice) {
             console.log(fiscalDevice);
             return `${fiscalDevice.name} (${fiscalDevice.fiscalCode})`;
         }

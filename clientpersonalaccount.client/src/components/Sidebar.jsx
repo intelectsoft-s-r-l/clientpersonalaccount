@@ -36,7 +36,7 @@ const pageRoutes = {
     dashboard: "/Dashboard",
     assortement: "/Assortement",
     license: "/License",
-    fiscalDevices: "/fiscalDevices",
+    fiscalDevices: "/FiscalDevices",
     banks: "/Banks",
     transactionDkv: "/TransactionDkv"
 };
@@ -66,6 +66,8 @@ export default function Sidebar() {
             setActivePage(currentRoute);
         }
     }, [location.pathname]);
+
+
 
     return (
         <>
@@ -237,7 +239,10 @@ export default function Sidebar() {
 */
       `}</style>
 
-            <aside className="sidebar" role="navigation" aria-label="Главное меню" >
+            <aside className={`sidebar ${window.innerWidth < 768
+                    ? "fixed top-0 left-0 h-full z-40 bg-white shadow-lg"
+                    : "static"
+                }`} role="navigation" aria-label="Главное меню" >
                 <div className="sidebar-content">
                     <div className="sidebar-menu-sections">
                         {menuSections.map(({ title, items }, idx) => (
@@ -267,7 +272,7 @@ export default function Sidebar() {
                     <div className="flex flex-col items-center mb-1 space-y-1">
                         <div className="brand-logo">
                             {!collapsed ? (
-                                <img src={LongLogo} alt="Fiscal Cloud Logo" className="w-32 h-10" />
+                                <img src={LongLogo} alt="Fiscal Cloud Logo" className="w-32 h-8" />
                             ) : (
                                 <img src={Logo} alt="Fiscal Cloud Logo" className="w-10 h-10" />
                             )}
@@ -277,12 +282,13 @@ export default function Sidebar() {
                             onClick={logout}
                             aria-label={t("Logout")}
                             title={t("Logout")}
-                            className={`flex items-center justify-center ${!collapsed ? "w-10 h-10" : "w-full px-3 py-2"} text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform hover:scale-110`}
+                            className={`flex items-center justify-center w-full px-3 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform hover:scale-105 ${!collapsed ? "justify-start gap-2" : "justify-center"
+                                }`}
                         >
+                            <img src="/icons/Log_Out.svg" className="w-6 h-6" />
                             {!collapsed && (
-                                <span className="ml-2 text-sm font-medium text-black">{t("Logout")}</span>
+                                <span className="text-sm font-medium text-black">{t("Logout")}</span>
                             )}
-                            <img src="/icons/Log_Out.svg" className="w-6 h-6 text-black" />
                         </button>
                     </div>
                 </div>

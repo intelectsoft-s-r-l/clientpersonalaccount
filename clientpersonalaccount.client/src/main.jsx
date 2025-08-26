@@ -16,6 +16,12 @@ import LoginPage from './pages/Authorize/LoginPage';
 import ForgotPasswordPage from './pages/Authorize/ForgotPasswordPage';
 import HomePage from './pages/HomePage';
 import FiscalDevicePage from './pages/FisacalDevices/FiscalDevicePage';
+import FiscalDevicesListPage from './pages/FisacalDevices/FiscalDevicesListPage';
+import AssortementPage from './pages/Assortement/AssortementPage';
+import LicensePage from './pages/License/LicensePage';
+import BankPage from './pages/Bank/BankPage';
+import TransactionDKVPage from './pages/TransactionDKV/TransactionDKVPage';
+import DashboardPage from './pages/DashboardPage';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -37,48 +43,50 @@ const ProtectedRoute = ({ children }) => {
 const PublicRoute = ({ children }) => {
     const { isAuthenticated, isInitialized } = useAuth();
     if (!isInitialized) return <LoadingScreen />;
-    return !isAuthenticated ? children : <Navigate to="/Main" replace />;
+    return !isAuthenticated ? children : <Navigate to="/Dashboard" replace />;
 };
 
 const router = createBrowserRouter(
     [
         {
+            path: "/login",
+            element: (
+                <AuthProvider>
+                    <PublicRoute>
+                        <LoginPage />
+                    </PublicRoute>
+                </AuthProvider>
+            )
+        },
+        {
+            path: "/forgot-password",
+            element: (
+                <AuthProvider>
+                    <PublicRoute>
+                        <ForgotPasswordPage />
+                    </PublicRoute>
+                </AuthProvider>
+            )
+        },
+        {
             path: "/",
             element: (
-                <Provider store={store}>
-                    <AuthProvider>
-                        <App />
-                    </AuthProvider>
-                </Provider>
+                <AuthProvider>
+                    <ProtectedRoute>
+                        <App />  {/* здесь уже Sidebar, TopBar */}
+                    </ProtectedRoute>
+                </AuthProvider>
             ),
             children: [
-                {
-                    path: "",
-                    element: <Navigate to="/Main" replace />
-                },
-                {
-                    path: "login",
-                    element: (
-                        <PublicRoute>
-                            <LoginPage />
-                        </PublicRoute>
-                    ),
-                },
-                {
-                    path: "*",
-                    element: (
-                        <ProtectedRoute>
-                            <HomePage />
-                        </ProtectedRoute>
-                    ),
-                },
-                {
-                    path: "forgot-password",
-                    element: <ForgotPasswordPage />,
-                },
-                { path: "fiscalDevices/fiscalDevice/:id", element: <FiscalDevicePage /> },
-            ],
-        },
+                { path: "Dashboard", element: <DashboardPage /> },
+                { path: "Assortement", element: <AssortementPage /> },
+                { path: "License", element: <LicensePage /> },
+                { path: "FiscalDevices", element: <FiscalDevicesListPage /> },
+                { path: "FiscalDevices/:id", element: <FiscalDevicePage /> },
+                { path: "Banks", element: <BankPage /> },
+                { path: "TransactionDkv", element: <TransactionDKVPage /> },
+            ]
+        }
     ],
     {
         unstable_future: {

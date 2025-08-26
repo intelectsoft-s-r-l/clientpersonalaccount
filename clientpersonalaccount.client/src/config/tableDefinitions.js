@@ -1,4 +1,4 @@
-export const tableDefinitions = (t) => [
+export const tableDefinitions = (t, data) => [
     {
         key: "payments",
         title: t("Tabs.Payments"),
@@ -12,11 +12,11 @@ export const tableDefinitions = (t) => [
     },
     {
         key: "products",
-        title: t("Tabs.Products"),
+        title: `${t("Tabs.Products")} (${data?.length || 0})`,
         idField: "ID",
         columns: [
             { key: "ID", label: "ID", width: "5%", editable: false, filterable: true, align: "left" },
-            { key: "Plu", label: "Plu", editable: true, type: "number", width: "10%", filterable: true, align: "left" },
+            { key: "PLU", label: "Plu", editable: true, type: "number", width: "10%", filterable: true, align: "left" },
             { key: "Code", label: t("Code"), editable: true, type: "number", width: "5%", filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, width: "25%", filterable: true, align: "left" },
             { key: "Price", label: t("Price"), editable: true, type: "price", width: "15%", filterable: true, align: "right" },
@@ -35,7 +35,7 @@ export const tableDefinitions = (t) => [
                 },
                 filterable: true, align: "left"
             },
-            { key: "Tme", label: "Tme", editable: true, type: "boolean", width: "15%", filterable: true, align: "left" }
+            { key: "TME", label: "Tme", editable: true, type: "boolean", width: "15%", filterable: true, align: "left" }
         ],
     },
     {
@@ -76,7 +76,7 @@ export const tableDefinitions = (t) => [
         columns: [
             { key: "ID", label: "ID", width: "33%", editable: false, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, width: "33%", filterable: true, align: "left" },
-            { key: "Pin", label: "PIN", editable: true, type: "number", filterable: true, align: "left" },
+            { key: "PIN", label: "PIN", editable: true, type: "number", filterable: true, align: "left" },
         ],
     },
     {

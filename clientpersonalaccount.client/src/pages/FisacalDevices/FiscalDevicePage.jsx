@@ -228,7 +228,7 @@ export default function FiscalDevicePage({ id }) {
     };
 
     const getDeviceTypeText = (value) => {
-        const type = Object.values(FiscalDeviceTypeEnum).find((t) => t.value === value);
+        const type = Object.values(FiscalDeviceTypeEnum(t)).find((t) => t.value === value);
         return type?.label || "-";
     };
 

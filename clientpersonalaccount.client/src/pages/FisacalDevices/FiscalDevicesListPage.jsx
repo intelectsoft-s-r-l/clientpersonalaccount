@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import FiscalDevicePage from "./FiscalDevicePage";
 import { Eye } from "lucide-react";
-import { StatusEnum, FiscalDeviceTypeEnum } from "../../enums/Enums";
+import { StatusEnum, FiscalDeviceTypeEnum, FiscalDeviceBusinessTypeEnum } from "../../enums/Enums";
 import { DataTable } from "../../components/DataTable"; // Импорт универсального DataTable
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -59,7 +59,12 @@ export default function FiscalDevicesListPage() {
         };
 
     const getDeviceTypeText = (value) => {
-        const type = Object.values(FiscalDeviceTypeEnum).find((t) => t.value === value);
+        const type = Object.values(FiscalDeviceTypeEnum(t)).find((t) => t.value === value);
+        return type?.label || "-";
+    };
+
+    const getDeviceBusinessTypeText = (value) => {
+        const type = Object.values(FiscalDeviceBusinessTypeEnum(t)).find((t) => t.value === value);
         return type?.label || "-";
     };
 
@@ -76,7 +81,8 @@ export default function FiscalDevicesListPage() {
         return {
             ...device,
             statusCode: String(device.status),
-            typeCode: device.type
+            typeCode: device.type,
+            typeBusiness: device.bu
         };
     });
 
@@ -99,9 +105,17 @@ export default function FiscalDevicesListPage() {
         { key: "number", label: t("NumberSTS"), filterable: true, width: "12%" },
         {
             key: "typeCode",
-            label: t("Type"),
+            label: t("TypeDevice"),
             filterable: true,
             width: "14%",
+            sortable: true,
+            filterOptions: [
+                { value: "0", label: t("NotFiscal") },
+                { value: "1", label: "SI_DE_imprimante_fiscale" },
+                { value: "2", label: "SI_DE_fara_imprimante_fiscale" },
+                { value: "3", label: "SI_FDE_fara_imprimante_fiscale" },
+                { value: "4", label: "Masina_de_casa_si_control" }
+            ],
             render: (value) => (
                 <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-md text-xs font-medium">
                     {getDeviceTypeText(value)}
@@ -109,10 +123,30 @@ export default function FiscalDevicesListPage() {
             ),
         },
         {
+            key: "businessType",
+            label: t("TypeBusiness"),
+            filterable: true,
+            width: "8%",
+            sortable: true,
+            filterOptions: [
+                { value: "0", label: t("NotFiscal") },
+                { value: "1", label: "Petrol" },
+                { value: "2", label: "Sales" },
+                { value: "3", label: "PetrolAndSales" },
+                { value: "4", label: "Taxi" },
+                { value: "5", label: "Gambling" }
+            ],
+            render: (value) => (
+                <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-md text-xs font-medium">
+                    {getDeviceBusinessTypeText(value)}
+                </span>
+            ),
+        },
+        {
             key: "statusCode",
             label: t("Status"),
             filterable: true,
-            width: "14%",
+            width: "10%",
             sortable: true,
             filterOptions: [
                 { value: "0", label: t("NotActivated") },
@@ -137,7 +171,7 @@ export default function FiscalDevicesListPage() {
             label: t("IsActive"),
             filterable: true,
             sortable: true,
-            width: "10%",
+            width: "6%",
             render: (value) => formatDate(value),
         },
         {
@@ -145,34 +179,38 @@ export default function FiscalDevicesListPage() {
             label: "",
             filterable: false,
             sortable: false,
-            width: "6%",
+            width: "10%",
+            headerClassName: "sticky right-0 bg-white dark:bg-gray-800 z-10 text-center", // для th
+            cellClassName: "sticky right-0 bg-white dark:bg-gray-800 z-10 text-center",   // для td
             render: (_, row) => (
-                <div className="flex space-x-2">
+                <div className="flex justify-center items-center gap-1">
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/fiscalDevices/${row.id}`);
+                            navigate(`/FiscalDevices/${row.id}`);
                         }}
                         className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
                         title="Просмотреть детали"
                     >
                         <img
                             src="/icons/Globe.svg"
-                            className="w-6 h-6 text-black hover:scale-125"
+                            className="w-8 h-8 hover:scale-125"
+                            alt="Details"
                         />
                     </button>
 
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedDevice(row);  // Вызов модального окна с выбранным устройством
+                            setSelectedDevice(row);
                         }}
                         className="text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded-full transition-all duration-200"
                         title="Открыть модальное окно"
                     >
                         <img
                             src="/icons/Show.svg"
-                            className="w-6 h-6 text-black hover:scale-125"
+                            className="w-8 h-8 hover:scale-125"
+                            alt="Show"
                         />
                     </button>
                 </div>
