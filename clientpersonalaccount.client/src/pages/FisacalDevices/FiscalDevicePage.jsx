@@ -15,10 +15,12 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Modal from "react-modal";
 import Datepicker from "react-tailwindcss-datepicker";
+import { useParams } from "react-router-dom";
 
 Modal.setAppElement("#root");
 
-export default function FiscalDevicePage({ id }) {
+export default function FiscalDevicePage() {
+    const { id } = useParams();
     const { token } = useAuth();
     const [shifts, setShifts] = useState([]);
     const [bills, setBills] = useState([]);

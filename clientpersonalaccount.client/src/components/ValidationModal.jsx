@@ -15,7 +15,7 @@ export default function ValidationModal({ errors, visible, onClose }) {
             const shouldShowRowPrefix =
                 rowId &&
                 isNumericKey(rowId) &&
-                !(rowId === "_global" && Object.keys(errors).length === 1);
+                rowId !== "general"; // general не получает префикс
 
             if (shouldShowRowPrefix) {
                 messages.push(`${t("Row")} ${rowId}: ${value}`);
@@ -38,6 +38,18 @@ export default function ValidationModal({ errors, visible, onClose }) {
 
     const hasErrors = errors && Object.keys(errors).length > 0;
 
+    // Собираем сначала general ошибки
+    const generalMessages = errors.general
+        ? errors.general.map((msg, idx) => <li key={`general-${idx}`}>{msg}</li>)
+        : [];
+
+    // Затем все остальные ошибки
+    const rowMessages = Object.entries(errors)
+        .filter(([key]) => key !== "general")
+        .flatMap(([key, value]) =>
+            parseErrors(key, value).map((msg, idx) => <li key={`${key}-${idx}`}>{msg}</li>)
+        );
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-lg overflow-y-auto max-h-[80vh]">
@@ -47,11 +59,8 @@ export default function ValidationModal({ errors, visible, onClose }) {
 
                 {hasErrors && (
                     <ul className="list-disc list-inside space-y-2 max-h-60 overflow-y-auto">
-                        {Object.entries(errors).flatMap(([key, value]) =>
-                            parseErrors(key, value).map((msg, idx) => (
-                                <li key={`${key}-${idx}`}>{msg}</li>
-                            ))
-                        )}
+                        {generalMessages}
+                        {rowMessages}
                     </ul>
                 )}
 

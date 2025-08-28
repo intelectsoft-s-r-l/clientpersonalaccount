@@ -261,9 +261,9 @@ export function DataTable({
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-xl overflow-visible select-none dark:bg-gray-800 dark:text-white">
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden select-none dark:bg-gray-800 dark:text-white">
             {/* Заголовок и кнопки */}
-            <div className="p-4 border-b border-[#787f88] flex flex-wrap justify-between items-center gap-2">
+            <div className="p-4 flex flex-wrap justify-between items-center gap-2">
                 <h2 className="text-lg sm:text-xl font-semibold truncate max-w-[70%]">
                     {title}
                 </h2>
@@ -310,14 +310,14 @@ export function DataTable({
                     <input
                         type="text"
                         placeholder={t("Search")}
-                        className="w-full sm:w-64 border border-[#787f88] rounded px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm text-right dark:bg-gray-700 dark:text-white"
+                        className="w-full sm:w-64 border border-[#dbdbdb] rounded px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm text-right dark:bg-gray-700 dark:text-white"
                         value={globalFilter}
                         onChange={(e) => handleGlobalFilterChange(e.target.value)}
                     />
                 </div>
 
                 {/* Таблица */}
-                <table className="w-full border border-[#787f88] border-solid border-collapse table-auto text-xs sm:text-sm">
+                <table className="w-full table-auto text-xs sm:text-sm">
                     <thead>
                         <tr className="bg-gray-100">
                             {columns.map((col) => {
@@ -326,35 +326,78 @@ export function DataTable({
                                     <th
                                         key={col.key}
                                         style={{ width: col.width || "auto" }}
-                                        className={`relative font-bold uppercase tracking-wider p-1 sm:p-2 border border-[#787f88] ${getAlignment(col)} dark:text-white ${isActions
-                                                ? "sticky right-0 bg-white dark:bg-gray-800 z-20 w-[84px] sm:w-[96px] text-center" // ⭐ фиксируем справа + ширина
+                                        className={`relative font-bold uppercase tracking-wider p-1 sm:p-2 ${getAlignment(col)} dark:text-white ${isActions
+                                            ? "sticky right-0 bg-gray-100 dark:bg-gray-800 z-20 w-[84px] sm:w-[96px] text-center" // ⭐ фиксируем справа + ширина
                                                 : ""
                                             }`}
                                         onClick={() =>
                                             col.sortable !== false && handleSort(col.key)
                                         }
                                     >
-                                        <div
-                                            className={`flex items-center space-x-1 ${getAlignment(col).includes("right")
-                                                    ? "justify-end"
-                                                    : getAlignment(col).includes("center")
-                                                        ? "justify-center"
-                                                        : "justify-start"
-                                                } ${isActions ? "justify-center" : ""}`} // ⭐ центруем actions
-                                        >
-                                            <span className="flex-grow min-w-0 overflow-hidden whitespace-nowrap text-ellipsis">
-                                                {col.label}
-                                            </span>
+                                        <div className="flex items-center justify-center space-x-1">
+                                            <span className="truncate">{col.label}</span>
                                             {sortConfig.key === col.key && (
-                                                <span className="ml-1 text-[10px] sm:text-xs flex-shrink-0">
+                                                <span className="ml-1 text-xs">
                                                     {sortConfig.direction === "asc" ? "▲" : "▼"}
                                                 </span>
                                             )}
+                                            {col.filterable && (
+                                                <>
+                                                    {!activeFilter || activeFilter !== col.key ? (
+                                                        <div
+                                                            className="w-6 h-6 cursor-pointer flex items-center justify-center"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleClick(col.key);
+                                                            }}
+                                                        >
+                                                            <img
+                                                                src="/icons/Filter.svg"
+                                                                alt="Filter"
+                                                                className="w-5 h-5 hover:scale-110"
+                                                            />
+                                                        </div>
+                                                    ) : null}
+                                                </>
+                                            )}
                                         </div>
+
+                                        {/* Поле фильтра */}
+                                        {col.filterable && activeFilter === col.key && (
+                                            <div id={`filter-${col.key}`} onClick={(e) => e.stopPropagation()} className="absolute top-full left-0 mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-300 rounded shadow-lg">
+                                                {col.filterOptions ? (
+                                                    <select
+                                                        value={filters[col.key] ?? ""}
+                                                        onChange={(e) => handleFilterChange(col.key, e.target.value)}
+                                                        className="w-full p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <option value="">{t("All")}</option>
+                                                        {(col.filterOptions || []).map((opt) => (
+                                                            <option
+                                                                key={typeof opt === "object" ? opt.value : opt}
+                                                                value={typeof opt === "object" ? opt.value : opt}
+                                                            >
+                                                                {typeof opt === "object" ? opt.label : opt}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        value={filters[col.key] || ""}
+                                                        onChange={(e) => handleFilterChange(col.key, e.target.value)}
+                                                        placeholder={`${t("Filter")}...`}
+                                                        className="w-full p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                )}
+                                            </div>
+                                        )}
                                     </th>
                                 );
                             })}
-                            {onDeleteRow && <th className="w-10 sm:w-12 border border-[#787f88] flex-shrink-0"></th>}
+                            {onDeleteRow && <th className=" w-10 sm:w-12 flex-shrink-0"></th>}
                         </tr>
                     </thead>
 
@@ -363,7 +406,7 @@ export function DataTable({
                             <tr>
                                 <td
                                     colSpan={columns.length}
-                                    className="text-center py-8 text-gray-500 dark:bg-gray-800 dark:text-white border border-[#787f88] border-solid"
+                                    className="text-center py-8 text-gray-500 dark:bg-gray-800 dark:text-white border-solid"
                                 >
                                     <div className="flex items-center justify-center h-64">
                                         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid"></div>
@@ -374,7 +417,7 @@ export function DataTable({
                             <tr>
                                 <td
                                     colSpan={columns.length}
-                                    className="text-center py-8 text-gray-400 dark:bg-gray-800 dark:text-white border border-[#787f88] border-solid"
+                                    className="text-center py-8 text-gray-400 dark:bg-gray-800 dark:text-white border-solid"
                                 >
                                     {t("No data to display")}
                                 </td>
@@ -389,7 +432,7 @@ export function DataTable({
                                         className={`${onRowClick ? "cursor-pointer" : ""} ${isSelected
                                                 ? "bg-blue-100 dark:bg-blue-700"
                                                 : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                                            } border-b border-[#787f88]`}
+                                            } border-b border-[#dbdbdb]`}
                                         onClick={
                                             onRowClick
                                                 ? () => {
@@ -424,7 +467,7 @@ export function DataTable({
                                                     return (
                                                         <td
                                                             key={col.key}
-                                                            className={`p-2 border border-[#787f88] text-sm text-gray-900 ${getAlignment(
+                                                            className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                                 col
                                                             )} dark:bg-gray-800 dark:text-white ${isActions
                                                                     ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
@@ -446,7 +489,7 @@ export function DataTable({
                                                     return (
                                                         <td
                                                             key={col.key}
-                                                            className={`p-2 border border-[#787f88] text-sm text-gray-900 ${getAlignment(
+                                                            className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                                 col
                                                             )} dark:bg-gray-800 dark:text-white ${isActions
                                                                     ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
@@ -455,7 +498,7 @@ export function DataTable({
                                                         >
                                                             <select
                                                                 autoFocus
-                                                                className="w-full p-1 border border-gray-300 rounded dark:bg-gray-700 dark:text-white"
+                                                                className="w-full p-1 border-b border-gray-300 rounded dark:bg-gray-700 dark:text-white"
                                                                 value={String(editValue ?? "")}
                                                                 onChange={(e) => setEditValue(e.target.value)}
                                                                 onBlur={saveEdit}
@@ -484,7 +527,7 @@ export function DataTable({
                                                 return (
                                                     <td
                                                         key={col.key}
-                                                        className={`p-2 border border-[#787f88] text-sm text-gray-900 ${getAlignment(
+                                                        className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                             col
                                                         )} dark:bg-gray-800 dark:text-white ${isActions
                                                                 ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
@@ -514,7 +557,7 @@ export function DataTable({
                                                 return (
                                                     <td
                                                         key={col.key}
-                                                        className={`p-2 border border-[#787f88] text-sm text-gray-900 ${getAlignment(
+                                                        className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                             col
                                                         )} dark:bg-gray-800 dark:text-white ${isActions
                                                                 ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
@@ -528,7 +571,7 @@ export function DataTable({
                                                             onBlur={saveEdit}
                                                             onKeyDown={handleKeyDown}
                                                             autoFocus
-                                                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white"
+                                                            className="w-full border-b border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white"
                                                         />
                                                     </td>
                                                 );
@@ -537,7 +580,7 @@ export function DataTable({
                                             return (
                                                 <td
                                                     key={col.key}
-                                                    className={`p-2 border border-[#787f88] text-sm text-gray-900 ${getAlignment(
+                                                    className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                         col
                                                     )} overflow-hidden whitespace-nowrap text-ellipsis dark:bg-gray-800 dark:text-white ${isActions
                                                             ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
@@ -575,7 +618,7 @@ export function DataTable({
                                         })}
 
                                         {onDeleteRow && (
-                                            <td className="text-center border border-[#787f88] dark:bg-gray-800 dark:text-white flex-shrink-0">
+                                            <td className="text-center border-b border-[#dbdbdb] dark:bg-gray-800 dark:text-white flex-shrink-0">
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -602,7 +645,7 @@ export function DataTable({
 
             {/* Пагинация */}
             {totalPages > 1 && (
-                <div className="flex flex-wrap justify-center items-center gap-1 sm:gap-2 p-2 sm:p-4 border-t border-[#787f88]">
+                <div className="flex flex-wrap justify-center items-center gap-1 sm:gap-2 p-2 sm:p-4 border-t border-[#dbdbdb]">
                     {/* Кнопка назад */}
                     <button
                         onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -615,6 +658,19 @@ export function DataTable({
                             alt={t("Previous Page")}
                         />
                     </button>
+
+                    {/* Быстрый доступ на первую страницу, если близко к последней */}
+                    {currentPage != 1 && currentPage != 2 && currentPage != 3  && totalPages > 1 && (
+                        <>
+                            <button
+                                onClick={() => setCurrentPage(1)}
+                                className="px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-full border border-gray-300 dark:border-gray-600 dark:text-white"
+                            >
+                                1
+                            </button>
+                            <span className="px-2">...</span>
+                        </>
+                    )}
 
                     {/* Пагинация */}
                     {(() => {
@@ -643,7 +699,7 @@ export function DataTable({
                             );
                         }
 
-                        // Добавляем последнюю страницу, если она не в видимом диапазоне
+                        // Последняя страница
                         if (totalPages > maxVisible) {
                             if (endPage < totalPages - 1) {
                                 pages.push(<span key="dots" className="px-2">...</span>);
@@ -681,6 +737,7 @@ export function DataTable({
                     </button>
                 </div>
             )}
+
         </div>
     );
 

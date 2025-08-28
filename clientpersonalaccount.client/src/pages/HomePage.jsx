@@ -41,6 +41,7 @@ export default function HomePage() {
         if (activePage === "FiscalDevices") return <FiscalDevicesListPage />;
         if (activePage.startsWith("FiscalDevices/")) {
             const id = activePage.split("/")[1];
+            console.log(id);
             return <FiscalDevicePage id={id} />;
         }
         if (activePage === "Banks") return <BankPage />;

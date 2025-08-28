@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import ValidationModal from "./ValidationModal";
 import { validateProducts } from "../validation/validationSchemas";
 
-const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataChange, usersPin = []}, ref) => {
+const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataChange, usersPin = [] }, ref) => {
     const [tableData, setTableData] = useState(data);
     const [usersPinData, setUsersPinData] = useState(usersPin);
     const [pinData, setPinData] = useState([]);
@@ -63,12 +63,28 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
 
             let errors = {};
             if (tableKey === "users")
-                errors = validateProducts([editedRow], tableKey, usersPinData, pinData,t);
+                errors = validateProducts(editedRow, tableKey, usersPinData, pinData, t, newData);
             else
-                errors = validateProducts([editedRow], tableKey, null, null,t);
+                errors = validateProducts(editedRow, tableKey, null, null, t, newData);
 
             if (Object.keys(errors).length > 0) {
-                setValidationErrors(prev => ({ ...prev, [rowId]: errors }));
+                setValidationErrors(prev => {
+                    const updated = { ...prev };
+
+                    // если есть general — сохраняем только general
+                    if (errors.general) {
+                        return { general: errors.general };
+                    }
+
+                    // иначе сохраняем ошибки по строке
+                    if (Object.keys(errors).length > 0) {
+                        updated[rowId] = errors;
+                    } else {
+                        delete updated[rowId];
+                    }
+
+                    return updated;
+                });
                 setShowErrors(true);
             } else {
                 setValidationErrors(prev => {
@@ -89,6 +105,13 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
     };
 
     const handleAddRow = () => {
+        if (tableKey === "products" && tableData.length >= 1000) {
+            const generalError = { general: [t("validation.maxRows", { count: 1000 })] };
+            setValidationErrors(generalError);
+            setShowErrors(true);
+            return;
+        }
+
         const maxId = tableData.reduce((max, row) => {
             const id = Number(row.ID);
             return !isNaN(id) && id > max ? id : max;
@@ -106,6 +129,12 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
             ...emptyFields,
             isNew: true,
         };
+
+        setValidationErrors(prev => {
+            const updated = { ...prev };
+            delete updated[newRow.ID];
+            return updated;
+        });
 
         setTableData(prev => [newRow, ...prev]);
     };

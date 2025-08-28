@@ -15,7 +15,12 @@ export const registerSchema = (t) => yup.object({
     email: yup.string().email(t("validation.invalidEmail")).required(t("validation.emailRequired")),
 });
 
-export const validateProducts = (data, tableKey, usersPin, pins, t) => {
+export const validateProducts = (item, tableKey, usersPin, pins, t, data) => {
+    console.log(data.length);
+    if (tableKey === "products" && data.length > 1000) {
+        return { general: [t("validation.maxRows", { count: 1000 })] };
+    }
+
     const errors = {};
     const pluSet = new Set();
     const codeSet = new Set();
@@ -23,53 +28,47 @@ export const validateProducts = (data, tableKey, usersPin, pins, t) => {
     const seenPins = new Set(pins);
     const usersPinList = new Set(usersPin);
 
-    if (tableKey === "products" && data.length > 1000) {
-        errors.general = [t("validation.maxRows", { count: 1000 })];
+    const rowErrors = {};
+    const id = item.ID || idx;
+
+    if (!item.Name || item.Name.trim() === "" || item.Name === "undefined") {
+        rowErrors.Name = t("validation.nameRequired");
     }
 
-    data.forEach((item, idx) => {
-        const rowErrors = {};
-        const id = item.ID || idx;
-
-        if (!item.Name || item.Name.trim() === "" || item.Name === "undefined") {
-            rowErrors.Name = t("validation.nameRequired");
+    if (tableKey === "users") {
+        const pin = item.PIN?.toString();
+        if (!pin || pin.trim() === "" || pin === "undefined") {
+            rowErrors.PIN = t("validation.pinRequired");
+        } else {
+            if (!/^\d{5}$/.test(pin)) rowErrors.PIN = t("validation.pinFiveDigits");
+            if (usersPinList.has(pin)) rowErrors.PIN = t("validation.pinUsed");
+            if (seenPins.has(pin)) rowErrors.PIN = t("validation.pinDuplicate");
+            else seenPins.add(pin);
         }
+    }
 
-        if (tableKey === "users") {
-            const pin = item.PIN?.toString();
-            if (!pin || pin.trim() === "" || pin === "undefined") {
-                rowErrors.PIN = t("validation.pinRequired");
-            } else {
-                if (!/^\d{5}$/.test(pin)) rowErrors.PIN = t("validation.pinFiveDigits");
-                if (usersPinList.has(pin)) rowErrors.PIN = t("validation.pinUsed");
-                if (seenPins.has(pin)) rowErrors.PIN = t("validation.pinDuplicate");
-                else seenPins.add(pin);
-            }
-        }
+    if (tableKey === "products") {
+        if (!item.PLU || item.PLU.trim() === "") rowErrors.PLU = t("validation.pluRequired");
+        else if (pluSet.has(item.PLU)) rowErrors.PLU = t("validation.pluDuplicate");
+        else pluSet.add(item.PLU);
 
-        if (tableKey === "products") {
-            if (!item.PLU || item.PLU.trim() === "") rowErrors.PLU = t("validation.pluRequired");
-            else if (pluSet.has(item.PLU)) rowErrors.PLU = t("validation.pluDuplicate");
-            else pluSet.add(item.PLU);
+        if (!item.Code || item.Code.trim() === "") rowErrors.Code = t("validation.codeRequired");
+        else if (codeSet.has(item.Code)) rowErrors.Code = t("validation.codeDuplicate");
+        else codeSet.add(item.Code);
 
-            if (!item.Code || item.Code.trim() === "") rowErrors.Code = t("validation.codeRequired");
-            else if (codeSet.has(item.Code)) rowErrors.Code = t("validation.codeDuplicate");
-            else codeSet.add(item.Code);
+        const normalizedPrice = Number(item.Price?.toString().replace(",", "."));
+        if (!normalizedPrice || normalizedPrice <= 0) rowErrors.Price = t("validation.pricePositive");
 
-            const normalizedPrice = Number(item.Price?.toString().replace(",", "."));
-            if (!normalizedPrice || normalizedPrice <= 0) rowErrors.Price = t("validation.pricePositive");
+        if (!item.Barcode || item.Barcode.trim() === "") rowErrors.Barcode = t("validation.barcodeRequired");
+        else if (barcodeSet.has(item.Barcode)) rowErrors.Barcode = t("validation.barcodeDuplicate");
+        else barcodeSet.add(item.Barcode);
 
-            if (!item.Barcode || item.Barcode.trim() === "") rowErrors.Barcode = t("validation.barcodeRequired");
-            else if (barcodeSet.has(item.Barcode)) rowErrors.Barcode = t("validation.barcodeDuplicate");
-            else barcodeSet.add(item.Barcode);
+        if (!item.VATCode || item.VATCode.trim() === "") rowErrors.VATCode = t("validation.vatRequired");
+    }
 
-            if (!item.VATCode || item.VATCode.trim() === "") rowErrors.VATCode = t("validation.vatRequired");
-        }
-
-        if (Object.keys(rowErrors).length > 0) {
-            errors[id] = rowErrors;
-        }
-    });
+    if (Object.keys(rowErrors).length > 0) {
+        errors[id] = rowErrors;
+    }
 
     return errors;
 };

@@ -87,9 +87,9 @@ export default function LayoutWithSidebar({ children }) {
     };
 
     return (
-        <div className="flex h-screen overflow-hidden">
+        <div className="flex h-screen">
             <Sidebar onNavigate={setActivePage} />
-            <main className={`transition-[margin] duration-300 overflow-y-auto w-full p-4 dark:bg-gray-700`}>
+            <main className={`transition-[margin] duration-300 overflow-y-auto flex-1 min-w-0l p-4 dark:bg-gray-700`}>
                 {/* Верхняя панель */}
                 <div className="flex justify-between items-center w-full mb-3">
                     {/* Левая часть: кнопка + breadcrumbs */}

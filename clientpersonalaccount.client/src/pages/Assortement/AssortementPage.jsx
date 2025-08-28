@@ -569,16 +569,18 @@ export default function AssortmentPage() {
 
     return (
         <div id="assortement" className="flex flex-col min-h-screen">
-            <nav className="border-b p-3 overflow-x-auto whitespace-nowrap">
+            <nav className="border-b p-3 w-full min-w-0">
                 <h3 className="text-lg font-bold mb-2">{t("Settings")}</h3>
-                <div className="flex gap-2">
+
+                <div className="flex flex-wrap gap-2 w-full">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveId(tab.id)}
-                            className={`hover:scale-110 px-4 py-2 rounded whitespace-nowrap ${tab.id === activeId
-                                ? "bg-gradient-to-r from-[#72b827] to-green-600 text-white"
-                                : "hover:bg-gray-200"
+                            className={`px-4 py-2 rounded flex-none whitespace-normal break-words
+                ${tab.id === activeId
+                                    ? "bg-gradient-to-r from-[#72b827] to-green-600 text-white"
+                                    : "hover:bg-gray-200"
                                 }`}
                         >
                             {t(tab.nameKey, { number: tab.number })}
@@ -587,12 +589,15 @@ export default function AssortmentPage() {
                 </div>
             </nav>
 
-            <div className="flex gap-4 px-6 py-4 border-b">
+            <div className="flex flex-wrap gap-4 px-6 py-4 border-b">
                 {["products", "payments", "groups", "departments", "users", "global"].map((key) => (
                     <button
                         key={key}
                         onClick={() => setActiveTable(key)}
-                        className={`hover:scale-110 px-4 py-2 border-b-2 ${key === activeTable ? " border-green-600 text-green-600" : "border-transparent text-gray-600 dark:text-white"
+                        className={`hover:scale-110 px-4 py-2 border-b-2 text-center break-words min-w-[80px] 
+        ${key === activeTable
+                                ? "border-green-600 text-green-600"
+                                : "border-transparent text-gray-600 dark:text-white"
                             }`}
                     >
                         {key === "products" && t("Tabs.Products")}
@@ -605,7 +610,7 @@ export default function AssortmentPage() {
                 ))}
             </div>
             {activeTable === "payments" && (
-                <div className="flex flex-col border-b bg-gray-50">
+                <div className="flex flex-col bg-gray-50">
                     <div className="flex items-center justify-end gap-4 px-6 py-4">
                         <div className="flex items-center gap-3">
                             <button
@@ -631,7 +636,7 @@ export default function AssortmentPage() {
 
             {/* Блок импорта/экспорта - показывается только для таблицы products */}
             {activeTable === "products" && (
-                <div className="flex flex-col border-b bg-gray-50">
+                <div className="flex flex-col bg-gray-50">
                     {/* Верхняя панель */}
                     <div className="flex items-center justify-between gap-4 px-6 py-4">
                         {/* Текст слева */}
@@ -739,8 +744,8 @@ export default function AssortmentPage() {
 
 
 
-            <main className="flex-1 p-6 overflow-auto">
-                <div className="grid grid-cols-1 md:grid-cols-1 mt-6">
+            <main className="flex-1 overflow-auto">
+                <div className="grid grid-cols-1 md:grid-cols-1 mt-1">
                     {activeTable === "global" ? (
                         <GlobalSettingsForm
                             initialSettings={currentGlobalSettings}
