@@ -14,10 +14,11 @@ const defaultSettings = {
     MaxServiceAmount: 0,
     MIA: "",
     EnableSMS: false,
-    CheckedFiscalizationCardOffline: false
+    CheckedFiscalizationCardOffline: false,
+    SistemPaymentSmart: "default",
 };
 
-const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
+const GlobalSettingsForm = forwardRef(({ initialSettings, onChange }, ref) => {
     const [settings, setSettings] = useState({ ...defaultSettings, ...initialSettings });
     const [options, setOptions] = useState([]);
     const [cashRegisterTypes, setCashRegisterTypes] = useState([]);
@@ -49,6 +50,16 @@ const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
         setSettings({ ...defaultSettings, ...initialSettings });
     }, [initialSettings]);
 
+    useEffect(() => {
+        // После загрузки options
+        if (settings.MIA && options.length) {
+            const opt = options.find((o) => o.apyKey === settings.MIA);
+            if (opt) {
+                setSettings((prev) => ({ ...prev, SistemPaymentSmart: opt.id }));
+            }
+        }
+    }, [settings.MIA, options]);
+
     useImperativeHandle(ref, () => ({
         getGlobalSettings: () => settings,
     }));
@@ -56,28 +67,35 @@ const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
     const handleChange = (e) => {
         const { name, type, value, checked } = e.target;
 
-        // если меняем SistemPaymentSmart (VisualInterface)
-        if (name === "VisualInterface") {
+        if (name === "SistemPaymentSmart") {
             const selectedOpt = options.find((opt) => opt.id === value);
-
-            setSettings((prev) => ({
-                ...prev,
-                VisualInterface: value,
-                MIA: selectedOpt?.apyKey || "", // ставим apiKey в MIA
-            }));
+            console.log(value, selectedOpt);
+            setSettings((prev) => {
+                const updated = {
+                    ...prev,
+                    SistemPaymentSmart: value,       // сохраняем выбранный posID
+                    MIA: selectedOpt?.apyKey || "00000000-0000-0000-0000-000000000000", // ставим apiKey в MIA
+                };
+                onChange?.(updated);
+                return updated;
+            });
             return;
         }
 
         // дефолтное поведение
-        setSettings((prev) => ({
-            ...prev,
-            [name]:
-                type === "checkbox"
-                    ? checked
-                    : type === "number"
-                        ? +value || 0
-                        : value || "",
-        }));
+        setSettings((prev) => {
+            const updated = {
+                ...prev,
+                [name]:
+                    type === "checkbox"
+                        ? checked
+                        : type === "number"
+                            ? +value || 0
+                            : value || "",
+            };
+            onChange?.(updated);
+            return updated;
+        });
     };
 
     return (
@@ -110,8 +128,8 @@ const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
                 <label className="flex flex-col space-y-1 text-gray-700">
                     <span>{t("Type")}</span>
                     <select
-                        name="Type"
-                        value={settings.Type || ""}
+                        name="VisualInterface"
+                        value={settings.VisualInterface || ""}
                         onChange={handleChange}
                         className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     >
@@ -127,8 +145,8 @@ const GlobalSettingsForm = forwardRef(({ initialSettings }, ref) => {
                 <label className="flex flex-col space-y-1 text-gray-700">
                     <span>{t("SistemPaymentSmart")}</span>
                     <select
-                        name="VisualInterface"
-                        value={settings.VisualInterface || ""}
+                        name="SistemPaymentSmart"
+                        value={settings.SistemPaymentSmart || ""}
                         onChange={handleChange}
                         className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     >

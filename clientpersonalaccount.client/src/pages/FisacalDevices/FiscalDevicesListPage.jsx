@@ -180,16 +180,14 @@ export default function FiscalDevicesListPage() {
             filterable: false,
             sortable: false,
             width: "10%",
-            headerClassName: "sticky right-0 bg-white dark:bg-gray-800 z-10 text-center", // для th
-            cellClassName: "sticky right-0 bg-white dark:bg-gray-800 z-10 text-center",   // для td
             render: (_, row) => (
-                <div className="flex justify-center items-center gap-1">
+                <div className="flex justify-center items-center gap-1 overflow-visible">
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/FiscalDevices/${row.id}`);
                         }}
-                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
+                        className="flex-shrink-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
                         title="Просмотреть детали"
                     >
                         <img
@@ -204,7 +202,7 @@ export default function FiscalDevicesListPage() {
                             e.stopPropagation();
                             setSelectedDevice(row);
                         }}
-                        className="text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded-full transition-all duration-200"
+                        className="flex-shrink-0 text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded-full transition-all duration-200"
                         title="Открыть модальное окно"
                     >
                         <img

@@ -471,8 +471,8 @@ export default function FiscalDevicePage() {
         }
       `}</style>
             <div className="p-6 overflow-y-auto">
-                <div className="grid grid-cols-1 md:grid-cols-[300px_minmax(0,1fr)_400px] gap-4">
-                    <div>
+                <div className="flex flex-wrap gap-4">
+                    <div className="w-full md:w-[300px]">
                         <DataTable
                             title={t("Shifts")}
                             columns={columnsShifts}
@@ -486,7 +486,7 @@ export default function FiscalDevicePage() {
                             )}
                         />
                     </div>
-                    <div>
+                    <div className="w-full md:flex-1">
                         <DataTable
                             title={t("Bills")}
                             columns={columnsBills}
@@ -497,7 +497,7 @@ export default function FiscalDevicePage() {
                             onRefresh={() => fetchBills(id, selectedShiftId)}
                         />
                     </div>
-                    <div>
+                    <div className="w-full md:w-[400px]">
                         <div className="dark:bg-gray-800 dark:text-white rounded-xl shadow-md p-4">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="space-x-4">
@@ -597,12 +597,16 @@ export default function FiscalDevicePage() {
                                     </label>
                                     <Datepicker
                                         asSingle={true}
-                                        value={{ startDate: period.startDate }}
+                                        value={{ startDate: period.startDate, endDate: period.startDate }}
                                         onChange={(newValue) =>
-                                            setPeriod(prev => ({ ...prev, startDate: newValue.startDate }))
+                                            setPeriod(prev => ({
+                                                ...prev, startDate: newValue.startDate
+                                            }))
                                         }
                                         primaryColor="cyan"
-                                        displayFormat="YYYY.MM.DD"
+                                        displayFormat="DD.MM.YYYY"
+                                        maxDate={period?.endDate || new Date()}
+                                        minDate={new Date(2000, 0, 1)}
                                         inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
                                     />
                                     <label className="text-sm font-medium text-gray-700">
@@ -610,12 +614,13 @@ export default function FiscalDevicePage() {
                                     </label>
                                     <Datepicker
                                         asSingle={true}
-                                        value={period.endDate}
+                                        value={{ startDate: period.endDate, endDate: period.endDate }}
                                         onChange={(newValue) =>
-                                            setPeriod(prev => ({ ...prev, endDate: newValue.endDate }))
+                                            setPeriod(prev => ({ ...prev, endDate: newValue.startDate }))
                                         }
                                         primaryColor="cyan"
-                                        displayFormat="YYYY.MM.DD"
+                                        displayFormat="DD.MM.YYYY"
+                                        minDate={period?.startDate || new Date()}
                                         maxDate={new Date()}
                                         inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
                                     />

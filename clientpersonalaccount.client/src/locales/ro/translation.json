@@ -104,7 +104,7 @@
   "Documentation": "Documentație",
   "AddDocumentation": "Adăugați documentație",
   "ReleasedOn": "Eliberat",
-  "VatCode": "Cod de TVA",
+  "VATCode": "Cod de TVA",
   "Country": "Țara",
   "JuridicalAddress": "Adresa juridică",
   "OfficeAddress": "Adresa biroului",
@@ -808,6 +808,9 @@
   "NoUsers": "Nu există date despre utilizator",
   "LoadingUsers": "Se încarcă utilizatorii...",
   "LicenseInfo": "Informații despre licență",
+  "errors": {
+    "loginFailed": "Eroare de autorizare"
+  },
   "validation": {
     "usernameRequired": "Numele de utilizator este obligatoriu",
     "passwordMin": "Minim 6 caractere",
@@ -819,7 +822,7 @@
     "pinFiveDigits": "PIN-ul trebuie să aibă exact 5 cifre",
     "pinUsed": "Acest PIN este deja utilizat",
     "pinDuplicate": "PIN duplicat în tabel",
-    "maxRows": "Numărul maxim de rânduri este {{count}}",
+    "maxRows": "Numărul maxim de rânduri în tabelul Sortiment {{count}}",
     "pluRequired": "PLU este obligatoriu",
     "pluDuplicate": "PLU duplicat",
     "codeRequired": "Codul este obligatoriu",
@@ -839,5 +842,14 @@
   "TypeDevice": "Tipul dispozitivului",
   "TypeBusiness": "Tipul afacerii",
   "NotFiscal": "Tipul afacerii",
-  "NotSet": "Nu este specificat"
+  "NotSet": "Nu este specificat",
+  "Format": {
+    "Supported": "Formate acceptate"
+  },
+  "SaveAllSettings": "Setările au fost salvate cu succes",
+  "FiscalSummary": "Raport fiscal consolidat",
+  "ReceiptForPeriod": "Descărcați raportul privind încasările pentru perioada respectivă",
+  "ReceiptForPeriodGrouped": "Descărcați raportul grupat privind încasările pentru perioada respectivă",
+  "KKMJournal": "Jurnal de marcat",
+  "DownloadKKMJournal": "Descărcați jurnalul casei de marcat"
 }

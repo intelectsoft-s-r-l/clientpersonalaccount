@@ -104,7 +104,7 @@
   "Documentation": "Documentation",
   "AddDocumentation": "Add documentation",
   "ReleasedOn": "Released on",
-  "VatCode": "VAT Code",
+  "VATCode": "VAT Code",
   "Country": "Country",
   "JuridicalAddress": "Juridical address",
   "OfficeAddress": "Office address",
@@ -807,6 +807,9 @@
   "NoUsers": "No user data",
   "LoadingUsers": "Loading users...",
   "LicenseInfo": "License information",
+  "errors": {
+    "loginFailed": "Authorization error"
+  },
   "validation": {
     "usernameRequired": "Username is required",
     "passwordMin": "Minimum 6 characters",
@@ -818,7 +821,7 @@
     "pinFiveDigits": "PIN must be exactly 5 digits",
     "pinUsed": "This PIN is already used",
     "pinDuplicate": "Duplicate PIN in table",
-    "maxRows": "Maximum number of rows is {{count}}",
+    "maxRows": "Maximum number of rows in the Assortment table {{count}}",
     "pluRequired": "PLU is required",
     "pluDuplicate": "Duplicate PLU",
     "codeRequired": "Code is required",
@@ -838,5 +841,14 @@
   "TypeDevice": "Device type",
   "TypeBusiness": "Business type",
   "NotFiscal": "Not fiscal",
-  "NotSet": "Not specified"
+  "NotSet": "Not specified",
+  "Format": {
+    "Supported": "Supported formats"
+  },
+  "SaveAllSettings": "Settings saved successfully",
+  "FiscalSummary": "Consolidated fiscal report",
+  "ReceiptForPeriod": "Download the report on receipts for the period",
+  "ReceiptForPeriodGrouped": "Download grouped report on receipts for the period",
+  "KKMJournal": "Cash register log",
+  "DownloadKKMJournal": "Download cash register log"
 }

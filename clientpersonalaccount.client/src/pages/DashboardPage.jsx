@@ -471,6 +471,7 @@ export default function DashboardPage() {
                                             primaryColor="cyan"
                                             displayFormat="DD.MM.YYYY"
                                             minDate={period?.startDate || new Date()}
+                                            maxDate={new Date()}
                                             inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
                                         />
                                     </div>

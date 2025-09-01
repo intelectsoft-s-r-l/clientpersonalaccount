@@ -107,8 +107,11 @@ export default function LayoutWithSidebar({ children }) {
                         <nav className="flex text-sm text-gray-600 dark:text-gray-300 ml-2" aria-label="Breadcrumb">
                             <ol className="inline-flex items-center space-x-1 md:space-x-2">
                                 <li className="inline-flex items-center">
-                                    <Link to="/Dashboard" className="inline-flex items-center text-cyan-600 hover:text-cyan-400">
-                                        <img src="/icons/House_01.svg" className="w-6 h-6 hover:scale-125" />
+                                    <Link
+                                        to="/Dashboard"
+                                        className="inline-flex items-center text-gray-600 dark:text-gray-300 no-underline"
+                                    >
+                                        <img src="/icons/House_01.svg" className="w-6 h-6" />
                                     </Link>
                                 </li>
                                 {pathnames.map((value, index) => {
@@ -123,19 +126,59 @@ export default function LayoutWithSidebar({ children }) {
 
                                     return (
                                         <li key={to} className="inline-flex items-center">
-                                            <svg className="w-4 h-4 text-gray-400 mx-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                            <svg
+                                                className="w-4 h-4 text-gray-400 mx-1"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                viewBox="0 0 24 24"
+                                            >
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                             </svg>
-                                            {isLast ? <span>{text}</span> : <Link to={to} className="hover:text-blue-600">{text}</Link>}
+                                            {isLast ? (
+                                                <span className="text-gray-600 dark:text-gray-300">{text}</span>
+                                            ) : (
+                                                <Link
+                                                    to={to}
+                                                    className="text-gray-600 dark:text-gray-300 no-underline"
+                                                >
+                                                    {text}
+                                                </Link>
+                                            )}
                                         </li>
                                     );
                                 })}
                             </ol>
                         </nav>
 
+
                         {/* Адрес устройства */}
                         {fiscalDevice && (
-                            <div className="text-sm text-gray-500 ml-16 mb-3">{fiscalDevice.address}</div>
+                            <div className="flex items-center text-sm text-gray-500 ml-16 mb-3 gap-2">
+                                {/* Иконка адреса */}
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-4 w-4 text-gray-400"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M17.657 16.657L13 21.314l-4.657-4.657A8 8 0 1117.657 16.657z"
+                                    />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
+                                </svg>
+
+                                <span>{fiscalDevice.address}</span>
+                            </div>
                         )}
                     </div>
 

@@ -56,48 +56,11 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
     const handleCellUpdate = (rowId, columnKey, newValue) => {
         setTableData((prevData) => {
             const newData = prevData.map((row) =>
-                row.ID === rowId ? { ...row, [columnKey]: newValue } : row
+                row.ID === rowId ? { ...row, [columnKey]: newValue, isEdited: true } : row
             );
 
-            const editedRow = newData.find(row => row.ID === rowId);
-
-            let errors = {};
-            if (tableKey === "users")
-                errors = validateProducts(editedRow, tableKey, usersPinData, pinData, t, newData);
-            else
-                errors = validateProducts(editedRow, tableKey, null, null, t, newData);
-
-            if (Object.keys(errors).length > 0) {
-                setValidationErrors(prev => {
-                    const updated = { ...prev };
-
-                    // если есть general — сохраняем только general
-                    if (errors.general) {
-                        return { general: errors.general };
-                    }
-
-                    // иначе сохраняем ошибки по строке
-                    if (Object.keys(errors).length > 0) {
-                        updated[rowId] = errors;
-                    } else {
-                        delete updated[rowId];
-                    }
-
-                    return updated;
-                });
-                setShowErrors(true);
-            } else {
-                setValidationErrors(prev => {
-                    const updated = { ...prev };
-                    delete updated[rowId];
-                    return updated;
-                });
-
-                // если строка валидна и это новая — снимаем isNew и сохраняем
-                if (editedRow.isNew) {
-                    editedRow.isNew = false;
-                    if (onDataChange) onDataChange(tableKey, newData.filter(r => !r.isNew));
-                }
+            if (onDataChange) {
+                onDataChange(tableKey, newData);
             }
 
             return newData;

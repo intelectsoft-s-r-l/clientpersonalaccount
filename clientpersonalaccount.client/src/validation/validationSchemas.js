@@ -16,7 +16,6 @@ export const registerSchema = (t) => yup.object({
 });
 
 export const validateProducts = (item, tableKey, usersPin, pins, t, data) => {
-    console.log(data.length);
     if (tableKey === "products" && data.length > 1000) {
         return { general: [t("validation.maxRows", { count: 1000 })] };
     }

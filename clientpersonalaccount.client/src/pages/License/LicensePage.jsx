@@ -101,7 +101,7 @@ export default function LicensePage() {
         label: "", // или t("Actions")
         filterable: false,
         sortable: false,
-        width: "6%",
+        width: "5%",
         render: (value, row) => (
             <button
                 onClick={(e) => {

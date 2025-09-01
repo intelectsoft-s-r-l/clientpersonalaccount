@@ -8,6 +8,9 @@ import { useTranslation } from "react-i18next";
 import apiService from '../../services/apiService';
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
+import { validateProducts } from "../../validation/validationSchemas";
+import ValidationModal from "../../components/ValidationModal";
+import SuccessModal from "../../components/SuccessModal";
 
 export default function AssortmentPage() {
     const [tabs, setTabs] = useState(assortmentConfigs);
@@ -18,9 +21,13 @@ export default function AssortmentPage() {
     const [token, setToken] = useState(null);
     const { t } = useTranslation();
     const [usersPin, setUsersPin] = useState([]);
-
+    const [validationErrors, setValidationErrors] = useState({});
+    const [showErrors, setShowErrors] = useState(false);
     const tabsRefs = useRef({});
     const globalSettingsRef = useRef(null);
+    const [pinData, setPinData] = useState([]);
+    const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+    const [showSuccessMessage, setShowSuccessMessage] = useState(null);
 
     useEffect(() => {
         const fetchToken = async () => {
@@ -55,7 +62,7 @@ export default function AssortmentPage() {
                         // Пробуем сразу распарсить
                         JSON.parse(str);
                         // Если получилось — значит не base64, нужно кодировать
-                        return btoa(unescape(encodeURIComponent(str)));
+                        return btoa(encodeURIComponent(str));
                     } catch {
                         // Иначе — вероятно, уже base64
                         return str;
@@ -66,7 +73,19 @@ export default function AssortmentPage() {
                     if (rawData[key]) {
                         try {
                             const base64Str = forceBase64(rawData[key]);
-                            const jsonStr = atob(base64Str);
+                            let jsonStr = atob(base64Str);
+
+                            try {
+                                JSON.parse(jsonStr);
+                            } catch {
+                                try {
+                                    jsonStr = decodeURIComponent(jsonStr);
+                                    JSON.parse(jsonStr);
+                                } catch (e) {
+                                    console.error("Не удалось распарсить JSON:", e);
+                                }
+                            }
+
                             const parsed = JSON.parse(jsonStr);
 
                             ["PaymentTypes", "Assortments", "Groups", "Departments", "Users"].forEach(
@@ -142,15 +161,13 @@ export default function AssortmentPage() {
     // Функция сохранения на сервер настроек для текущей вкладки
     const saveSettingsForActiveId = useCallback(
         async (settingId, settingData) => {
-            console.log(settingData);
             if (!token) {
                 console.warn("Токен не получен, сохранение невозможно");
                 return;
             }
 
             try {
-                console.log(settingData);
-                const encodedSettings = btoa(encodeURIComponent(JSON.stringify(settingData)));
+                const encodedSettings = btoa(JSON.stringify(settingData));
                 const typeMap = {
                     settings1: 1,
                     settings2: 2,
@@ -204,39 +221,18 @@ export default function AssortmentPage() {
                 return "Departments";
             case "users":
                 return "Users";
+            case "global":
+                return "GlobalSettings";
             default:
                 return null;
         }
     }
 
-    // Обработчик обновления данных из дочерних таблиц — обновляет состояние и сразу запускает сохранение (с дебаунсом)
-    const handleTableDataUpdate = (tableKey, updatedData) => {
-        setDataBySetting((prev) => {
-            const currentSetting = prev[activeId] || {};
-            const settingsField = mapTableKeyToSettingsField(tableKey);
-            if (!settingsField) return prev;
-
-            const updatedSetting = {
-                ...currentSetting,
-                [settingsField]: updatedData,
-            };
-
-            const newDataBySetting = {
-                ...prev,
-                [activeId]: updatedSetting,
-            };
-
-            // Сохраняем настройки с задержкой (1 сек) — чтобы не гонять запросы при каждом вводе
-            debouncedSave(activeId, updatedSetting, saveSettingsForActiveId);
-
-            return newDataBySetting;
-        });
-    };
-
     const handleSaveAll = async () => {
         if (!activeId) return;
 
         const currentSetting = dataBySetting[activeId] || {};
+
         const Settings = {
             PaymentTypes: currentSetting.PaymentTypes || [],
             Assortments: currentSetting.Assortments || [],
@@ -245,6 +241,42 @@ export default function AssortmentPage() {
             Users: currentSetting.Users || [],
             GlobalSettings: currentSetting.GlobalSettings || {},
         };
+
+        // прогоняем валидацию
+        let validationErrors = {};
+        const validateAll = (rows, key) => {
+            if (activeTable == "users" && extraData && extraData.users) {
+                let userPins = [];
+                extraData.users.forEach(u => userPins.push(u.Pin));
+                setPinData(userPins);
+            }
+
+            rows.forEach(row => {
+                let errors = {};
+                if (key === "users")
+                    errors = validateProducts(row, key, usersPin, pinData, t, rows);
+                else
+                    errors = validateProducts(row, key, null, null, t, rows);
+
+                if (Object.keys(errors).length > 0) {
+                    // если есть general — то сохраняем только general
+                    if (errors.general) {
+                        validationErrors = { general: errors.general };
+                    } else {
+                        validationErrors[row.ID] = errors;
+                    }
+                }
+            });
+        };
+
+        validateAll(currentSetting.Users || [], "users");
+        validateAll(currentSetting.Assortments || [], "products");
+
+        if (Object.keys(validationErrors).length > 0) {
+            setValidationErrors(validationErrors);
+            setShowErrors(true);
+            return;
+        }
 
         const typeMap = {
             settings1: 1,
@@ -255,7 +287,16 @@ export default function AssortmentPage() {
         const type = typeMap[activeId] || 0;
 
         try {
-            const encodedSettings = btoa(JSON.stringify(Settings));
+            let encodedSettings;
+
+            try {
+                // Пробуем обычный btoa
+                encodedSettings = btoa(JSON.stringify(Settings));
+            } catch {
+                // Если ошибка — кодируем через encodeURIComponent
+                const jsonStr = JSON.stringify(Settings);
+                encodedSettings = btoa(encodeURIComponent(jsonStr));
+            }
             const payload = {
                 token: token,
                 settings: encodedSettings,
@@ -275,16 +316,18 @@ export default function AssortmentPage() {
                 console.error("Ошибка сохранения:", resp.errorMessage);
                 throw new Error(`Ошибка ${resp.errorCode}`);
             }
-            alert("Настройки успешно сохранены");
+            else {
+                setShowSuccessMessage(t("SaveAllSettings"));
+                setIsSuccessModalVisible(true);
+            }
         } catch (err) {
-            alert("Ошибка при сохранении: " + err.message);
+            throw new Error(`Ошибка ${err.message}`);
         }
     };
 
     // Функция для экспорта товаров (только для таблицы products)
     const handleExport = () => {
         if (activeTable !== "products") {
-            alert("Экспорт доступен только для таблицы товаров");
             return;
         }
 
@@ -292,7 +335,6 @@ export default function AssortmentPage() {
         const products = currentSetting.Assortments || [];
 
         if (!products || products.length === 0) {
-            alert("Нет товаров для экспорта");
             return;
         }
 
@@ -333,7 +375,6 @@ export default function AssortmentPage() {
             saveAs(data, fileName);
         } catch (error) {
             console.error("Ошибка при экспорте:", error);
-            alert("Ошибка при экспорте файла");
         }
     };
 
@@ -345,7 +386,6 @@ export default function AssortmentPage() {
         if (!file) return;
 
         if (activeTable !== "products") {
-            alert("Импорт доступен только для таблицы товаров");
             e.target.value = '';
             return;
         }
@@ -353,7 +393,6 @@ export default function AssortmentPage() {
         // Проверяем формат файла
         const fileExtension = file.name.split('.').pop().toLowerCase();
         if (!['xlsx', 'xls'].includes(fileExtension)) {
-            alert("Поддерживаются только файлы Excel (.xlsx, .xls)");
             e.target.value = '';
             return;
         }
@@ -381,7 +420,6 @@ export default function AssortmentPage() {
                 });
 
                 if (!jsonData || !Array.isArray(jsonData) || jsonData.length === 0) {
-                    alert("Файл пуст или содержит некорректные данные");
                     return;
                 }
 
@@ -408,16 +446,13 @@ export default function AssortmentPage() {
 
                     return newDataBySetting;
                 });
-
-                alert(`Успешно импортировано ${processedData.length} товаров`);
             } catch (error) {
                 console.error("Ошибка при импорте:", error);
-                alert("Ошибка при чтении файла. Убедитесь, что файл не поврежден и имеет правильный формат.");
             }
         };
 
         reader.onerror = () => {
-            alert("Ошибка при чтении файла");
+            console.error("Ошибка при чтении файла");
         };
 
         reader.readAsBinaryString(file);
@@ -430,10 +465,11 @@ export default function AssortmentPage() {
     const currentSetting = dataBySetting[activeId] || {};
     const currentTableData = currentSetting[settingsField] || [];
     const currentGlobalSettings = currentSetting.GlobalSettings || {};
-
     const products = currentSetting.Assortments || [];
     const groups = currentSetting.Groups || [];
     const users = currentSetting.Users || [];
+    const payments = currentSetting.PaymentTypes || [];
+    const departments = currentSetting.Departments || [];
 
     const joinConfigs = {
         // Здесь можете добавить конфигурации для объединения данных, если нужно
@@ -451,73 +487,6 @@ export default function AssortmentPage() {
                 ) || "-",
         }))
         : currentTableData;
-
-    function CollapsibleHint() {
-        const [open, setOpen] = useState(false);
-
-        return (
-            <div className="px-6 pb-4 text-xs text-gray-700">
-                <button
-                    onClick={() => setOpen(!open)}
-                    className="text-blue-600 underline hover:text-blue-800 transition-colors"
-                >
-                    {open ? "Скрыть пример формата" : "Показать пример формата"}
-                </button>
-
-                {open && (
-                    <div className="mt-2">
-                        <p className="mb-2 font-medium">Формат для файла с ассортиментом:</p>
-                        <p className="italic text-gray-600">
-                            ID, PLU, Код, Наименование, Цена, Штрих-код, Код НДС, Группа (для МСР), TME
-                        </p>
-                        <p className="text-gray-500">Файл должен быть меньше 2 МБ</p>
-
-                        <div className="overflow-x-auto mt-2">
-                            <table className="min-w-full text-xs border border-gray-300">
-                                <thead className="bg-gray-100">
-                                    <tr>
-                                        <th className="border px-2 py-1">ID</th>
-                                        <th className="border px-2 py-1">PLU</th>
-                                        <th className="border px-2 py-1">Code</th>
-                                        <th className="border px-2 py-1">Name</th>
-                                        <th className="border px-2 py-1">Price</th>
-                                        <th className="border px-2 py-1">Barcode</th>
-                                        <th className="border px-2 py-1">TVA</th>
-                                        <th className="border px-2 py-1">GROUP</th>
-                                        <th className="border px-2 py-1">TME</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td className="border px-2 py-1">1</td>
-                                        <td className="border px-2 py-1">1</td>
-                                        <td className="border px-2 py-1">11111</td>
-                                        <td className="border px-2 py-1">tomatoes</td>
-                                        <td className="border px-2 py-1">12,00</td>
-                                        <td className="border px-2 py-1">484000144087</td>
-                                        <td className="border px-2 py-1">A</td>
-                                        <td className="border px-2 py-1">test</td>
-                                        <td className="border px-2 py-1">1</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="border px-2 py-1">2</td>
-                                        <td className="border px-2 py-1">2</td>
-                                        <td className="border px-2 py-1">22222</td>
-                                        <td className="border px-2 py-1">tomatoes</td>
-                                        <td className="border px-2 py-1">13,00</td>
-                                        <td className="border px-2 py-1">484000144089</td>
-                                        <td className="border px-2 py-1">A</td>
-                                        <td className="border px-2 py-1">test</td>
-                                        <td className="border px-2 py-1">0</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    }
 
     const handleDownloadTemplate = () => {
         const link = document.createElement("a");
@@ -567,6 +536,28 @@ export default function AssortmentPage() {
         });
     };
 
+    // Обработчик обновления данных из дочерних таблиц — обновляет состояние и сразу запускает сохранение (с дебаунсом)
+    const handleTableDataUpdate = (tableKey, updatedData) => {
+        setDataBySetting((prev) => {
+            console.log(prev);
+            const currentSetting = prev[activeId] || {};
+            const settingsField = mapTableKeyToSettingsField(tableKey);
+            if (!settingsField) return prev;
+
+            const updatedSetting = {
+                ...currentSetting,
+                [settingsField]: updatedData,
+            };
+
+            const newDataBySetting = {
+                ...prev,
+                [activeId]: updatedSetting,
+            };
+
+            return newDataBySetting;
+        });
+    };
+
     return (
         <div id="assortement" className="flex flex-col min-h-screen">
             <nav className="border-b p-3 w-full min-w-0">
@@ -609,6 +600,7 @@ export default function AssortmentPage() {
                     </button>
                 ))}
             </div>
+
             {activeTable === "payments" && (
                 <div className="flex flex-col bg-gray-50">
                     <div className="flex items-center justify-end gap-4 px-6 py-4">
@@ -616,7 +608,6 @@ export default function AssortmentPage() {
                             <button
                                 onClick={handleResetPayments}
                                 className="p-2 bg-gray-200 hover:scale-110 rounded-full transition flex items-center justify-center"
-                                title="Сбросить способы оплаты"
                             >
                                 {/* Простой SVG иконки ластика */}
                                 <svg
@@ -641,7 +632,7 @@ export default function AssortmentPage() {
                     <div className="flex items-center justify-between gap-4 px-6 py-4">
                         {/* Текст слева */}
                         <div className="text-sm text-gray-600">
-                            Поддерживаемые форматы: .xlsx, .xls
+                            {t("Format.Supported")}: .xlsx, .xls
                         </div>
 
                         {/* Кнопки справа + знак вопроса */}
@@ -653,11 +644,11 @@ export default function AssortmentPage() {
                                 </div>
 
                                 <div className="absolute right-0 top-6 z-50 hidden group-hover:block w-[600px] bg-white shadow-lg border border-gray-200 rounded-lg p-3 text-xs text-gray-700">
-                                    <p className="mb-1 font-medium">Формат для файла с ассортиментом:</p>
+                                    <p className="mb-1 font-medium">{t("TooltipImportAssortiment1")}:</p>
                                     <p className="italic text-gray-600 mb-1">
-                                        ID, PLU, Код, Наименование, Цена, Штрих-код, Код НДС, Группа (для МСР), TME
+                                        {t("TooltipImportAssortiment2")}
                                     </p>
-                                    <p className="text-gray-500">Файл должен быть меньше 2 МБ</p>
+                                    <p className="text-gray-500">{t("TooltipImportAssortiment3")}</p>
 
                                     <div className="overflow-x-auto mt-2">
                                         <table className="min-w-full text-xs border border-gray-300">
@@ -707,17 +698,15 @@ export default function AssortmentPage() {
                             <button
                                 onClick={handleDownloadTemplate}
                                 className="px-2 py-1 text-white bg-indigo-600 rounded hover:bg-indigo-700 transition-colors flex items-center gap-1"
-                                title="Скачать шаблон"
                             >
                                 <img src="/icons/File_Download.svg" className="w-5 h-5" />
-                                <span className="text-xs">Шаблон</span>
+                                <span className="text-xs">{t("Template")}</span>
                             </button>
 
                             {/* Импорт */}
                             <label
                                 htmlFor="import-file"
                                 className="cursor-pointer px-2 py-1 text-white bg-green-600 rounded hover:bg-green-700 transition-colors flex items-center gap-1"
-                                title="Импорт"
                             >
                                 <img src="/icons/File_Upload.svg" className="w-5 h-5" />
                             </label>
@@ -733,7 +722,6 @@ export default function AssortmentPage() {
                             <button
                                 onClick={handleExport}
                                 className="px-2 py-1 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors flex items-center gap-1"
-                                title="Экспорт"
                             >
                                 <img src="/icons/File_Download.svg" className="w-5 h-5" />
                             </button>
@@ -741,8 +729,6 @@ export default function AssortmentPage() {
                     </div>
                 </div>
             )}
-
-
 
             <main className="flex-1 overflow-auto">
                 <div className="grid grid-cols-1 md:grid-cols-1 mt-1">
@@ -756,30 +742,39 @@ export default function AssortmentPage() {
                                         ...prev[activeId],
                                         GlobalSettings: newSettings,
                                     };
-                                    const updatedAll = {
+                                    return {
                                         ...prev,
                                         [activeId]: updated,
                                     };
-                                    debouncedSave(activeId, updated, saveSettingsForActiveId);
-                                    return updatedAll;
                                 });
                             }}
                         />
                     ) : (
                         <AssortmentTab
+                            key={activeTable}
                             ref={(ref) => {
                                 if (ref) tabsRefs.current[`${activeId}-${activeTable}`] = ref;
                             }}
                             tableKey={activeTable}
                             data={transformedData}
-                            extraData={{ groups, products, users }}
-                            onDataChange={handleTableDataUpdate}
+                            extraData={{ groups, products, users, payments, departments }}
                             usersPin={usersPin}
+                            onDataChange={handleTableDataUpdate}
                         />
                     )}
                 </div>
             </main>
 
+            <ValidationModal
+                errors={validationErrors}
+                visible={showErrors}
+                onClose={() => setShowErrors(false)}
+            />
+            <SuccessModal
+                visible={isSuccessModalVisible}
+                message={showSuccessMessage}
+                onClose={() => setIsSuccessModalVisible(false)}
+            />
             <footer className="p-6 border-t">
                 <button
                     onClick={handleSaveAll}

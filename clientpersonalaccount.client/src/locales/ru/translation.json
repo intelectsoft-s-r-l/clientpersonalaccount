@@ -828,7 +828,7 @@
     "pinFiveDigits": "PIN должен содержать ровно 5 цифр",
     "pinUsed": "Этот PIN уже используется",
     "pinDuplicate": "Дублирующийся PIN в таблице",
-    "maxRows": "Максимальное количество строк — {{count}}",
+    "maxRows": "Максимальное количество строк в таблице Ассортимент — {{count}}",
     "pluRequired": "PLU обязательно",
     "pluDuplicate": "Дублирование PLU",
     "codeRequired": "Code обязательно",
@@ -848,5 +848,9 @@
   "TypeDevice": "Тип устройства",
   "TypeBusiness": "Тип бизнеса",
   "NotFiscal": "Не фискальное",
-  "NotSet": "Не задано"
+  "NotSet": "Не задано",
+  "Format": {
+    "Supported": "Поддерживаемые форматы"
+  },
+  "SaveAllSettings":  "Настройки успешно сохранены"
 }

@@ -261,7 +261,7 @@ export function DataTable({
     };
 
     return (
-        <div className="bg-white rounded-3xl shadow-xl overflow-hidden select-none dark:bg-gray-800 dark:text-white">
+        <div className="bg-white rounded-3xl shadow-xl select-none dark:bg-gray-800 dark:text-white">
             {/* Заголовок и кнопки */}
             <div className="p-4 flex flex-wrap justify-between items-center gap-2">
                 <h2 className="text-lg sm:text-xl font-semibold truncate max-w-[70%]">
@@ -325,9 +325,9 @@ export function DataTable({
                                 return (
                                     <th
                                         key={col.key}
-                                        style={{ width: col.width || "auto" }}
+                                        style={{ width: col.width || "auto", minWidth: isActions ? "120px" : undefined }}
                                         className={`relative font-bold uppercase tracking-wider p-1 sm:p-2 ${getAlignment(col)} dark:text-white ${isActions
-                                            ? "sticky right-0 bg-gray-100 dark:bg-gray-800 z-20 w-[84px] sm:w-[96px] text-center" // ⭐ фиксируем справа + ширина
+                                            ? "sticky right-0 bg-gray-100 dark:bg-gray-800 z-20" // ⭐ фиксируем справа + ширина
                                                 : ""
                                             }`}
                                         onClick={() =>
@@ -470,7 +470,7 @@ export function DataTable({
                                                             className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                                 col
                                                             )} dark:bg-gray-800 dark:text-white ${isActions
-                                                                    ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
+                                                                    ? "sticky right-0 bg-white dark:bg-gray-800 z-20"
                                                                     : ""
                                                                 }`}
                                                         >
@@ -492,7 +492,7 @@ export function DataTable({
                                                             className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                                 col
                                                             )} dark:bg-gray-800 dark:text-white ${isActions
-                                                                    ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
+                                                                    ? "sticky right-0 bg-white dark:bg-gray-800 z-20"
                                                                     : ""
                                                                 }`}
                                                         >
@@ -530,7 +530,7 @@ export function DataTable({
                                                         className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                             col
                                                         )} dark:bg-gray-800 dark:text-white ${isActions
-                                                                ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
+                                                                ? "sticky right-0 bg-white dark:bg-gray-800 z-20"
                                                                 : ""
                                                             }`}
                                                     >
@@ -560,7 +560,7 @@ export function DataTable({
                                                         className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                             col
                                                         )} dark:bg-gray-800 dark:text-white ${isActions
-                                                                ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
+                                                                ? "sticky right-0 bg-white dark:bg-gray-800 z-20"
                                                                 : ""
                                                             }`}
                                                     >
@@ -583,7 +583,7 @@ export function DataTable({
                                                     className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                         col
                                                     )} overflow-hidden whitespace-nowrap text-ellipsis dark:bg-gray-800 dark:text-white ${isActions
-                                                            ? "sticky right-0 bg-white dark:bg-gray-800 z-10 w-[84px] sm:w-[96px] text-center"
+                                                            ? "sticky right-0 bg-white dark:bg-gray-800 z-20"
                                                             : ""
                                                         }`}
                                                     onClick={() =>
