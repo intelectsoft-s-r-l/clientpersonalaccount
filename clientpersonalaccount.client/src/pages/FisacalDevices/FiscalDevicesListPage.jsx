@@ -37,10 +37,10 @@ export default function FiscalDevicesListPage() {
                 setDevices(data.fiscalDevices);
                 setError("");
             } else {
-                setError("Неожиданная структура ответа");
+                setError(t("InternalError"));
             }
         } catch (err) {
-            setError(err.message || "Ошибка получения данных");
+            setError(err.message || t("InternalError"));
         } finally {
             setLoading(false);
         }
@@ -192,7 +192,7 @@ export default function FiscalDevicesListPage() {
                     >
                         <img
                             src="/icons/Globe.svg"
-                            className="w-8 h-8 hover:scale-125"
+                            className="w-6 h-6 hover:scale-125"
                             alt="Details"
                         />
                     </button>
@@ -207,7 +207,7 @@ export default function FiscalDevicesListPage() {
                     >
                         <img
                             src="/icons/Show.svg"
-                            className="w-8 h-8 hover:scale-125"
+                            className="w-6 h-6 hover:scale-125"
                             alt="Show"
                         />
                     </button>

@@ -700,7 +700,7 @@ export function DataTable({
                         }
 
                         // Последняя страница
-                        if (totalPages > maxVisible) {
+                        if (endPage < totalPages) {
                             if (endPage < totalPages - 1) {
                                 pages.push(<span key="dots" className="px-2">...</span>);
                             }

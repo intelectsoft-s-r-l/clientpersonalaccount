@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import apiService from '../../services/apiService';
+import { useTranslation } from "react-i18next";
 
 export default function BankModal({ bank, onClose, onSave }) {
     const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ export default function BankModal({ bank, onClose, onSave }) {
     const [token, setToken] = useState(null);
     const [availableBanks, setAvailableBanks] = useState([]);
     const [successMessage, setSuccessMessage] = useState("");
+    const { t } = useTranslation();
 
     const fetchToken = async () => {
         const result = await getTokenFromServer();
@@ -34,7 +36,7 @@ export default function BankModal({ bank, onClose, onSave }) {
                 })
                 setAvailableBanks(data.banks);
             } catch (error) {
-                console.error("Ошибка при загрузке списка банков", error);
+                console.error(t("InternalError"), error);
             }
         };
 
@@ -107,7 +109,7 @@ export default function BankModal({ bank, onClose, onSave }) {
             })
 
             if (onSave) onSave(responseData); // callback в родителе
-            setSuccessMessage("Банк успешно сохранён ✅");
+            setSuccessMessage(t("SaveSuccess"));
 
             // Скрыть через 3 секунды
             setTimeout(() => setSuccessMessage(""), 3000);
@@ -117,8 +119,8 @@ export default function BankModal({ bank, onClose, onSave }) {
 
             onClose();
         } catch (err) {
-            console.error("Ошибка при сохранении:", err);
-            setError("Не удалось сохранить банк.");
+            console.error(t("InternalError"), err);
+            setError(t("InternalError"));
         } finally {
             setLoading(false);
         }
@@ -148,12 +150,12 @@ export default function BankModal({ bank, onClose, onSave }) {
                 </button>
 
                 <h2 className="text-2xl font-semibold text-indigo-700 mb-4">
-                    Редактировать банк
+                    {t("Contract_Bank")}
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4 text-sm">
                     <div>
-                        <label className="font-semibold block mb-1">Название банка</label>
+                        <label className="font-semibold block mb-1">{t("Contract_NameBanks")}</label>
                         <select
                             name="bankOID"
                             value={formData.bankOID}
@@ -161,7 +163,7 @@ export default function BankModal({ bank, onClose, onSave }) {
                             className="w-full border px-3 py-2 rounded"
                             required
                         >
-                            <option value="">Выберите банк</option>
+                            <option value="">{t("ChooseBank")}</option>
                             {availableBanks.map((b, i) => {
                                 if (!b.oid) return null; // пропустить без OID
                                 return (
@@ -173,7 +175,7 @@ export default function BankModal({ bank, onClose, onSave }) {
                         </select>
                     </div>
                     <div>
-                        <label className="font-semibold block mb-1">Логин</label>
+                        <label className="font-semibold block mb-1">{t("Login") }</label>
                         <input
                             name="login"
                             value={formData.login}
@@ -191,14 +193,14 @@ export default function BankModal({ bank, onClose, onSave }) {
                             onClick={onClose}
                             className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded"
                         >
-                            Отмена
+                            {t("Cancel")}
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
                             className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                         >
-                            {loading ? "Сохранение..." : "Сохранить"}
+                            {t("Save")}
                         </button>
                     </div>
                 </form>

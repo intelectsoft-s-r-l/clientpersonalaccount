@@ -47,10 +47,10 @@ export default function LicensePage() {
                 setLicenses(data.cashRegisters);
                 setError("");
             } else {
-                setError("Неожиданная структура ответа");
+                setError(t("InternalError"));
             }
         } catch (err) {
-            setError(err.message || "Ошибка получения данных");
+            setError(err.message || t("InternalError"));
         } finally {
             setLoading(false);
         }

@@ -43,7 +43,7 @@ export default function BankPage() {
                 setBankNames(map);
             }
         } catch (err) {
-            console.error("Ошибка при получении названий банков", err);
+            console.error(t("InternalError"), err);
         }
     };
 
@@ -67,10 +67,10 @@ export default function BankPage() {
                 setTapxphoneSettings(data.tapxphoneSettings);
                 setError("");
             } else {
-                setError("Неожиданная структура ответа");
+                setError(t("InternalError"));
             }
         } catch (err) {
-            setError(err.message || "Ошибка получения данных");
+            setError(err.message || t("InternalError"));
         } finally {
             setLoading(false);
         }

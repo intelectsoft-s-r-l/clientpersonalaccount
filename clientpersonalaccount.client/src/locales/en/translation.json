@@ -845,10 +845,11 @@
   "Format": {
     "Supported": "Supported formats"
   },
-  "SaveAllSettings": "Settings saved successfully",
+  "SaveAllSettings": "Setting saved successfully",
   "FiscalSummary": "Consolidated fiscal report",
   "ReceiptForPeriod": "Download the report on receipts for the period",
   "ReceiptForPeriodGrouped": "Download grouped report on receipts for the period",
   "KKMJournal": "Cash register log",
-  "DownloadKKMJournal": "Download cash register log"
+  "DownloadKKMJournal": "Download cash register log",
+  "SaveSuccess": "Data saved successfully"
 }
