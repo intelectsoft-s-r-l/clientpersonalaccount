@@ -38,6 +38,67 @@ export default function AssortmentPage() {
         fetchToken();
     }, [token]);
 
+    const defaultEmptySetting = {
+        PaymentTypes: [
+            { ID: 1, Name: "NUMERAR", MaxPaymentAmount: 100000, IsActive: true },
+            { ID: 2, Name: "CARD", MaxPaymentAmount: 2000000, IsActive: true },
+            { ID: 5, Name: "TME", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 6, Name: "ABONAMENT", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 7, Name: "ALT_IP", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 9, Name: "MIA", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 31, Name: "VAUCHER", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 32, Name: "CEC_CERTIFICAT_VALORIC", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 33, Name: "TICHET", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 34, Name: "RETURNARE_MIZE", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 35, Name: "IMPOZIT", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 36, Name: "CÂȘTIG", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 81, Name: "CREDIT", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 82, Name: "LEASING", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 83, Name: "AVANS", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 84, Name: "ARVUNA", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 85, Name: "GAJ", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 86, Name: "CARD_VALORIC_CORPORATIV", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 87, Name: "TESTARE_METROLOGICA", MaxPaymentAmount: 0, IsActive: false },
+            { ID: 88, Name: "ALT_MOD", MaxPaymentAmount: 0, IsActive: false }
+        ],
+        Assortments: [],
+        Groups: [],
+        Departments: [
+            { ID: 1, Name: "Department1", Assortment: null },
+            { ID: 2, Name: "Department2", Assortment: null },
+            { ID: 3, Name: "Department3", Assortment: null },
+            { ID: 4, Name: "Department4", Assortment: null },
+            { ID: 5, Name: "Department5", Assortment: null },
+            { ID: 6, Name: "Department6", Assortment: null },
+            { ID: 7, Name: "Department7", Assortment: null },
+            { ID: 8, Name: "Department8", Assortment: null },
+            { ID: 9, Name: "Department9", Assortment: null },
+            { ID: 10, Name: "Department10", Assortment: null },
+            { ID: 11, Name: "Department11", Assortment: null },
+            { ID: 12, Name: "Department12", Assortment: null },
+            { ID: 13, Name: "Department13", Assortment: null },
+            { ID: 14, Name: "Department14", Assortment: null },
+            { ID: 15, Name: "Department15", Assortment: null },
+            { ID: 16, Name: "Department16", Assortment: null },
+            { ID: 17, Name: "Department17", Assortment: null },
+            { ID: 18, Name: "Department18", Assortment: null },
+            { ID: 19, Name: "Department19", Assortment: null },
+            { ID: 20, Name: "Department20", Assortment: null },
+            { ID: 21, Name: "Department21", Assortment: null },
+            { ID: 22, Name: "Department22", Assortment: null },
+            { ID: 23, Name: "Department23", Assortment: null },
+            { ID: 24, Name: "Department24", Assortment: null },
+            { ID: 25, Name: "Department25", Assortment: null },
+            { ID: 26, Name: "Department26", Assortment: null },
+            { ID: 27, Name: "Department27", Assortment: null },
+            { ID: 28, Name: "Department28", Assortment: null },
+            { ID: 29, Name: "Department29", Assortment: null },
+            { ID: 30, Name: "Department30", Assortment: null },
+        ],
+        Users: [],
+        GlobalSettings: {}
+    };
+
     useEffect(() => {
         async function fetchAndDecode() {
             try {
@@ -49,10 +110,6 @@ export default function AssortmentPage() {
                         "X-Service-Id": "16",
                     },
                 })
-
-                if (!rawData.settings1 && !rawData.settings2 && !rawData.settings3) {
-                    throw new Error("Нет настроек в ответе");
-                }
 
                 const decodedSettings = {};
                 const tabsList = [];
@@ -70,50 +127,43 @@ export default function AssortmentPage() {
                 };
 
                 ["settings1", "settings2", "settings3"].forEach((key, idx) => {
+                    let parsed = defaultEmptySetting;
+
                     if (rawData[key]) {
                         try {
                             const base64Str = forceBase64(rawData[key]);
                             let jsonStr = atob(base64Str);
-
-                            try {
-                                JSON.parse(jsonStr);
-                            } catch {
-                                try {
-                                    jsonStr = decodeURIComponent(jsonStr);
-                                    JSON.parse(jsonStr);
-                                } catch (e) {
-                                    console.error("Не удалось распарсить JSON:", e);
-                                }
+                            try { parsed = JSON.parse(jsonStr); }
+                            catch {
+                                try { parsed = JSON.parse(decodeURIComponent(jsonStr)); }
+                                catch (e) { console.error("Не удалось распарсить JSON:", e); }
                             }
-
-                            const parsed = JSON.parse(jsonStr);
-
-                            ["PaymentTypes", "Assortments", "Groups", "Departments", "Users"].forEach(
-                                (field) => {
-                                    if (parsed[field] && Array.isArray(parsed[field])) {
-                                        parsed[field] = parsed[field].map((item) => ({
-                                            ...item,
-                                            ID: item.ID !== undefined ? item.ID : Date.now() + Math.random(),
-                                        }));
-                                    }
-                                }
-                            );
-
-                            decodedSettings[key] = parsed;
-                            tabsList.push({
-                                id: key,
-                                nameKey: "SettingNumber",
-                                number: idx + 1,
-                            });
                         } catch (e) {
-                            console.error(`Ошибка декодирования или парсинга ${key}`, e);
+                            console.error(`Ошибка декодирования ${key}`, e);
                         }
                     }
+
+                    ["PaymentTypes", "Assortments", "Groups", "Departments", "Users"].forEach((field) => {
+                        if (parsed[field] && Array.isArray(parsed[field])) {
+                            parsed[field] = parsed[field].map(item => ({
+                                ...item,
+                                ID: item.ID !== undefined ? item.ID : Date.now() + Math.random()
+                            }));
+                        }
+                    });
+
+                    decodedSettings[key] = parsed;
+
+                    tabsList.push({
+                        id: key,
+                        nameKey: "SettingNumber",
+                        number: idx + 1
+                    });
                 });
 
                 setTabs(tabsList);
                 setDataBySetting(decodedSettings);
-
+                console.log(decodedSettings);
                 if (tabsList.length > 0) {
                     setActiveId(tabsList[0].id);
                 }
@@ -180,7 +230,7 @@ export default function AssortmentPage() {
                     settings: encodedSettings,
                     type: type,
                 };
-
+                
                 const resp = await apiService.proxyRequest(`/MobileCashRegister/web/UpsertSettings`, {
                     method: "POST",
                     credentials: "include",
@@ -390,7 +440,6 @@ export default function AssortmentPage() {
             return;
         }
 
-        // Проверяем формат файла
         const fileExtension = file.name.split('.').pop().toLowerCase();
         if (!['xlsx', 'xls'].includes(fileExtension)) {
             e.target.value = '';
@@ -408,11 +457,9 @@ export default function AssortmentPage() {
                     cellText: false
                 });
 
-                // Берём первый лист
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
 
-                // Конвертируем в JSON с настройками для корректного чтения
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, {
                     defval: "",
                     raw: false,
@@ -423,17 +470,27 @@ export default function AssortmentPage() {
                     return;
                 }
 
-                // Добавляем ID для каждой записи
-                const processedData = jsonData.map((item, index) => ({
-                    ...item
-                }));
+                const processedData = jsonData.map(item => ({ ...item }));
 
-                // Обновляем данные товаров в состоянии
-                setDataBySetting((prev) => {
+                let maxId = groups.length ? Math.max(...groups.map(g => g.ID)) : 0;
+                const newGroups = [...groups];
+
+                processedData.forEach(item => {
+                    if (item.Group &&
+                        !newGroups.some(g => g.Name && g.Name.toString().trim().toLowerCase() === item.Group.toString().trim().toLowerCase())
+                    ) {
+                        maxId += 1;
+                        newGroups.push({ ID: maxId, Name: item.Group });
+                    }
+                });
+
+                // Обновляем данные ассортимента
+                setDataBySetting(prev => {
                     const currentSetting = prev[activeId] || {};
                     const updatedSetting = {
                         ...currentSetting,
-                        Assortments: processedData,  // products соответствует Assortments
+                        Assortments: processedData,
+                        Groups: newGroups,
                     };
 
                     const newDataBySetting = {
@@ -441,11 +498,11 @@ export default function AssortmentPage() {
                         [activeId]: updatedSetting,
                     };
 
-                    // Сохраняем с дебаунсом
                     debouncedSave(activeId, updatedSetting, saveSettingsForActiveId);
 
                     return newDataBySetting;
                 });
+
             } catch (error) {
                 console.error("Ошибка при импорте:", error);
             }
@@ -456,10 +513,9 @@ export default function AssortmentPage() {
         };
 
         reader.readAsBinaryString(file);
-
-        // Сбрасываем значение input для возможности повторного выбора того же файла
         e.target.value = '';
     };
+
 
     const settingsField = mapTableKeyToSettingsField(activeTable);
     const currentSetting = dataBySetting[activeId] || {};
@@ -539,7 +595,6 @@ export default function AssortmentPage() {
     // Обработчик обновления данных из дочерних таблиц — обновляет состояние и сразу запускает сохранение (с дебаунсом)
     const handleTableDataUpdate = (tableKey, updatedData) => {
         setDataBySetting((prev) => {
-            console.log(prev);
             const currentSetting = prev[activeId] || {};
             const settingsField = mapTableKeyToSettingsField(tableKey);
             if (!settingsField) return prev;

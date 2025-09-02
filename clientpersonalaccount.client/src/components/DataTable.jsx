@@ -260,6 +260,17 @@ export function DataTable({
         return "text-left";
     };
 
+    const getAlignmentFlex = (col) => {
+        // ID-шки всегда по левому краю
+        if (col.key.toLowerCase().includes("id")) return "justify-start";
+        // Булевы значения по центру
+        if (col.type === "boolean") return "justify-center";
+        // Числовые типы по правому краю
+        if (["int", "decimal", "float", "number", "price"].includes(col.type)) return "justify-end";
+        // Строки и даты по левому краю по умолчанию
+        return "justify-start";
+    };
+
     return (
         <div className="bg-white rounded-3xl shadow-xl select-none dark:bg-gray-800 dark:text-white">
             {/* Заголовок и кнопки */}
@@ -326,15 +337,13 @@ export function DataTable({
                                     <th
                                         key={col.key}
                                         style={{ width: col.width || "auto", minWidth: isActions ? "120px" : undefined }}
-                                        className={`relative font-bold uppercase tracking-wider p-1 sm:p-2 ${getAlignment(col)} dark:text-white ${isActions
-                                            ? "sticky right-0 bg-gray-100 dark:bg-gray-800 z-20" // ⭐ фиксируем справа + ширина
-                                                : ""
+                                        className={`relative font-bold uppercase tracking-wider p-1 sm:p-2 dark:text-white ${isActions
+                                            ? "sticky right-0 bg-gray-100 dark:bg-gray-800 z-20"
+                                            : ""
                                             }`}
-                                        onClick={() =>
-                                            col.sortable !== false && handleSort(col.key)
-                                        }
+                                        onClick={() => col.sortable !== false && handleSort(col.key)}
                                     >
-                                        <div className="flex items-center justify-center space-x-1">
+                                        <div className={`flex items-center ${getAlignmentFlex(col)} space-x-1`}>
                                             <span className="truncate">{col.label}</span>
                                             {sortConfig.key === col.key && (
                                                 <span className="ml-1 text-xs">
@@ -397,7 +406,7 @@ export function DataTable({
                                     </th>
                                 );
                             })}
-                            {onDeleteRow && <th className=" w-10 sm:w-12 flex-shrink-0"></th>}
+                            {onDeleteRow && <th className="sticky right-0 bg-gray-100 dark:bg-gray-800 z-20" style={{ minWidth: "40px"}}></th>}
                         </tr>
                     </thead>
 
@@ -432,7 +441,7 @@ export function DataTable({
                                         className={`${onRowClick ? "cursor-pointer" : ""} ${isSelected
                                                 ? "bg-blue-100 dark:bg-blue-700"
                                                 : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                                            } border-b border-[#dbdbdb]`}
+                                            } border border-[#dbdbdb]`}
                                         onClick={
                                             onRowClick
                                                 ? () => {
@@ -467,7 +476,7 @@ export function DataTable({
                                                     return (
                                                         <td
                                                             key={col.key}
-                                                            className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
+                                                            className={`p-2 border border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                                 col
                                                             )} dark:bg-gray-800 dark:text-white ${isActions
                                                                     ? "sticky right-0 bg-white dark:bg-gray-800 z-20"
@@ -489,7 +498,7 @@ export function DataTable({
                                                     return (
                                                         <td
                                                             key={col.key}
-                                                            className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
+                                                            className={`p-2 border border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                                 col
                                                             )} dark:bg-gray-800 dark:text-white ${isActions
                                                                     ? "sticky right-0 bg-white dark:bg-gray-800 z-20"
@@ -498,7 +507,7 @@ export function DataTable({
                                                         >
                                                             <select
                                                                 autoFocus
-                                                                className="w-full p-1 border-b border-gray-300 rounded dark:bg-gray-700 dark:text-white"
+                                                                className="w-full p-1 border border-gray-300 rounded dark:bg-gray-700 dark:text-white"
                                                                 value={String(editValue ?? "")}
                                                                 onChange={(e) => setEditValue(e.target.value)}
                                                                 onBlur={saveEdit}
@@ -527,7 +536,7 @@ export function DataTable({
                                                 return (
                                                     <td
                                                         key={col.key}
-                                                        className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
+                                                        className={`p-2 border border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                             col
                                                         )} dark:bg-gray-800 dark:text-white ${isActions
                                                                 ? "sticky right-0 bg-white dark:bg-gray-800 z-20"
@@ -557,7 +566,7 @@ export function DataTable({
                                                 return (
                                                     <td
                                                         key={col.key}
-                                                        className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
+                                                        className={`p-2 border border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                             col
                                                         )} dark:bg-gray-800 dark:text-white ${isActions
                                                                 ? "sticky right-0 bg-white dark:bg-gray-800 z-20"
@@ -571,7 +580,7 @@ export function DataTable({
                                                             onBlur={saveEdit}
                                                             onKeyDown={handleKeyDown}
                                                             autoFocus
-                                                            className="w-full border-b border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white"
+                                                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white"
                                                         />
                                                     </td>
                                                 );
@@ -580,7 +589,7 @@ export function DataTable({
                                             return (
                                                 <td
                                                     key={col.key}
-                                                    className={`p-2 border-b border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
+                                                    className={`p-2 border border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                         col
                                                     )} overflow-hidden whitespace-nowrap text-ellipsis dark:bg-gray-800 dark:text-white ${isActions
                                                             ? "sticky right-0 bg-white dark:bg-gray-800 z-20"
@@ -616,9 +625,8 @@ export function DataTable({
                                                 </td>
                                             );
                                         })}
-
                                         {onDeleteRow && (
-                                            <td className="text-center border-b border-[#dbdbdb] dark:bg-gray-800 dark:text-white flex-shrink-0">
+                                            <td className="text-center border border-[#dbdbdb] dark:bg-gray-800 dark:text-white flex-shrink-0">
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -645,7 +653,7 @@ export function DataTable({
 
             {/* Пагинация */}
             {totalPages > 1 && (
-                <div className="flex flex-wrap justify-center items-center gap-1 sm:gap-2 p-2 sm:p-4 border-t border-[#dbdbdb]">
+                <div className="flex flex-wrap justify-center items-center gap-1 sm:gap-2 p-2 sm:p-4">
                     {/* Кнопка назад */}
                     <button
                         onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}

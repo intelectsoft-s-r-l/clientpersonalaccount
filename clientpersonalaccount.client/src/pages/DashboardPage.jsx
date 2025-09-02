@@ -252,7 +252,7 @@ export default function DashboardPage() {
                         if (filteredData.length === 0) return;
 
                         newChartData[result.posID] = {
-                            title: `POS: ${posList.find((p) => p.posID === result.posID)?.name || result.posID}`,
+                            title: `${t("device")}: ${posList.find((p) => p.posID === result.posID)?.name || result.posID}`,
                             data: filteredData,
                         };
                     }

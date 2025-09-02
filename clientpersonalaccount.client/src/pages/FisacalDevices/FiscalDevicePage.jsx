@@ -42,8 +42,9 @@ export default function FiscalDevicePage() {
     const [currentReportType, setCurrentReportType] = useState(null);
     const [period, setPeriod] = useState({ startDate: null, endDate: null });
     const [selectedReportForShift, setSelectedReportForShift] = useState(null);
-    const [isOpenFiscalSummary, setIsOpenFiscalSummary] = useState(false);
     const [pdfUrl, setPdfUrl] = useState(null);
+    const [fiscalSummaryText, setFiscalSummaryText] = useState("");
+    const [isOpenFiscalSummary, setIsOpenFiscalSummary] = useState(false);
 
     const printReceipt = () => {
         printJS({
@@ -289,10 +290,32 @@ export default function FiscalDevicePage() {
 
         try {
             if (currentReportType === "FiscalSummary") {
-                
+                payload.startNum = period.startNum || 0;
+                payload.endNum = period.endNum || 0;
+                payload.detailed = period.detailed || false;
+
+                const data = await apiService.proxyRequest(
+                    `/ISFiscalCloudRegister/Report/ZForPeriod?DeviceID=${id}&startDate=${payload.startDate}&endDate=${payload.endDate}&startNum=${payload.startNum}&endNum=${payload.endNum}&detailed=${payload.detailed}&printTemplate=44`,
+                    { method: "GET" }
+                );
+
+                if (data?.dataToPrint) {
+                    // Декодируем Base64 в текст
+                    const byteCharacters = atob(data.dataToPrint);
+                    const byteArrays = new Uint8Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteArrays[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const decodedText = new TextDecoder("utf-8").decode(byteArrays);
+
+                    setFiscalSummaryText(decodedText);
+                    setIsOpenFiscalSummary(true);
+                }
+
+                exportToExcel(data || [], "FiscalSummary.xlsx");
             }
             else if (currentReportType === "KKMJournal") {
-                fiscalSummary();
+                kkmJournal();
             } else {
                 const data = await apiService.proxyRequest(
                     `/ISFiscalCloudRegister/Report/ReportGoodsPeriod?DeviceID=${id}&startDate=${payload.startDate}&endDate=${payload.endDate}`,
@@ -303,8 +326,8 @@ export default function FiscalDevicePage() {
                 const receiptForPeriod = data.fiscalReceiptItems || [];
 
                 if (currentReportType === "ReceiptForPeriod") {
+                    const receiptForPeriod = data.fiscalReceiptItems || [];
                     setReportData({ ReceiptForPeriod: receiptForPeriod });
-                    console.log(receiptForPeriod);
                     exportToExcel(receiptForPeriod, "ReceiptForPeriod.xlsx");
                 } else if (currentReportType === "ReceiptForPeriodGrouped") {
                     const receiptGrouped = receiptForPeriod.reduce((acc, item) => {
@@ -328,12 +351,12 @@ export default function FiscalDevicePage() {
                         return acc;
                     }, {});
 
-                    const groupedData = Object.values(receiptGrouped).sort((a, b) => {
-                        const dateA = new Date(a.ReceiptDate);
-                        const dateB = new Date(b.ReceiptDate);
-                        if (dateB - dateA !== 0) return dateB - dateA;
-                        return a.Name.localeCompare(b.Name);
-                    });
+                    const groupedData = Object.values(receiptGrouped).map(item => ({
+                        ...item,
+                        TotalAmount: Number(item.TotalAmount.toFixed(2)),
+                        TotalDiscount: Number(item.TotalDiscount.toFixed(2)),
+                        TotalTax: Number(item.TotalTax.toFixed(2)),
+                    }));
 
                     setReportData({ ReceiptForPeriodGrouped: groupedData });
 
@@ -352,7 +375,7 @@ export default function FiscalDevicePage() {
         }
     };
 
-    const fiscalSummary = async () => {
+    const kkmJournal = async () => {
         const data = await apiService.proxyRequest(
             `/ISFiscalCloudRegister/Report/RegisterForPeriod?&DeviceID=${id}&startDate=${payload.startDate}&endDate=${payload.endDate}`,
             { method: "GET" }
@@ -590,48 +613,98 @@ export default function FiscalDevicePage() {
                     {isReportModalOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[400px]">
-                                <h3 className="text-lg font-semibold mb-4">Выберите период</h3>
-                                <div className="flex flex-col gap-3">
-                                    <label className="text-sm font-medium text-gray-700">
-                                        {t("StartDate")}:
-                                    </label>
+                                <h3 className="text-lg font-semibold mb-4">{t("SelectPeriod")}</h3>
+
+                                {/* Выбор даты для всех отчётов */}
+                                <div className="flex flex-col gap-3 mb-4">
+                                    <label className="text-sm font-medium">{t("StartDate")}:</label>
                                     <Datepicker
-                                        asSingle={true}
+                                        asSingle
                                         value={{ startDate: period.startDate, endDate: period.startDate }}
-                                        onChange={(newValue) =>
-                                            setPeriod(prev => ({
-                                                ...prev, startDate: newValue.startDate
-                                            }))
+                                        onChange={(val) =>
+                                            setPeriod((prev) => ({ ...prev, startDate: val.startDate }))
                                         }
                                         primaryColor="cyan"
                                         displayFormat="DD.MM.YYYY"
                                         maxDate={period?.endDate || new Date()}
                                         minDate={new Date(2000, 0, 1)}
-                                        inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
+                                        inputClassName="w-full px-4 py-2 text-sm border rounded"
                                     />
-                                    <label className="text-sm font-medium text-gray-700">
-                                        {t("EndDate")}:
-                                    </label>
+
+                                    <label className="text-sm font-medium">{t("EndDate")}:</label>
                                     <Datepicker
-                                        asSingle={true}
+                                        asSingle
                                         value={{ startDate: period.endDate, endDate: period.endDate }}
-                                        onChange={(newValue) =>
-                                            setPeriod(prev => ({ ...prev, endDate: newValue.startDate }))
+                                        onChange={(val) =>
+                                            setPeriod((prev) => ({ ...prev, endDate: val.startDate }))
                                         }
                                         primaryColor="cyan"
                                         displayFormat="DD.MM.YYYY"
                                         minDate={period?.startDate || new Date()}
                                         maxDate={new Date()}
-                                        inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
+                                        inputClassName="w-full px-4 py-2 text-sm border rounded"
                                     />
                                 </div>
+
+                                {/* Поля для FiscalSummary */}
+                                {currentReportType === "FiscalSummary" && (
+                                    <>
+                                        <div className="flex flex-col gap-3 mb-4">
+                                            <label className="text-sm font-medium">{t("RangeStart")}:</label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                value={period.startNum}
+                                                onChange={(e) =>
+                                                    setPeriod((prev) => ({ ...prev, startNum: Number(e.target.value) }))
+                                                }
+                                                className="w-full px-4 py-2 text-sm border rounded"
+                                            />
+
+                                            <label className="text-sm font-medium">{t("RangeEnd")}:</label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                value={period.endNum}
+                                                onChange={(e) =>
+                                                    setPeriod((prev) => ({ ...prev, endNum: Number(e.target.value) }))
+                                                }
+                                                className="w-full px-4 py-2 text-sm border rounded"
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={period.detailed}
+                                                onChange={(e) =>
+                                                    setPeriod((prev) => ({ ...prev, detailed: e.target.checked }))
+                                                }
+                                            />
+                                            <span>{t("Detailed")}</span>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Кнопки для всех отчётов */}
                                 <div className="flex justify-end gap-2 mt-4">
-                                    <button onClick={closeReportModal} className="px-4 py-2 rounded border">Отмена</button>
-                                    <button onClick={loadReports} className="px-4 py-2 rounded bg-green-600 text-white">Загрузить</button>
+                                    <button
+                                        onClick={closeReportModal}
+                                        className="px-4 py-2 rounded border"
+                                    >
+                                        {t("Cancel")}
+                                    </button>
+                                    <button
+                                        onClick={loadReports}
+                                        className="px-4 py-2 rounded bg-green-600 text-white"
+                                    >
+                                        {t("Load")}
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     )}
+
 
                     <Modal
                         isOpen={isOpenFiscalSummary}
@@ -640,25 +713,23 @@ export default function FiscalDevicePage() {
                         style={{
                             content: {
                                 top: "5%",
-                                left: "5%",
-                                right: "5%",
+                                left: "25%",
+                                right: "25%",
                                 bottom: "5%",
-                                width: "90%",
-                                height: "90%",
-                                padding: "10px"
+                                width: "50%",
+                                height: "80%",
+                                padding: "20px",
+                                overflow: "auto"
                             },
                         }}
                     >
-                        <button onClick={() => setIsOpenFiscalSummary(false)}>Закрыть</button>
-                        {pdfUrl && (
-                            <iframe
-                                src={pdfUrl}
-                                title="Сводный отчет"
-                                width="100%"
-                                height="100%"
-                                style={{ border: "none" }}
-                            />
-                        )}
+                        <button
+                            className="mb-3 px-3 py-1 bg-red-600 text-white rounded"
+                            onClick={() => setIsOpenFiscalSummary(false)}
+                        >
+                            Закрыть
+                        </button>
+                        <pre className="whitespace-pre-wrap font-mono text-center">{fiscalSummaryText}</pre>
                     </Modal>
                 </div>
             </div>

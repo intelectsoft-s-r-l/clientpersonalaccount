@@ -852,5 +852,6 @@
   "ReceiptForPeriodGrouped": "Descărcați raportul grupat privind încasările pentru perioada respectivă",
   "KKMJournal": "Jurnal de marcat",
   "DownloadKKMJournal": "Descărcați jurnalul casei de marcat",
-  "SaveSuccess": "Datele au fost salvate cu succes"
+  "SaveSuccess": "Datele au fost salvate cu succes",
+  "Value": "Valoare"
 }

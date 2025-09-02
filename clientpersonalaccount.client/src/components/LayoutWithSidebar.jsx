@@ -103,7 +103,9 @@ export default function LayoutWithSidebar({ children }) {
                         >
                             <i className="bi bi-list" aria-hidden="true"></i>
                         </button>
-
+                        <div className="flex items-center text-sm text-gray-500 ml-16 mb-3 gap-1">
+                            <span>{user.Company}</span>
+                        </div>
                         <nav className="flex text-sm text-gray-600 dark:text-gray-300 ml-2" aria-label="Breadcrumb">
                             <ol className="inline-flex items-center space-x-1 md:space-x-2">
                                 <li className="inline-flex items-center">
