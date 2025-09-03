@@ -40,9 +40,10 @@ export default function FiscalDevicePage() {
     });
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [currentReportType, setCurrentReportType] = useState(null);
+    const today = new Date();
     const [period, setPeriod] = useState({
-        startDate: null,
-        endDate: null,
+        startDate: today,
+        endDate: today,
         startNum: 0,
         endNum: 0,
         detailed: false,
@@ -300,8 +301,13 @@ export default function FiscalDevicePage() {
 
         try {
             if (currentReportType === "FiscalSummary") {
-                payload.startNum = period.startNum || 0;
-                payload.endNum = period.endNum || 0;
+                if (period.startNum > 0 && period.endNum > 0) {
+                    payload.startDate = null;
+                    payload.endDate = null;
+                }
+
+                payload.startNum = payload.startDate ? 0 : period.startNum || 0;
+                payload.endNum = payload.endDate ? 0 : period.endNum || 0;
                 payload.detailed = period.detailed || false;
 
                 const data = await apiService.proxyRequest(
@@ -605,7 +611,7 @@ export default function FiscalDevicePage() {
 
     const closeReportModal = () => {
         setIsReportModalOpen(false);
-        setPeriod({ startDate: null, endDate: null });
+        setPeriod({ startDate: today, endDate: today });
     };
 
     return (
@@ -734,8 +740,8 @@ export default function FiscalDevicePage() {
                     </div>
 
                     {isReportModalOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[400px]">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={closeReportModal}>
+                            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[400px]" onClick={(e) => e.stopPropagation()}>
                                 <h3 className="text-lg font-semibold mb-4">{t("SelectPeriod")}</h3>
                                 {/* Для FiscalSummary показываем переключатель */}
                                 {currentReportType === "FiscalSummary" && (
@@ -747,7 +753,7 @@ export default function FiscalDevicePage() {
                                                 checked={period.mode === "date"}
                                                 onChange={() => setPeriod((prev) => ({ ...prev, mode: "date" }))}
                                             />
-                                            <span>{t("ByDates")}</span>
+                                            <span>{t("Date")}</span>
                                         </label>
                                         <label className="flex items-center gap-2">
                                             <input
@@ -756,7 +762,7 @@ export default function FiscalDevicePage() {
                                                 checked={period.mode === "range"}
                                                 onChange={() => setPeriod((prev) => ({ ...prev, mode: "range" }))}
                                             />
-                                            <span>{t("ByRange")}</span>
+                                            <span>{t("Range")}</span>
                                         </label>
                                     </div>
                                 )}
@@ -823,7 +829,7 @@ export default function FiscalDevicePage() {
                                 )}
 
                                 {/* Чекбокс "детально" только для FiscalSummary */}
-                                {currentReportType === "FiscalSummary" && period.mode === "range" && (
+                                {currentReportType === "FiscalSummary" && (
                                     <div className="flex items-center gap-2 mb-4">
                                         <input
                                             type="checkbox"

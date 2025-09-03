@@ -26,7 +26,8 @@ export default function DashboardPage() {
     const dropdownRef = useRef(null);
     const [yearlyAllDevicesData, setYearlyAllDevicesData] = useState(null);
     const [topProducts, setTopProducts] = useState([]);
-    const [period, setPeriod] = useState({ startDate: null, endDate: null });
+    const today = new Date();
+    const [period, setPeriod] = useState({ startDate: null, endDate: today });
     //#endregion
 
     //#region  Расчет startDate и endDate по выбранному диапазону

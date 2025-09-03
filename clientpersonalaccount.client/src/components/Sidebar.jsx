@@ -24,9 +24,25 @@ const menuSections = [
     {
         items: [
             { id: "assortement", key: "Assortment", icon: AssortmentIcon },
+        ],
+    },
+    {
+        items: [
             { id: "license", key: "Licenses", icon: LicensesIcon },
+        ],
+    },
+    {
+        items: [
             { id: "fiscalDevices", key: "FiscalDevice", icon: FiscalDeviceIcon },
+        ],
+    },
+    {
+        items: [
             { id: "banks", key: "Banks", icon: BanksIcon },
+        ],
+    },
+    {
+        items: [
             { id: "transactionDkv", key: "TransactionDKV", icon: TransactionDKVIcon },
         ],
     },
