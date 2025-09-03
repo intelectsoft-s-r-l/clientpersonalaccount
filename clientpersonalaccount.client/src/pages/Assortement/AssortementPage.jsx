@@ -163,7 +163,7 @@ export default function AssortmentPage() {
 
                 setTabs(tabsList);
                 setDataBySetting(decodedSettings);
-                console.log(decodedSettings);
+
                 if (tabsList.length > 0) {
                     setActiveId(tabsList[0].id);
                 }
@@ -615,7 +615,7 @@ export default function AssortmentPage() {
 
     return (
         <div id="assortement" className="flex flex-col min-h-screen">
-            <nav className="border-b p-3 w-full min-w-0">
+            <nav className="p-3 w-full min-w-0">
                 <h3 className="text-lg font-bold mb-2">{t("Settings")}</h3>
 
                 <div className="flex flex-wrap gap-2 w-full">
@@ -635,7 +635,7 @@ export default function AssortmentPage() {
                 </div>
             </nav>
 
-            <div className="flex flex-wrap gap-4 px-6 py-4 border-b">
+            <div className="flex flex-wrap gap-4 px-6 py-4">
                 {["products", "payments", "groups", "departments", "users", "global"].map((key) => (
                     <button
                         key={key}
@@ -785,8 +785,7 @@ export default function AssortmentPage() {
                 </div>
             )}
 
-            <main className="flex-1 overflow-auto">
-                <div className="grid grid-cols-1 md:grid-cols-1 mt-1">
+            <main className="flex-1 overflow-x-auto">
                     {activeTable === "global" ? (
                         <GlobalSettingsForm
                             initialSettings={currentGlobalSettings}
@@ -817,7 +816,6 @@ export default function AssortmentPage() {
                             onDataChange={handleTableDataUpdate}
                         />
                     )}
-                </div>
             </main>
 
             <ValidationModal
@@ -830,7 +828,7 @@ export default function AssortmentPage() {
                 message={showSuccessMessage}
                 onClose={() => setIsSuccessModalVisible(false)}
             />
-            <footer className="p-6 border-t">
+            <footer className="p-6">
                 <button
                     onClick={handleSaveAll}
                     className="px-4 py-2 bg-gradient-to-r from-[#72b827] to-green-600 text-white rounded transition"

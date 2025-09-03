@@ -853,5 +853,7 @@
   "KKMJournal": "Jurnal de marcat",
   "DownloadKKMJournal": "Descărcați jurnalul casei de marcat",
   "SaveSuccess": "Datele au fost salvate cu succes",
-  "Value": "Valoare"
+  "Value": "Valoare",
+  "SelectPeriod": "Specificați perioada",
+  "Load": "Descărcați"
 }

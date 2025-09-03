@@ -89,7 +89,7 @@ export function ShiftMenu({ handleDownloadKKMJournal, openReportModal, t }) {
                             {t("KKMJournal")}
                         </button>
                         <button
-                            onClick={() => { handleDownloadKKMJournal(); setIsOpen(false); }}
+                            onClick={() => { openReportModal("DownloadKKMJournal"); setIsOpen(false); }}
                             className="block w-full text-left px-4 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
                         >
                             {t("DownloadKKMJournal")}

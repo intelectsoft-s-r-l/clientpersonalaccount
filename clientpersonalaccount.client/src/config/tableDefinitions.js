@@ -56,7 +56,7 @@ export const tableDefinitions = (t, data) => [
             { key: "Name", label: t("Name"), editable: true, width: "33%", filterable: true, align: "left" },
             {
                 key: "Assortment",
-                label: t("Assortement"),
+                label: t("Assortment"),
                 editable: true,
                 type: "select",
                 filterable: true,

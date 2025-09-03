@@ -852,5 +852,7 @@
   "KKMJournal": "Cash register log",
   "DownloadKKMJournal": "Download cash register log",
   "SaveSuccess": "Data saved successfully",
-  "Value": "Value"
+  "Value": "Value",
+  "SelectPeriod": "Specify period",
+  "Load": "Download"
 }

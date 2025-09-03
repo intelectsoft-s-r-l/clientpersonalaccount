@@ -40,7 +40,14 @@ export default function FiscalDevicePage() {
     });
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [currentReportType, setCurrentReportType] = useState(null);
-    const [period, setPeriod] = useState({ startDate: null, endDate: null });
+    const [period, setPeriod] = useState({
+        startDate: null,
+        endDate: null,
+        startNum: 0,
+        endNum: 0,
+        detailed: false,
+        mode: "date"
+    });
     const [selectedReportForShift, setSelectedReportForShift] = useState(null);
     const [pdfUrl, setPdfUrl] = useState(null);
     const [fiscalSummaryText, setFiscalSummaryText] = useState("");
@@ -286,6 +293,9 @@ export default function FiscalDevicePage() {
     };
 
     const loadReports = async () => {
+        setPdfUrl(null);
+        setFiscalSummaryText(null);
+
         if (!id) return;
 
         try {
@@ -316,7 +326,10 @@ export default function FiscalDevicePage() {
             }
             else if (currentReportType === "KKMJournal") {
                 kkmJournal();
-            } else {
+            } else if (currentReportType == "DownloadKKMJournal") {
+                handleDownloadKKMJournal();
+            }
+            else {
                 const data = await apiService.proxyRequest(
                     `/ISFiscalCloudRegister/Report/ReportGoodsPeriod?DeviceID=${id}&startDate=${payload.startDate}&endDate=${payload.endDate}`,
                     { method: "GET" }
@@ -326,36 +339,38 @@ export default function FiscalDevicePage() {
                 const receiptForPeriod = data.fiscalReceiptItems || [];
 
                 if (currentReportType === "ReceiptForPeriod") {
-                    const receiptForPeriod = data.fiscalReceiptItems || [];
                     setReportData({ ReceiptForPeriod: receiptForPeriod });
                     exportToExcel(receiptForPeriod, "ReceiptForPeriod.xlsx");
                 } else if (currentReportType === "ReceiptForPeriodGrouped") {
                     const receiptGrouped = receiptForPeriod.reduce((acc, item) => {
-                        const date = new Date(item.ReceiptDate).toLocaleDateString("ru-RU");
-                        const key = `${date}-${item.Name}`;
+                        const date = new Date(item.receiptDate).toLocaleDateString("ru-RU");
+                        const key = `${date}-${item.name}`;
                         if (!acc[key]) {
                             acc[key] = {
                                 ReceiptDate: date,
-                                Name: item.Name,
+                                Name: item.name,
                                 TotalQuantity: 0,
                                 TotalAmount: 0,
-                                BasePrice: item.BasePrice,
+                                BasePrice: item.basePrice,
                                 TotalDiscount: 0,
                                 TotalTax: 0
                             };
                         }
-                        acc[key].TotalQuantity += item.Quantity;
-                        acc[key].TotalAmount += item.TotalCost;
-                        acc[key].TotalDiscount += item.Discount?.Amount || 0;
-                        acc[key].TotalTax += item.Tax?.Amount || 0;
+                        acc[key].TotalQuantity += item.quantity;
+                        acc[key].TotalAmount += item.totalCost;
+                        acc[key].TotalDiscount += item.discount?.amount || 0;
+                        acc[key].TotalTax += item.tax?.amount || 0;
                         return acc;
                     }, {});
 
                     const groupedData = Object.values(receiptGrouped).map(item => ({
-                        ...item,
-                        TotalAmount: Number(item.TotalAmount.toFixed(2)),
-                        TotalDiscount: Number(item.TotalDiscount.toFixed(2)),
-                        TotalTax: Number(item.TotalTax.toFixed(2)),
+                        ReceiptDate: String(item.ReceiptDate || ""),
+                        Name: String(item.Name || ""),
+                        TotalQuantity: Number(item.TotalQuantity || 0),
+                        TotalAmount: Number((item.TotalAmount || 0).toFixed(2)),
+                        BasePrice: Number(item.BasePrice || 0),
+                        TotalDiscount: Number((item.TotalDiscount || 0).toFixed(2)),
+                        TotalTax: Number((item.TotalTax || 0).toFixed(2))
                     }));
 
                     setReportData({ ReceiptForPeriodGrouped: groupedData });
@@ -375,9 +390,117 @@ export default function FiscalDevicePage() {
         }
     };
 
+    const handleDownloadKKMJournal = async () => {
+        if (!id) return;
+
+        try {
+            // Загружаем данные KKMJournal
+            const data = await apiService.proxyRequest(
+                `/ISFiscalCloudRegister/Report/RegisterForPeriod?DeviceID=${id}&startDate=${payload.startDate}&endDate=${payload.endDate}`,
+                { method: "GET" }
+            );
+
+            if (!data) {
+                return;
+            }
+
+            // Генерируем PDF
+            const doc = generateKKMJournalPDF(data, payload.startDate, payload.endDate);
+            doc.save(`KKMJournal_${payload.startDate}_${payload.endDate}.pdf`);
+        } catch (err) {
+            console.error("Ошибка при скачивании KKMJournal:", err);
+        }
+    };
+
+    const generateKKMJournalPDF = (data, startDate, endDate) => {
+        const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+        const pageWidth = pdf.internal.pageSize.getWidth();
+
+        pdf.setFontSize(10);
+        pdf.text(
+            `Registrul electronic MCC/IF de la ${new Date(startDate).toLocaleDateString("ro-RO")} până la ${new Date(endDate).toLocaleDateString("ro-RO")}`,
+            pageWidth / 2,
+            30,
+            { align: "center" }
+        );
+        pdf.text(`${data.company}, Cod Fiscal: ${data.companyIDNO}`, pageWidth / 2, 45, { align: "center" });
+        pdf.text(`Numărul de înregistrare: ${data.registrationNumber}, Adresa: ${data.salesPointAddress}`, pageWidth / 2, 60, { align: "center" });
+
+        // === Динамическая шапка ===
+        const head = [
+            [
+                { content: "Nr. curent al înscrierii", rowSpan: 2 },
+                { content: "Nr. raportului de închidere zilnică / Data raportului", rowSpan: 2 },
+                { content: "Valoare totală rulaj / TVA total", rowSpan: 2 },
+                { content: "Rulajul conform raportului zilnic / Valorile TVA pe cote", colSpan: 4 + (data.showTaxE ? 1 : 0) + (data.showTaxF ? 1 : 0) },
+                { content: "Suma predată în casierie", rowSpan: 2 },
+                { content: "Suma restituită", rowSpan: 2 },
+                { content: "Suma achitată cu alte instrumente", rowSpan: 2 },
+                { content: "Suma tichet masă", rowSpan: 2 },
+                { content: "Soldul numerar", rowSpan: 2 }
+            ],
+            [
+                "Total Brut / TVA",
+                "Rulaj A / TVA A",
+                "Rulaj B / TVA B",
+                "Rulaj C / TVA C",
+                "Rulaj D / TVA D",
+                ...(data.showTaxE ? ["Rulaj E / TVA E"] : []),
+                ...(data.showTaxF ? ["Rulaj F / TVA F"] : [])
+            ]
+        ];
+
+        // === Формирование тела таблицы ===
+        const body = data.reports.flatMap((r, idx) => ([
+            [
+                idx + 1,
+                r.reportNumber,
+                r.grandTotalBrut.toFixed(2),
+                r.totalBrut.toFixed(2),
+                r.totalBrutA.toFixed(2),
+                r.totalBrutB.toFixed(2),
+                r.totalBrutC.toFixed(2),
+                r.totalBrutD.toFixed(2),
+                ...(data.showTaxE ? [r.totalBrutE.toFixed(2)] : []),
+                ...(data.showTaxF ? [r.totalBrutF.toFixed(2)] : []),
+                r.cashIn.toFixed(2),
+                r.cashOutCollect.toFixed(2),
+                r.cashOutRefund.toFixed(2),
+                r.totalOther.toFixed(2),
+                r.totalTME.toFixed(2),
+                r.totalInBox.toFixed(2)
+            ],
+            [
+                "", // для rowspan первой колонки
+                new Date(r.reportDate).toLocaleString("ro-RO"),
+                r.grandTotalTax.toFixed(2),
+                r.totalTax.toFixed(2),
+                r.totalTaxA.toFixed(2),
+                r.totalTaxB.toFixed(2),
+                r.totalTaxC.toFixed(2),
+                r.totalTaxD.toFixed(2),
+                ...(data.showTaxE ? [r.totalTaxE.toFixed(2)] : []),
+                ...(data.showTaxF ? [r.totalTaxF.toFixed(2)] : []),
+                "", "", "", "", "", "" // пустые поля во второй строке
+            ]
+        ]));
+
+        autoTable(pdf, {
+            head,
+            body,
+            startY: 80,
+            theme: "grid",
+            styles: { fontSize: 7, halign: "center", valign: "middle" },
+            headStyles: { fillColor: [220, 220, 220] },
+            margin: { left: 10, right: 10 }
+        });
+
+        return pdf;
+    };
+
     const kkmJournal = async () => {
         const data = await apiService.proxyRequest(
-            `/ISFiscalCloudRegister/Report/RegisterForPeriod?&DeviceID=${id}&startDate=${payload.startDate}&endDate=${payload.endDate}`,
+            `/ISFiscalCloudRegister/Report/RegisterForPeriod?DeviceID=${id}&startDate=${payload.startDate}&endDate=${payload.endDate}`,
             { method: "GET" }
         );
 
@@ -388,87 +511,87 @@ export default function FiscalDevicePage() {
             unit: "pt",
             format: "a4"
         });
-
+        console.log(data);
         const pageWidth = pdf.internal.pageSize.getWidth();
 
-        // 3. Шапка документа
+        // 1. Шапка документа
         const headerLines = [
-            `${data.Company}, Cod Fiscal: ${data.CompanyIDNO}`,
-            `Registrul electronic MCC/IF de la ${new Date(data.StartDate).toLocaleDateString()} până la ${new Date(data.EndDate).toLocaleDateString()}`,
-            `Nr. înregistrare: ${data.RegistrationNumber}, Adresa: ${data.SalesPointAddress}`
+            `${data.company}, Cod Fiscal: ${data.companyIDNO}`,
+            `Registrul electronic MCC/IF de la ${new Date(data.startDate).toLocaleDateString("ro-RO")} până la ${new Date(data.endDate).toLocaleDateString("ro-RO")}`,
+            `Numărul de înregistrare: ${data.registrationNumber}, Adresa: ${data.salesPointAddress}`
         ];
 
-        pdf.setFontSize(8);
+        pdf.setFontSize(9);
         headerLines.forEach((line, idx) => {
-            pdf.text(line, pageWidth / 2, 20 + idx * 12, { align: "center" });
+            pdf.text(line, pageWidth / 2, 25 + idx * 12, { align: "center" });
         });
 
-        // 4. Заголовки таблицы
+        // 2. Заголовки таблицы (две строки)
+        const dynamicTaxes = data.taxesMapping?.map((tax) => `Rulaj ${tax.taxCode} / TVA ${tax.taxCode}`) || [];
+
         const head = [
             [
-                "Nr. curent",
-                "Nr. raport",
-                "Valoare totală rulaj",
-                "Rulaj (lei)",
-                "Suma predată",
-                "Suma restituită",
-                "Suma achitată",
-                "Suma tichet",
-                "Sold numerar",
-                "Valoare totală rulaj/T.V.A."
+                { content: "Nr. curent", rowSpan: 2 },
+                { content: "Nr. raport / Data raportului", rowSpan: 2 },
+                { content: "Valoare totală rulaj / TVA total", rowSpan: 2 },
+                { content: "Rulaj conform raportului zilnic / TVA pe cote", colSpan: 1 + dynamicTaxes.length },
+                { content: "Suma predată în casierie", rowSpan: 2 },
+                { content: "Suma restituită", rowSpan: 2 },
+                { content: "Suma achitată cu alte instrumente", rowSpan: 2 },
+                { content: "Suma tichet masă", rowSpan: 2 },
+                { content: "Sold numerar", rowSpan: 2 }
+            ],
+            [
+                "Total Brut / TVA",
+                ...dynamicTaxes
             ]
         ];
 
-        // Динамические колонки по TaxesMapping
-        if (data.TaxesMapping) {
-            data.TaxesMapping.forEach((tax) => {
-                head[0].push(`Rulaj cota ${tax.TaxCode} / TVA ${tax.TaxCode}`);
-            });
-        }
+        // 3. Тело таблицы (каждая запись → 2 строки)
+        const body = data.reports?.flatMap((report, idx) => {
+            const brutRow = [
+                idx + 1,
+                report.reportNumber ?? "",
+                Number(report.grandTotalBrut ?? 0).toFixed(2),
+                Number(report.totalBrut ?? 0).toFixed(2),
+                ...(data.taxesMapping?.map((tax) => {
+                    const taxItem = report.taxes?.find((t) => t.taxCode === tax.taxCode);
+                    return Number(taxItem?.brut ?? 0).toFixed(2);
+                }) || []),
+                Number(report.cashIn ?? 0).toFixed(2),
+                Number(report.cashOutCollect ?? 0).toFixed(2),
+                Number(report.cashOutRefund ?? 0).toFixed(2),
+                Number(report.totalOther ?? 0).toFixed(2),
+                Number(report.totalInBox ?? 0).toFixed(2)
+            ];
 
-        let body;
+            const taxRow = [
+                "", // пусто вместо номера
+                new Date(report.reportDate).toLocaleString("ro-RO"),
+                Number(report.grandTotalTax ?? 0).toFixed(2),
+                Number(report.totalTax ?? 0).toFixed(2),
+                ...(data.taxesMapping?.map((tax) => {
+                    const taxItem = report.taxes?.find((t) => t.taxCode === tax.taxCode);
+                    return Number(taxItem?.tax ?? 0).toFixed(2);
+                }) || []),
+                "", "", "", "", "" // пустые для нижней строки
+            ];
 
-        // 5. Формируем тело таблицы
-        if (data.reports?.length > 0) {
-            body = data.reports.map((report, index) => {
-                const row = [
-                    index + 1,
-                    report.ReportNumber ?? "",
-                    Number(report.GrandTotalBrut ?? 0).toFixed(2),
-                    Number(report.TotalBrut ?? 0).toFixed(2),
-                    Number(report.CashIn ?? 0).toFixed(2),
-                    Number(report.CashOutCollect ?? 0).toFixed(2),
-                    Number(report.CashOutRefund ?? 0).toFixed(2),
-                    Number(report.TotalOther ?? 0).toFixed(2),
-                    Number(report.TotalInBox ?? 0).toFixed(2),
-                    Number(report.TotalTax ?? 0).toFixed(2)
-                ];
+            return [brutRow, taxRow];
+        }) || [];
 
-                if (report.Taxes && data.TaxesMapping) {
-                    data.TaxesMapping.forEach((taxMap) => {
-                        const taxItem = report.Taxes.find((t) => t.TaxCode === taxMap.TaxCode);
-                        row.push(Number(taxItem?.Brut ?? 0).toFixed(2));
-                    });
-                }
-
-                return row;
-            });
-        } else {
-            body = [];
-        }
-
-        // 6. Генерация таблицы
+        // 4. Генерация таблицы
         autoTable(pdf, {
             head,
             body,
-            startY: 60,
+            startY: 70,
             theme: "grid",
-            styles: { fontSize: 8 },
+            styles: { fontSize: 7, halign: "center", valign: "middle" },
             headStyles: { fillColor: [220, 220, 220] },
             margin: { left: 10, right: 10 }
         });
 
-        // 7. Открываем PDF в новой вкладке
+        // 5. Открываем PDF в модалке
         const pdfBlob = pdf.output("blob");
         const blobUrl = URL.createObjectURL(pdfBlob);
         setPdfUrl(blobUrl);
@@ -614,79 +737,106 @@ export default function FiscalDevicePage() {
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[400px]">
                                 <h3 className="text-lg font-semibold mb-4">{t("SelectPeriod")}</h3>
-
-                                {/* Выбор даты для всех отчётов */}
-                                <div className="flex flex-col gap-3 mb-4">
-                                    <label className="text-sm font-medium">{t("StartDate")}:</label>
-                                    <Datepicker
-                                        asSingle
-                                        value={{ startDate: period.startDate, endDate: period.startDate }}
-                                        onChange={(val) =>
-                                            setPeriod((prev) => ({ ...prev, startDate: val.startDate }))
-                                        }
-                                        primaryColor="cyan"
-                                        displayFormat="DD.MM.YYYY"
-                                        maxDate={period?.endDate || new Date()}
-                                        minDate={new Date(2000, 0, 1)}
-                                        inputClassName="w-full px-4 py-2 text-sm border rounded"
-                                    />
-
-                                    <label className="text-sm font-medium">{t("EndDate")}:</label>
-                                    <Datepicker
-                                        asSingle
-                                        value={{ startDate: period.endDate, endDate: period.endDate }}
-                                        onChange={(val) =>
-                                            setPeriod((prev) => ({ ...prev, endDate: val.startDate }))
-                                        }
-                                        primaryColor="cyan"
-                                        displayFormat="DD.MM.YYYY"
-                                        minDate={period?.startDate || new Date()}
-                                        maxDate={new Date()}
-                                        inputClassName="w-full px-4 py-2 text-sm border rounded"
-                                    />
-                                </div>
-
-                                {/* Поля для FiscalSummary */}
+                                {/* Для FiscalSummary показываем переключатель */}
                                 {currentReportType === "FiscalSummary" && (
-                                    <>
-                                        <div className="flex flex-col gap-3 mb-4">
-                                            <label className="text-sm font-medium">{t("RangeStart")}:</label>
+                                    <div className="flex gap-4 mb-4">
+                                        <label className="flex items-center gap-2">
                                             <input
-                                                type="number"
-                                                min={0}
-                                                value={period.startNum}
-                                                onChange={(e) =>
-                                                    setPeriod((prev) => ({ ...prev, startNum: Number(e.target.value) }))
-                                                }
-                                                className="w-full px-4 py-2 text-sm border rounded"
+                                                type="radio"
+                                                name="mode"
+                                                checked={period.mode === "date"}
+                                                onChange={() => setPeriod((prev) => ({ ...prev, mode: "date" }))}
                                             />
-
-                                            <label className="text-sm font-medium">{t("RangeEnd")}:</label>
+                                            <span>{t("ByDates")}</span>
+                                        </label>
+                                        <label className="flex items-center gap-2">
                                             <input
-                                                type="number"
-                                                min={0}
-                                                value={period.endNum}
-                                                onChange={(e) =>
-                                                    setPeriod((prev) => ({ ...prev, endNum: Number(e.target.value) }))
-                                                }
-                                                className="w-full px-4 py-2 text-sm border rounded"
+                                                type="radio"
+                                                name="mode"
+                                                checked={period.mode === "range"}
+                                                onChange={() => setPeriod((prev) => ({ ...prev, mode: "range" }))}
                                             />
-                                        </div>
-
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <input
-                                                type="checkbox"
-                                                checked={period.detailed}
-                                                onChange={(e) =>
-                                                    setPeriod((prev) => ({ ...prev, detailed: e.target.checked }))
-                                                }
-                                            />
-                                            <span>{t("Detailed")}</span>
-                                        </div>
-                                    </>
+                                            <span>{t("ByRange")}</span>
+                                        </label>
+                                    </div>
                                 )}
 
-                                {/* Кнопки для всех отчётов */}
+                                {/* Если выбран режим по датам */}
+                                {(!currentReportType || period.mode === "date" || period.mode === undefined) && (
+                                    <div className="flex flex-col gap-3 mb-4">
+                                        <label className="text-sm font-medium">{t("StartDate")}:</label>
+                                        <Datepicker
+                                            asSingle
+                                            value={{ startDate: period.startDate, endDate: period.startDate }}
+                                            onChange={(val) =>
+                                                setPeriod((prev) => ({ ...prev, startDate: val.startDate }))
+                                            }
+                                            primaryColor="cyan"
+                                            displayFormat="DD.MM.YYYY"
+                                            maxDate={period?.endDate || new Date()}
+                                            minDate={new Date(2000, 0, 1)}
+                                            inputClassName="w-full px-4 py-2 text-sm border rounded"
+                                        />
+
+                                        <label className="text-sm font-medium">{t("DateEnd")}:</label>
+                                        <Datepicker
+                                            asSingle
+                                            value={{ startDate: period.endDate, endDate: period.endDate }}
+                                            onChange={(val) =>
+                                                setPeriod((prev) => ({ ...prev, endDate: val.startDate }))
+                                            }
+                                            primaryColor="cyan"
+                                            displayFormat="DD.MM.YYYY"
+                                            minDate={period?.startDate || new Date()}
+                                            maxDate={new Date()}
+                                            inputClassName="w-full px-4 py-2 text-sm border rounded"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Если выбран режим по диапазону (только для FiscalSummary) */}
+                                {currentReportType === "FiscalSummary" && period.mode === "range" && (
+                                    <div className="flex flex-col gap-3 mb-4">
+                                        <label className="text-sm font-medium">{t("RangeStart")}:</label>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={period.startNum || ""}
+                                            onChange={(e) =>
+                                                setPeriod((prev) => ({ ...prev, startNum: Number(e.target.value) }))
+                                            }
+                                            className="w-full px-4 py-2 text-sm border rounded"
+                                        />
+
+                                        <label className="text-sm font-medium">{t("RangeEnd")}:</label>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={period.endNum || ""}
+                                            onChange={(e) =>
+                                                setPeriod((prev) => ({ ...prev, endNum: Number(e.target.value) }))
+                                            }
+                                            className="w-full px-4 py-2 text-sm border rounded"
+                                        />
+                                    </div>
+
+                                )}
+
+                                {/* Чекбокс "детально" только для FiscalSummary */}
+                                {currentReportType === "FiscalSummary" && period.mode === "range" && (
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={period.detailed || false}
+                                            onChange={(e) =>
+                                                setPeriod((prev) => ({ ...prev, detailed: e.target.checked }))
+                                            }
+                                        />
+                                        <span>{t("Detailed")}</span>
+                                    </div>
+                                )}
+
+                                {/* Кнопки */}
                                 <div className="flex justify-end gap-2 mt-4">
                                     <button
                                         onClick={closeReportModal}
@@ -713,10 +863,10 @@ export default function FiscalDevicePage() {
                         style={{
                             content: {
                                 top: "5%",
-                                left: "25%",
-                                right: "25%",
+                                left: "15%",
+                                right: "15%",
                                 bottom: "5%",
-                                width: "50%",
+                                width: "70%",
                                 height: "80%",
                                 padding: "20px",
                                 overflow: "auto"
@@ -727,9 +877,21 @@ export default function FiscalDevicePage() {
                             className="mb-3 px-3 py-1 bg-red-600 text-white rounded"
                             onClick={() => setIsOpenFiscalSummary(false)}
                         >
-                            Закрыть
+                            {t("Close")}
                         </button>
-                        <pre className="whitespace-pre-wrap font-mono text-center">{fiscalSummaryText}</pre>
+                        {pdfUrl && (
+                            <iframe
+                                src={pdfUrl}
+                                title="KKM Journal PDF"
+                                width="100%"
+                                height="100%"
+                                style={{ border: "none" }}
+                            />
+                        )}
+
+                        {fiscalSummaryText && (
+                            <pre className="whitespace-pre-wrap font-mono text-center">{fiscalSummaryText}</pre>
+                        )}
                     </Modal>
                 </div>
             </div>

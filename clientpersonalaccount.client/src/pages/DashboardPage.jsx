@@ -12,12 +12,12 @@ import dayjs from "dayjs";
 export default function DashboardPage() {
     //#region вспомогательные атрибуты
     const { t } = useTranslation();
-    const [selectedRange, setSelectedRange] = useState("day");
+    const [selectedRange, setSelectedRange] = useState("year");
     const [customStartDate, setCustomStartDate] = useState(null);
     const [customEndDate, setCustomEndDate] = useState(null);
     const [posList, setPosList] = useState([]);
     const [selectedPos, setSelectedPos] = useState([]);
-    const [allDevices, setAllDevices] = useState(false);
+    const [allDevices, setAllDevices] = useState(true);
     const [loading, setLoading] = useState(false);
     const [chartData, setChartData] = useState({});
     const [allDevicesChartData, setAllDevicesChartData] = useState({});
