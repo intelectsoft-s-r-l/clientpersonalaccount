@@ -104,7 +104,6 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
 
     const handleDeleteRow = (rowId) => {
         const newData = tableData.filter((row) => row.ID !== rowId);
-        console.log(tableData);
         setTableData(newData);
         if (onDataChange) {
             onDataChange(tableKey, newData.filter(r => !r.isNew));
