@@ -65,6 +65,15 @@ export const validateProducts = (item, tableKey, usersPin, pins, t, data) => {
         if (!item.VATCode || item.VATCode.trim() === "") rowErrors.VATCode = t("validation.vatRequired");
     }
 
+    if (tableKey === "payments") {
+        const amount = item.MaxPaymentAmount?.toString() || "";
+        if (!/^\d+$/.test(amount)) {
+            rowErrors.MaxPaymentAmount = t("validation.onlyNumbers");
+        } else if (amount.length > 20) { // ограничение на длину
+            rowErrors.MaxPaymentAmount = t("validation.maxLength", { count: 20 });
+        }
+    }
+
     if (Object.keys(rowErrors).length > 0) {
         errors[id] = rowErrors;
     }

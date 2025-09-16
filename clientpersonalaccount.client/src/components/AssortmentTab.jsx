@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import ValidationModal from "./ValidationModal";
 import { validateProducts } from "../validation/validationSchemas";
 
-const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataChange, usersPin = [] }, ref) => {
+const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataChange, usersPin = [], onResetPayments }, ref) => {
     const [tableData, setTableData] = useState(data);
     const [usersPinData, setUsersPinData] = useState(usersPin);
     const [pinData, setPinData] = useState([]);
@@ -75,6 +75,16 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
             return;
         }
 
+        if (tableData.length > 0) {
+            const prevRow = tableData[0];
+            const errors = validateProducts(prevRow, tableKey, usersPin, pinData, t, tableData);
+            if (Object.keys(errors).length > 0) {
+                setValidationErrors(errors);
+                setShowErrors(true);
+                return; // блокируем добавление новой строки
+            }
+        }
+
         const maxId = tableData.reduce((max, row) => {
             const id = Number(row.ID);
             return !isNaN(id) && id > max ? id : max;
@@ -104,9 +114,37 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
 
     const handleDeleteRow = (rowId) => {
         const newData = tableData.filter((row) => row.ID !== rowId);
+
         setTableData(newData);
         if (onDataChange) {
-            onDataChange(tableKey, newData.filter(r => !r.isNew));
+            onDataChange(tableKey, newData);
+        }
+
+        if (onDataChange) {
+            // groups → products
+            if (tableKey === "groups" && extraData.products) {
+                const updatedProducts = extraData.products.map((p) =>
+                    p.Group?.toString() === rowId.toString()
+                        ? { ...p, Group: null, isEdited: true }
+                        : p
+                );
+                onDataChange("products", updatedProducts);
+            }
+
+            // products → departments
+            if (tableKey === "products" && extraData.departments) {
+                const updatedDepartments = extraData.departments.map((d) => {
+                    if (Array.isArray(d.Products) && d.Products.includes(rowId)) {
+                        return {
+                            ...d,
+                            Products: d.Products.filter(pid => pid !== rowId),
+                            isEdited: true,
+                        };
+                    }
+                    return d;
+                });
+                onDataChange("departments", updatedDepartments);
+            }
         }
     };
 
@@ -121,6 +159,7 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
                 onAddRow={tableKey === "payments" ? undefined : handleAddRow}
                 onDeleteRow={handleDeleteRow}
                 extraData={extraData}
+                onResetPayments={tableKey === "payments" ? onResetPayments : undefined }
             />
             <ValidationModal
                 errors={validationErrors}

@@ -836,7 +836,9 @@
     "vatCodeNoUnderscore": "Code must not contain underscore",
     "vatValueZero": "Value must be 0.00 for NotVat",
     "vatValueRange": "Value must be between 0.00 and 99.00",
-    "vatValueTwoDecimals": "Enter value with two decimal places"
+    "vatValueTwoDecimals": "Enter value with two decimal places",
+    "onlyNumbers": "You can only enter numbers.",
+    "maxLength": "Maximum length: {{count}} characters"
   },
   "TypeDevice": "Device type",
   "TypeBusiness": "Business type",
@@ -854,5 +856,6 @@
   "SaveSuccess": "Data saved successfully",
   "Value": "Value",
   "SelectPeriod": "Specify period",
-  "Load": "Download"
+  "Load": "Download",
+  "Click to edit": "Click to edit"
 }

@@ -30,8 +30,8 @@ export const tableDefinitions = (t, data) => [
                 width: "15%",
                 // options будут подставлены динамически в AssortmentTab из extraData.groups
                 render: (value, row, extraData) => {
-                    const option = extraData.groups?.find(g => g.ID.toString() === value);
-                    return option ? option.Name : value;
+                    const option = extraData.groups.find(g => g.ID.toString() === value || g.ID === value);
+                    return option ? option.Name : "-";
                 },
                 filterable: true, align: "left"
             },

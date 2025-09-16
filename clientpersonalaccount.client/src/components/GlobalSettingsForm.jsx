@@ -15,7 +15,7 @@ const defaultSettings = {
     MIA: "",
     EnableSMS: false,
     CheckedFiscalizationCardOffline: false,
-    SistemPaymentSmart: "default",
+    SistemPaymentSmart: null,
 };
 
 const GlobalSettingsForm = forwardRef(({ initialSettings, onChange }, ref) => {
@@ -69,7 +69,7 @@ const GlobalSettingsForm = forwardRef(({ initialSettings, onChange }, ref) => {
 
         if (name === "SistemPaymentSmart") {
             const selectedOpt = options.find((opt) => opt.id === value);
-            console.log(value, selectedOpt);
+
             setSettings((prev) => {
                 const updated = {
                     ...prev,
@@ -147,6 +147,7 @@ const GlobalSettingsForm = forwardRef(({ initialSettings, onChange }, ref) => {
                         name="SistemPaymentSmart"
                         value={settings.SistemPaymentSmart || ""}
                         onChange={handleChange}
+                        onClick={handleChange}
                         className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     >
                         {options.map((opt) => (

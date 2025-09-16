@@ -33,7 +33,8 @@ export function DataTable({
     extraData,
     errors = {},
     onRefresh,
-    customHeader
+    customHeader,
+    onResetPayments
 }) {
     const [editCell, setEditCell] = useState({ rowId: null, columnKey: null });
     const [editValue, setEditValue] = useState("");
@@ -299,6 +300,24 @@ export function DataTable({
                         </button>
                     )}
 
+                    {onResetPayments && (
+                        <button
+                            onClick={onResetPayments}
+                            className="p-2 bg-gray-200 hover:scale-110 rounded-full transition flex items-center justify-center"
+                        >
+                            {/* Простой SVG иконки ластика */}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-6 w-6 text-red-600"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                {/* Рисуем более реалистичный ластик */}
+                                <path d="M16.24 3.56a2 2 0 0 0-2.83 0L4 13.97a2 2 0 0 0 0 2.83l3.17 3.17a2 2 0 0 0 2.83 0l9.41-9.41a2 2 0 0 0 0-2.83l-3.17-3.17zM6.5 18.5l-2.5-2.5 7.59-7.59 2.5 2.5L6.5 18.5z" />
+                            </svg>
+                        </button>
+                    )}
+
                     {onRefresh && (
                         <button
                             onClick={onRefresh}
@@ -333,7 +352,8 @@ export function DataTable({
                         <thead>
                             <tr className="bg-gray-100">
                                 {columns.map((col) => {
-                                    const isActions = col.key === "actions"; // ⭐ определяем столбец действий
+                                    const isActions = col.key === "actions";
+                                    const isFiltered = (filters[col.key]?.toString().trim() || "") !== ""; // фильтр активен
                                     return (
                                         <th
                                             key={col.key}
@@ -346,39 +366,46 @@ export function DataTable({
                                         >
                                             <div className={`flex items-center ${getAlignmentFlex(col)} space-x-1`}>
                                                 <span className="truncate">{col.label}</span>
+
+                                                {/* Маленький зелёный кружок для активного фильтра */}
+                                                {isFiltered && (
+                                                    <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+                                                )}
+
                                                 {sortConfig.key === col.key && (
                                                     <span className="ml-1 text-xs">
                                                         {sortConfig.direction === "asc" ? "▲" : "▼"}
                                                     </span>
                                                 )}
-                                                {col.filterable && (
-                                                    <>
-                                                        {!activeFilter || activeFilter !== col.key ? (
-                                                            <div
-                                                                className="w-6 h-6 cursor-pointer flex items-center justify-center"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleClick(col.key);
-                                                                }}
-                                                            >
-                                                                <img
-                                                                    src="/icons/Filter.svg"
-                                                                    alt="Filter"
-                                                                    className="w-5 h-5 hover:scale-110"
-                                                                />
-                                                            </div>
-                                                        ) : null}
-                                                    </>
+
+                                                {col.filterable && !activeFilter && (
+                                                    <div
+                                                        className="w-6 h-6 cursor-pointer flex items-center justify-center"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleClick(col.key);
+                                                        }}
+                                                    >
+                                                        <img
+                                                            src="/icons/Filter.svg"
+                                                            alt="Filter"
+                                                            className="w-5 h-5 hover:scale-110"
+                                                        />
+                                                    </div>
                                                 )}
                                             </div>
 
                                             {/* Поле фильтра */}
                                             {col.filterable && activeFilter === col.key && (
-                                                <div id={`filter-${col.key}`} onClick={(e) => e.stopPropagation()} className="absolute top-full left-0 mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-300 rounded shadow-lg">
+                                                <div
+                                                    id={`filter-${col.key}`}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="absolute top-full left-0 mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-300 rounded shadow-lg"
+                                                >
                                                     {col.filterOptions ? (
                                                         <select
                                                             value={filters[col.key] ?? ""}
-                                                            onChange={(e) => handleFilterChange(col.key, e.target.value)}
+                                                            onChange={(e) => handleFilterChange(col.key, e.target.value.trim())}
                                                             className="w-full p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
@@ -396,7 +423,7 @@ export function DataTable({
                                                         <input
                                                             type="text"
                                                             value={filters[col.key] || ""}
-                                                            onChange={(e) => handleFilterChange(col.key, e.target.value)}
+                                                            onChange={(e) => handleFilterChange(col.key, e.target.value.trim())}
                                                             placeholder={`${t("Filter")}...`}
                                                             className="w-full p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
                                                             onClick={(e) => e.stopPropagation()}
@@ -531,6 +558,42 @@ export function DataTable({
                                                             </td>
                                                         );
                                                     }
+                                                }
+
+                                                if (col.type === "price" && isEditing && editCell.columnKey === col.key && editCell.rowId === row.ID) {
+                                                    return (
+                                                        <td
+                                                            key={col.key}
+                                                            className={`p-2 border border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
+                                                                col
+                                                            )} dark:bg-gray-800 dark:text-white ${isActions
+                                                                ? "sticky right-0 bg-white dark:bg-gray-800 z-20 border-t border-l border-r"
+                                                                : ""
+                                                                }`}
+                                                        >
+                                                            <input
+                                                                type="text"
+                                                                value={editValue || ""}
+                                                                autoFocus
+                                                                style={{ width: "100%" }}
+                                                                maxLength={10}
+                                                                onBeforeInput={(e) => {
+                                                                    if (!/[0-9,]/.test(e.data)) e.preventDefault();
+                                                                }}
+                                                                onPaste={(e) => {
+                                                                    const paste = e.clipboardData.getData("text");
+                                                                    if (/[^0-9,]/.test(paste)) e.preventDefault();
+                                                                }}
+                                                                onChange={(e) => {
+                                                                    const newValue = e.target.value.replace(/[^0-9,]/g, "");
+                                                                    setEditValue(newValue);
+                                                                    handleCellUpdate(row.ID, col.key, newValue);
+                                                                }}
+                                                                onBlur={saveEdit}
+                                                                className="w-full border border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white"
+                                                            />
+                                                        </td>
+                                                    );
                                                 }
 
                                                 if (col.type === "boolean") {

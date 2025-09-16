@@ -77,7 +77,7 @@ export default function LicensePage() {
             lastDateUpdate: formatDate(lic.lastDateUpdate),
             batteryDisplay: `${lic.battery} %`
         };
-    });
+    }).sort((a, b) => b.oid - a.oid);
 
     const columns = [
         { key: "deviceName", label: t("DeviceName"), filterable: true, width: "25%" },

@@ -837,7 +837,9 @@
     "vatCodeNoUnderscore": "Codul nu trebuie să conțină underscore",
     "vatValueZero": "Valoarea trebuie să fie 0.00 pentru NotVat",
     "vatValueRange": "Valoarea trebuie să fie între 0.00 și 99.00",
-    "vatValueTwoDecimals": "Introduceți valoarea cu două zecimale"
+    "vatValueTwoDecimals": "Introduceți valoarea cu două zecimale",
+    "onlyNumbers": "Puteți introduce numai numere.",
+    "maxLength": "Lungime maximă: {{count}} personaje"
   },
   "TypeDevice": "Tipul dispozitivului",
   "TypeBusiness": "Tipul afacerii",
@@ -855,5 +857,6 @@
   "SaveSuccess": "Datele au fost salvate cu succes",
   "Value": "Valoare",
   "SelectPeriod": "Specificați perioada",
-  "Load": "Descărcați"
+  "Load": "Descărcați",
+  "Click to edit": "Faceți clic pentru a edita"
 }

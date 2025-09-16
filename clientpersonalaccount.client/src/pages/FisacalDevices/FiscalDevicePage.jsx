@@ -420,140 +420,79 @@ export default function FiscalDevicePage() {
 
     const generateKKMJournalPDF = (data, startDate, endDate) => {
         const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+
         const pageWidth = pdf.internal.pageSize.getWidth();
+        const margin = 10;
 
         pdf.setFontSize(10);
+        pdf.text(`${data.company}, Cod Fiscal: ${data.companyIDNO}`, pageWidth / 2, 30, { align: "center" });
         pdf.text(
-            `Registrul electronic MCC/IF de la ${new Date(startDate).toLocaleDateString("ro-RO")} până la ${new Date(endDate).toLocaleDateString("ro-RO")}`,
+            `Registrul electronic MCC/IF de la ${new Date(startDate).toLocaleDateString("ro-RO")} pana la ${new Date(endDate).toLocaleDateString("ro-RO")}`,
             pageWidth / 2,
-            30,
+            45,
             { align: "center" }
         );
-        pdf.text(`${data.company}, Cod Fiscal: ${data.companyIDNO}`, pageWidth / 2, 45, { align: "center" });
-        pdf.text(`Numărul de înregistrare: ${data.registrationNumber}, Adresa: ${data.salesPointAddress}`, pageWidth / 2, 60, { align: "center" });
+        pdf.text(`Numarul de inregistrare: ${data.registrationNumber}, Adresa: ${data.salesPointAddress}`, pageWidth / 2, 60, { align: "center" });
 
-        // === Динамическая шапка ===
-        const head = [
-            [
-                { content: "Nr. curent al înscrierii", rowSpan: 2 },
-                { content: "Nr. raportului de închidere zilnică / Data raportului", rowSpan: 2 },
-                { content: "Valoare totală rulaj / TVA total", rowSpan: 2 },
-                { content: "Rulajul conform raportului zilnic / Valorile TVA pe cote", colSpan: 4 + (data.showTaxE ? 1 : 0) + (data.showTaxF ? 1 : 0) },
-                { content: "Suma predată în casierie", rowSpan: 2 },
-                { content: "Suma restituită", rowSpan: 2 },
-                { content: "Suma achitată cu alte instrumente", rowSpan: 2 },
-                { content: "Suma tichet masă", rowSpan: 2 },
-                { content: "Soldul numerar", rowSpan: 2 }
-            ],
-            [
-                "Total Brut / TVA",
-                "Rulaj A / TVA A",
-                "Rulaj B / TVA B",
-                "Rulaj C / TVA C",
-                "Rulaj D / TVA D",
-                ...(data.showTaxE ? ["Rulaj E / TVA E"] : []),
-                ...(data.showTaxF ? ["Rulaj F / TVA F"] : [])
-            ]
-        ];
-
-        // === Формирование тела таблицы ===
-        const body = data.reports.flatMap((r, idx) => ([
-            [
-                idx + 1,
-                r.reportNumber,
-                r.grandTotalBrut.toFixed(2),
-                r.totalBrut.toFixed(2),
-                r.totalBrutA.toFixed(2),
-                r.totalBrutB.toFixed(2),
-                r.totalBrutC.toFixed(2),
-                r.totalBrutD.toFixed(2),
-                ...(data.showTaxE ? [r.totalBrutE.toFixed(2)] : []),
-                ...(data.showTaxF ? [r.totalBrutF.toFixed(2)] : []),
-                r.cashIn.toFixed(2),
-                r.cashOutCollect.toFixed(2),
-                r.cashOutRefund.toFixed(2),
-                r.totalOther.toFixed(2),
-                r.totalTME.toFixed(2),
-                r.totalInBox.toFixed(2)
-            ],
-            [
-                "", // для rowspan первой колонки
-                new Date(r.reportDate).toLocaleString("ro-RO"),
-                r.grandTotalTax.toFixed(2),
-                r.totalTax.toFixed(2),
-                r.totalTaxA.toFixed(2),
-                r.totalTaxB.toFixed(2),
-                r.totalTaxC.toFixed(2),
-                r.totalTaxD.toFixed(2),
-                ...(data.showTaxE ? [r.totalTaxE.toFixed(2)] : []),
-                ...(data.showTaxF ? [r.totalTaxF.toFixed(2)] : []),
-                "", "", "", "", "", "" // пустые поля во второй строке
-            ]
-        ]));
-
-        autoTable(pdf, {
-            head,
-            body,
-            startY: 80,
-            theme: "grid",
-            styles: { fontSize: 7, halign: "center", valign: "middle" },
-            headStyles: { fillColor: [220, 220, 220] },
-            margin: { left: 10, right: 10 }
-        });
-
-        return pdf;
-    };
-
-    const kkmJournal = async () => {
-        const data = await apiService.proxyRequest(
-            `/ISFiscalCloudRegister/Report/RegisterForPeriod?DeviceID=${id}&startDate=${payload.startDate}&endDate=${payload.endDate}`,
-            { method: "GET" }
-        );
-
-        if (!data) return;
-
-        const pdf = new jsPDF({
-            orientation: "landscape",
-            unit: "pt",
-            format: "a4"
-        });
-        console.log(data);
-        const pageWidth = pdf.internal.pageSize.getWidth();
-
-        // 1. Шапка документа
-        const headerLines = [
-            `${data.company}, Cod Fiscal: ${data.companyIDNO}`,
-            `Registrul electronic MCC/IF de la ${new Date(data.startDate).toLocaleDateString("ro-RO")} până la ${new Date(data.endDate).toLocaleDateString("ro-RO")}`,
-            `Numărul de înregistrare: ${data.registrationNumber}, Adresa: ${data.salesPointAddress}`
-        ];
-
-        pdf.setFontSize(9);
-        headerLines.forEach((line, idx) => {
-            pdf.text(line, pageWidth / 2, 25 + idx * 12, { align: "center" });
-        });
-
-        // 2. Заголовки таблицы (две строки)
-        const dynamicTaxes = data.taxesMapping?.map((tax) => `Rulaj ${tax.taxCode} / TVA ${tax.taxCode}`) || [];
+        // Dynamic headers
+        const dynamicTaxHeaders = data.taxesMapping?.map((tax) => {
+            return {
+                content: `Valoarea rulajului pe cota ${tax.taxCode} / Valoarea T.V.A. pe cota ${tax.taxCode}`,
+                styles: {
+                    cellWidth: 60
+                }
+            };
+        }) || [];
 
         const head = [
             [
-                { content: "Nr. curent", rowSpan: 2 },
-                { content: "Nr. raport / Data raportului", rowSpan: 2 },
-                { content: "Valoare totală rulaj / TVA total", rowSpan: 2 },
-                { content: "Rulaj conform raportului zilnic / TVA pe cote", colSpan: 1 + dynamicTaxes.length },
-                { content: "Suma predată în casierie", rowSpan: 2 },
-                { content: "Suma restituită", rowSpan: 2 },
-                { content: "Suma achitată cu alte instrumente", rowSpan: 2 },
-                { content: "Suma tichet masă", rowSpan: 2 },
-                { content: "Sold numerar", rowSpan: 2 }
+                {
+                    content: "Nr. / curent al inscrierii", styles: {
+                        cellWidth: 30
+                    }, rowSpan: 2
+                },
+                {
+                    content: "Nr. raportului de inchidere zilnica / Data raportului de inchidere zilnica", styles: {
+                        cellWidth: 70
+                    }, rowSpan: 2
+                },
+                {
+                    content: "Valoare totala a rulajului inregistrat de la inceputul anului gestionar(lei)/ Valoarea totala a T.V.A. inregistrate de la inceputul anului gestionar(lei)", styles: {
+                        cellWidth: 70
+                    }, rowSpan: 2
+                },
+                {
+                    content: "Rulajul (lei) inregistrat, conform cu raportul de inchidere zilnica emis la sfarsitul perioadei de gestiune / Valorile T.V.A. (lei) pe cotele aferente", colSpan: dynamicTaxHeaders.length
+                },
+                {
+                    content: "Suma predata in casierie / incasatorului in timpul perioadei de gestiune", styles: {
+                        cellWidth: 70
+                    }, rowSpan: 2
+                },
+                {
+                    content: "Suma restituita consumatorilor in timpul perioadei de gestiune", styles: {
+                        cellWidth: 70
+                    }, rowSpan: 2
+                },
+                {
+                    content: "Suma achitata (confirmata) cu (prin) alte instrumente (documente) de plata", styles: {
+                        cellWidth: 70
+                    }, rowSpan: 2
+                },
+                {
+                    content: "Suma achitata (confirmata) cu (prin) tichet de masa pe suport de hârtie /pe suport electronic", styles: {
+                        cellWidth: 70
+                    }, rowSpan: 2
+                },
+                {
+                    content: "Soldul de numerar din caseta de bani a MCC/IF la sfarsitul perioadei de gestiune /Suma totala a restului nerambursat din valoarea nominala a tichetului de masa pe suport de hartie ('rest TMH')", styles: {
+                        cellWidth: 120
+                    }, rowSpan: 2
+                }
             ],
-            [
-                "Total Brut / TVA",
-                ...dynamicTaxes
-            ]
+            dynamicTaxHeaders
         ];
 
-        // 3. Тело таблицы (каждая запись → 2 строки)
         const body = data.reports?.flatMap((report, idx) => {
             const brutRow = [
                 idx + 1,
@@ -568,11 +507,12 @@ export default function FiscalDevicePage() {
                 Number(report.cashOutCollect ?? 0).toFixed(2),
                 Number(report.cashOutRefund ?? 0).toFixed(2),
                 Number(report.totalOther ?? 0).toFixed(2),
+                Number(report.totalTME ?? 0).toFixed(2),
                 Number(report.totalInBox ?? 0).toFixed(2)
             ];
 
             const taxRow = [
-                "", // пусто вместо номера
+                "", // empty for rowspan
                 new Date(report.reportDate).toLocaleString("ro-RO"),
                 Number(report.grandTotalTax ?? 0).toFixed(2),
                 Number(report.totalTax ?? 0).toFixed(2),
@@ -580,24 +520,49 @@ export default function FiscalDevicePage() {
                     const taxItem = report.taxes?.find((t) => t.taxCode === tax.taxCode);
                     return Number(taxItem?.tax ?? 0).toFixed(2);
                 }) || []),
-                "", "", "", "", "" // пустые для нижней строки
+                "", "", "", "", "", "" // empty fields for the rest of the row
             ];
 
             return [brutRow, taxRow];
         }) || [];
 
-        // 4. Генерация таблицы
+        // Table styles
         autoTable(pdf, {
-            head,
-            body,
-            startY: 70,
+            head: head,
+            body: body,
+            startY: 80,
             theme: "grid",
-            styles: { fontSize: 7, halign: "center", valign: "middle" },
-            headStyles: { fillColor: [220, 220, 220] },
-            margin: { left: 10, right: 10 }
+            margin: { left: margin, right: margin },
+            styles: {
+                fontSize: 8,
+                halign: "center",
+                valign: "top",
+                cellPadding: 3,
+                lineWidth: 0.5,
+                lineColor: [0, 0, 0],
+                textColor: [0, 0, 0],
+                overflow: "linebreak",
+            },
+            headStyles: {
+                fontStyle: "bold",
+                fillColor: [255, 255, 255], // Серый фон для заголовков
+                minCellHeight: 80, // Увеличиваем высоту ячеек заголовка для многострочного текста
+            },
         });
 
-        // 5. Открываем PDF в модалке
+        return pdf;
+    };
+
+    const kkmJournal = async () => {
+        const data = await apiService.proxyRequest(
+            `/ISFiscalCloudRegister/Report/RegisterForPeriod?DeviceID=${id}&startDate=${payload.startDate}&endDate=${payload.endDate}`,
+            { method: "GET" }
+        );
+
+        if (!data) return;
+
+        const pdf = generateKKMJournalPDF(data, payload.startDate, payload.endDate);
+
         const pdfBlob = pdf.output("blob");
         const blobUrl = URL.createObjectURL(pdfBlob);
         setPdfUrl(blobUrl);

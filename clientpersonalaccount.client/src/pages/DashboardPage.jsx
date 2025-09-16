@@ -17,7 +17,7 @@ export default function DashboardPage() {
     const [customEndDate, setCustomEndDate] = useState(null);
     const [posList, setPosList] = useState([]);
     const [selectedPos, setSelectedPos] = useState([]);
-    const [allDevices, setAllDevices] = useState(true);
+    const [allDevices, setAllDevices] = useState(false);
     const [loading, setLoading] = useState(false);
     const [chartData, setChartData] = useState({});
     const [allDevicesChartData, setAllDevicesChartData] = useState({});

@@ -132,11 +132,20 @@ export default function AssortmentPage() {
                     if (rawData[key]) {
                         try {
                             const base64Str = forceBase64(rawData[key]);
-                            let jsonStr = atob(base64Str);
-                            try { parsed = JSON.parse(jsonStr); }
-                            catch {
-                                try { parsed = JSON.parse(decodeURIComponent(jsonStr)); }
-                                catch (e) { console.error("Не удалось распарсить JSON:", e); }
+
+                            // Декодируем UTF-8 корректно
+                            const binaryStr = atob(base64Str);
+                            const bytes = Uint8Array.from(binaryStr, c => c.charCodeAt(0));
+                            const jsonStr = new TextDecoder("utf-8").decode(bytes);
+
+                            try {
+                                parsed = JSON.parse(jsonStr);
+                            } catch {
+                                try {
+                                    parsed = JSON.parse(decodeURIComponent(jsonStr));
+                                } catch (e) {
+                                    console.error("Не удалось распарсить JSON:", e);
+                                }
                             }
                         } catch (e) {
                             console.error(`Ошибка декодирования ${key}`, e);
@@ -217,7 +226,8 @@ export default function AssortmentPage() {
             }
 
             try {
-                const encodedSettings = btoa(JSON.stringify(settingData));
+                const jsonStr = JSON.stringify(settingData);
+                const encodedSettings = utf8ToBase64(jsonStr);
                 const typeMap = {
                     settings1: 1,
                     settings2: 2,
@@ -278,14 +288,30 @@ export default function AssortmentPage() {
         }
     }
 
+    function utf8ToBase64(str) {
+        const utf8Bytes = new TextEncoder().encode(str);
+        let binary = '';
+        const chunkSize = 0x8000; // 32k
+        for (let i = 0; i < utf8Bytes.length; i += chunkSize) {
+            const chunk = utf8Bytes.subarray(i, i + chunkSize);
+            binary += String.fromCharCode(...chunk);
+        }
+        return btoa(binary);
+    }
+
     const handleSaveAll = async () => {
         if (!activeId) return;
 
         const currentSetting = dataBySetting[activeId] || {};
 
+        const assortments = currentSetting.Assortments.map(item => ({
+            ...item,
+            TME: !!item.TME,
+        }));
+
         const Settings = {
             PaymentTypes: currentSetting.PaymentTypes || [],
-            Assortments: currentSetting.Assortments || [],
+            Assortments: assortments || [],
             Groups: currentSetting.Groups || [],
             Departments: currentSetting.Departments || [],
             Users: currentSetting.Users || [],
@@ -295,9 +321,9 @@ export default function AssortmentPage() {
         // прогоняем валидацию
         let validationErrors = {};
         const validateAll = (rows, key) => {
-            if (activeTable == "users" && extraData && extraData.users) {
+            if (activeTable == "users" && currentSetting && currentSetting.users) {
                 let userPins = [];
-                extraData.users.forEach(u => userPins.push(u.Pin));
+                currentSetting.users.forEach(u => userPins.push(u.Pin));
                 setPinData(userPins);
             }
 
@@ -337,21 +363,16 @@ export default function AssortmentPage() {
         const type = typeMap[activeId] || 0;
 
         try {
-            let encodedSettings;
 
-            try {
-                // Пробуем обычный btoa
-                encodedSettings = btoa(JSON.stringify(Settings));
-            } catch {
-                // Если ошибка — кодируем через encodeURIComponent
-                const jsonStr = JSON.stringify(Settings);
-                encodedSettings = btoa(encodeURIComponent(jsonStr));
-            }
+            const jsonStr = JSON.stringify(Settings);
+            const encodedSettings = utf8ToBase64(jsonStr);
+
             const payload = {
                 token: token,
                 settings: encodedSettings,
                 type: type,
             };
+
             const resp = await apiService.proxyRequest(`/MobileCashRegister/web/UpsertSettings`, {
                 method: "POST",
                 credentials: "include",
@@ -359,7 +380,7 @@ export default function AssortmentPage() {
                     "Content-Type": "application/json",
                     "X-Service-Id": "16",
                 },
-                body: JSON.stringify(payload),
+                body: payload,
             })
 
             if (resp.errorCode != 0) {
@@ -470,23 +491,106 @@ export default function AssortmentPage() {
                     return;
                 }
 
-                const processedData = jsonData.map(item => ({ ...item }));
+                // Мап заголовков: ключи Excel → твои ключи
+                const headerMap = {
+                    "ID": "ID",
+                    "id": "ID",
+                    "PLU": "PLU",
+                    "Артикул": "PLU",
+                    "Code": "Code",
+                    "Код": "Code",
+                    "Name": "Name",
+                    "Название": "Name",
+                    "Наименование": "Name",
+                    "Price": "Price",
+                    "Цена": "Price",
+                    "Barcode": "Barcode",
+                    "Штрихкод": "Barcode",
+                    "Штрих-код": "Barcode",
+                    "VATCode": "VATCode",
+                    "Код НДС": "VATCode",
+                    "Группа": "Group",
+                    "Group": "Group",
+                    "TME": "TME",
+                    "Tme": "TME"
+                };
 
-                let maxId = groups.length ? Math.max(...groups.map(g => g.ID)) : 0;
-                const newGroups = [...groups];
+                let errors = {};
 
-                processedData.forEach(item => {
-                    if (item.Group &&
-                        !newGroups.some(g => g.Name && g.Name.toString().trim().toLowerCase() === item.Group.toString().trim().toLowerCase())
-                    ) {
-                        maxId += 1;
-                        newGroups.push({ ID: maxId, Name: item.Group });
+                let validationErrors = {};
+                const validateAll = (rows, key) => {
+                    if (activeTable == "users" && currentSetting && currentSetting.users) {
+                        let userPins = [];
+                        currentSetting.users.forEach(u => userPins.push(u.Pin));
+                        setPinData(userPins);
                     }
+
+                    rows.forEach(row => {
+                        let errors = {};
+                        if (key === "users")
+                            errors = validateProducts(row, key, usersPin, pinData, t, rows);
+                        else
+                            errors = validateProducts(row, key, null, null, t, rows);
+
+                        if (Object.keys(errors).length > 0) {
+                            // если есть general — то сохраняем только general
+                            if (errors.general) {
+                                validationErrors = { general: errors.general };
+                            } else {
+                                validationErrors[row.ID] = errors;
+                            }
+                        }
+                    });
+                };
+
+                const processedData = jsonData.map(item => {
+                    const newItem = {};
+                    for (let key in item) {
+                        if (headerMap[key]) {
+                            newItem[headerMap[key]] = key === "TME" || key === "Tme"
+                                ? Boolean(item[key])
+                                : item[key];
+                        }
+                    }
+
+                    return newItem;
                 });
 
+                let maxId = 0;
+                const newGroups = [];
+
+                validateAll(processedData || [], "products");
+
+                if (Object.keys(validationErrors).length > 0) {
+                    setValidationErrors(validationErrors);
+                    setShowErrors(true);
+                    return;
+                }
+
+                processedData.forEach(item => {
+                    if (item.Group) {
+                        // ищем, есть ли такая группа уже в newGroups
+                        let group = newGroups.find(
+                            g => g.Name.toString().trim().toLowerCase() === item.Group.toString().trim().toLowerCase()
+                        );
+
+                        if (!group) {
+                            // создаем новую группу
+                            maxId += 1;
+                            group = { ID: maxId, Name: item.Group };
+                            newGroups.push(group);
+                        }
+
+                        // проставляем в ассортмент ID группы
+                        item.Group = group.ID;
+                        console.log(item, group);
+                    }
+                });
+                console.log(processedData);
                 // Обновляем данные ассортимента
                 setDataBySetting(prev => {
                     const currentSetting = prev[activeId] || {};
+
                     const updatedSetting = {
                         ...currentSetting,
                         Assortments: processedData,
@@ -656,30 +760,6 @@ export default function AssortmentPage() {
                 ))}
             </div>
 
-            {activeTable === "payments" && (
-                <div className="flex flex-col bg-gray-50">
-                    <div className="flex items-center justify-end gap-4 px-6 py-4">
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={handleResetPayments}
-                                className="p-2 bg-gray-200 hover:scale-110 rounded-full transition flex items-center justify-center"
-                            >
-                                {/* Простой SVG иконки ластика */}
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-6 w-6 text-red-600"
-                                    fill="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    {/* Рисуем более реалистичный ластик */}
-                                    <path d="M16.24 3.56a2 2 0 0 0-2.83 0L4 13.97a2 2 0 0 0 0 2.83l3.17 3.17a2 2 0 0 0 2.83 0l9.41-9.41a2 2 0 0 0 0-2.83l-3.17-3.17zM6.5 18.5l-2.5-2.5 7.59-7.59 2.5 2.5L6.5 18.5z" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* Блок импорта/экспорта - показывается только для таблицы products */}
             {activeTable === "products" && (
                 <div className="flex flex-col bg-gray-50">
@@ -805,7 +885,7 @@ export default function AssortmentPage() {
                         />
                     ) : (
                         <AssortmentTab
-                            key={activeTable}
+                            key={`${activeId}-${activeTable}`}
                             ref={(ref) => {
                                 if (ref) tabsRefs.current[`${activeId}-${activeTable}`] = ref;
                             }}
@@ -814,6 +894,7 @@ export default function AssortmentPage() {
                             extraData={{ groups, products, users, payments, departments }}
                             usersPin={usersPin}
                             onDataChange={handleTableDataUpdate}
+                            onResetPayments={handleResetPayments }
                         />
                     )}
             </main>

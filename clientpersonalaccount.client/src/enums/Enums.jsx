@@ -57,15 +57,15 @@ export const FiscalDeviceTypeEnum = (t) => ({
 
 export const CashRegisterTypes = {
     0: {
-        label: 'Cash register',
+        label: 'CashRegister',
         value: 0
     },
     1: {
-        label: 'Terminal',
+        label: 'PaymentTerminal',
         value: 1
     },
     2: {
-        label: 'Cash service',
+        label: 'CashRegisterService',
         value: 2
     },
 };
