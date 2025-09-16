@@ -160,7 +160,7 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
     const saveVatRates = async () => {
         if (!token) return null;
 
-        const errors = validateDevice(tableData.vatRates || [], activeTab);
+        const errors = validateDevice(tableData.vatRates || [], activeTab, t);
         if (Object.keys(errors).length > 0) {
             setValidationErrors(errors);
             setShowErrors(true);
@@ -261,7 +261,7 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
         const fields = [
             { label: t("Name"), value: d.name },
             { label: t("ActivationCode"), value: d.activationCode },
-            { label: t("SerialNumber"), value: d.serialNumber ?? "-" },  // возможно отсутствует
+            { label: t("Factory"), value: d.factory ?? "-" },  // возможно отсутствует
             { label: t("Model"), value: d.model },
             {
                 label: t("Type"),

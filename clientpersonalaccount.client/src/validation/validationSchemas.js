@@ -91,7 +91,7 @@ export const validateDevice = (data, tableKey, t) => {
 
             const vatCode = item.VatCode?.trim() ?? "";
             const vatValue = parseFloat(item.VatValue ?? "0");
-            const notVat = !!item.NotVat;
+            const notVat = !!item.NoVat;
 
             if (notVat) {
                 if (vatCode !== "" && vatCode !== "-" && vatCode !== "_") {

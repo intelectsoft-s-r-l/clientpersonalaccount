@@ -96,7 +96,7 @@ export const tableDefinitions = (t, data) => [
         columns: [
             { key: "VatValue", label: t("VatValue"), width: "30%", type: "number", editable: true },
             { key: "VatCode", label: t("VatCode"), width: "30%", editable: true },
-            { key: "NotVat", label: t("NotVat"), width: "30%", type: "boolean", editable: true },
+            { key: "NoVat", label: t("NotVat"), width: "30%", type: "boolean", editable: true },
         ],
     },
     {

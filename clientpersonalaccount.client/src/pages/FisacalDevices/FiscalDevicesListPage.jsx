@@ -34,6 +34,7 @@ export default function FiscalDevicesListPage() {
             if (data?.errorMessage) {
                 setError(`${data.errorName || "Ошибка"}: ${data.errorMessage}`);
             } else if (data?.fiscalDevices) {
+                console.log(data);
                 setDevices(data.fiscalDevices);
                 setError("");
             } else {
@@ -102,6 +103,7 @@ export default function FiscalDevicesListPage() {
         },
         { key: "address", label: t("Address"), filterable: true, width: "20%" },
         { key: "model", label: t("Model"), filterable: true, width: "10%" },
+        { key: "factory", label: t("Factory"), filterable: true, width: "2%" },
         { key: "number", label: t("NumberSTS"), filterable: true, width: "12%" },
         {
             key: "typeCode",
