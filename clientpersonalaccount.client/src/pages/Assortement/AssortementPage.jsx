@@ -11,6 +11,7 @@ import * as XLSX from "xlsx";
 import { validateProducts } from "../../validation/validationSchemas";
 import ValidationModal from "../../components/ValidationModal";
 import SuccessModal from "../../components/SuccessModal";
+import Toast from "../../components/Toast";
 
 export default function AssortmentPage() {
     const [tabs, setTabs] = useState(assortmentConfigs);
@@ -28,6 +29,9 @@ export default function AssortmentPage() {
     const [pinData, setPinData] = useState([]);
     const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
     const [showSuccessMessage, setShowSuccessMessage] = useState(null);
+    const [isWarningModalVisible, setIsWarningModalVisible] = useState(false);
+    const [showWarningMessage, setShowWarningMessage] = useState(null);
+
 
     useEffect(() => {
         const fetchToken = async () => {
@@ -309,9 +313,17 @@ export default function AssortmentPage() {
             TME: !!item.TME,
         }));
 
+        const cleanAssortments = assortments.map(item => {
+            const cleaned = { ...item };
+            // Удаляем служебные поля
+            delete cleaned.isEdited;
+            delete cleaned.isNew;
+            return cleaned;
+        });
+
         const Settings = {
             PaymentTypes: currentSetting.PaymentTypes || [],
-            Assortments: assortments || [],
+            Assortments: cleanAssortments || [],
             Groups: currentSetting.Groups || [],
             Departments: currentSetting.Departments || [],
             Users: currentSetting.Users || [],
@@ -321,9 +333,9 @@ export default function AssortmentPage() {
         // прогоняем валидацию
         let validationErrors = {};
         const validateAll = (rows, key) => {
-            if (activeTable == "users" && currentSetting && currentSetting.users) {
+            if (activeTable == "users" && currentSetting && currentSetting.Users) {
                 let userPins = [];
-                currentSetting.users.forEach(u => userPins.push(u.Pin));
+                currentSetting.Users.forEach(u => userPins.push(u.Pin));
                 setPinData(userPins);
             }
 
@@ -409,6 +421,31 @@ export default function AssortmentPage() {
             return;
         }
 
+        let validationErrors = {};
+        const validateAll = (rows, key) => {
+
+            rows.forEach(row => {
+                let errors = validateProducts(row, key, null, null, t, rows);
+
+                if (Object.keys(errors).length > 0) {
+                    // если есть general — то сохраняем только general
+                    if (errors.general) {
+                        validationErrors = { general: errors.general };
+                    } else {
+                        validationErrors[row.ID] = errors;
+                    }
+                }
+            });
+        };
+
+        validateAll(currentSetting.Assortments || [], "products");
+
+        if (Object.keys(validationErrors).length > 0) {
+            setValidationErrors(validationErrors);
+            setShowErrors(true);
+            return;
+        }
+
         // Убираем поля, которые не нужны в экспорте
         const cleanData = products.map(item => {
             const cleaned = { ...item };
@@ -418,6 +455,8 @@ export default function AssortmentPage() {
             delete cleaned.ProviderName;
             delete cleaned.Provide;
             delete cleaned.FormData;
+            delete cleaned.isEdited;
+            delete cleaned.isNew;
             return cleaned;
         });
 
@@ -625,7 +664,7 @@ export default function AssortmentPage() {
     const currentSetting = dataBySetting[activeId] || {};
     const currentTableData = currentSetting[settingsField] || [];
     const currentGlobalSettings = currentSetting.GlobalSettings || {};
-    const products = currentSetting.Assortments || [];
+    const products = (currentSetting.Assortments || []).slice().sort((a, b) => a.ID - b.ID);
     const groups = currentSetting.Groups || [];
     const users = currentSetting.Users || [];
     const payments = currentSetting.PaymentTypes || [];
@@ -696,6 +735,21 @@ export default function AssortmentPage() {
         });
     };
 
+    const checkDuplicateAssortment = (value, row) => {
+        if (!value) return false;
+
+        const isDuplicate = departments.some(
+            r => r.ID !== row.ID && r.Assortment === value
+        );
+
+        if (isDuplicate) {
+            setShowWarningMessage(t("DepartmentsDuplicate"));
+            setIsWarningModalVisible(true);
+        }
+
+        return isDuplicate;
+    };
+
     // Обработчик обновления данных из дочерних таблиц — обновляет состояние и сразу запускает сохранение (с дебаунсом)
     const handleTableDataUpdate = (tableKey, updatedData) => {
         setDataBySetting((prev) => {
@@ -739,7 +793,7 @@ export default function AssortmentPage() {
                 </div>
             </nav>
 
-            <div className="flex flex-wrap gap-4 px-6 py-4">
+            <div className="flex flex-wrap gap-2 px-6 py-4">
                 {["products", "payments", "groups", "departments", "users", "global"].map((key) => (
                     <button
                         key={key}
@@ -779,11 +833,12 @@ export default function AssortmentPage() {
                                 </div>
 
                                 <div className="absolute right-0 top-6 z-50 hidden group-hover:block w-[600px] bg-white shadow-lg border border-gray-200 rounded-lg p-3 text-xs text-gray-700">
-                                    <p className="mb-1 font-medium">{t("TooltipImportAssortiment1")}:</p>
+                                    <p className="mb-1 font-medium">{t("TooltipImportAssortiment1")}</p>
                                     <p className="italic text-gray-600 mb-1">
                                         {t("TooltipImportAssortiment2")}
                                     </p>
-                                    <p className="text-gray-500">{t("TooltipImportAssortiment3")}</p>
+                                    <p className="text-gray-500 mb-1">{t("TooltipImportAssortiment3")}</p>
+                                    <p className="text-gray-500">{t("TooltipImportAssortiment4")}</p>
 
                                     <div className="overflow-x-auto mt-2">
                                         <table className="min-w-full text-xs border border-gray-300">
@@ -810,7 +865,7 @@ export default function AssortmentPage() {
                                                     <td className="border px-2 py-1">484000144087</td>
                                                     <td className="border px-2 py-1">A</td>
                                                     <td className="border px-2 py-1">test</td>
-                                                    <td className="border px-2 py-1">1</td>
+                                                    <td className="border px-2 py-1">true</td>
                                                 </tr>
                                                 <tr>
                                                     <td className="border px-2 py-1">2</td>
@@ -821,7 +876,7 @@ export default function AssortmentPage() {
                                                     <td className="border px-2 py-1">484000144089</td>
                                                     <td className="border px-2 py-1">A</td>
                                                     <td className="border px-2 py-1">test</td>
-                                                    <td className="border px-2 py-1">0</td>
+                                                    <td className="border px-2 py-1">false</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -894,7 +949,8 @@ export default function AssortmentPage() {
                             extraData={{ groups, products, users, payments, departments }}
                             usersPin={usersPin}
                             onDataChange={handleTableDataUpdate}
-                            onResetPayments={handleResetPayments }
+                            onResetPayments={handleResetPayments}
+                            checkDuplicate={checkDuplicateAssortment}
                         />
                     )}
             </main>
@@ -904,10 +960,17 @@ export default function AssortmentPage() {
                 visible={showErrors}
                 onClose={() => setShowErrors(false)}
             />
-            <SuccessModal
+            <Toast
                 visible={isSuccessModalVisible}
                 message={showSuccessMessage}
                 onClose={() => setIsSuccessModalVisible(false)}
+                type="success"
+            />
+            <Toast
+                visible={isWarningModalVisible}
+                message={showWarningMessage}
+                onClose={() => setIsWarningModalVisible(false)}
+                type="warning"
             />
             <footer className="p-6">
                 <button

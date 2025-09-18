@@ -339,6 +339,7 @@
   "TooltipImportAssortiment1": "Format pentru fișierul de asortiment:",
   "TooltipImportAssortiment2": "ID, PLU, Codul, Denumirea, Preț, Cod de bare, Cod de TVA, Grupa (pentru MCR), TME",
   "TooltipImportAssortiment3": "Fișierul trebuie să fie mai mic de 2 MB",
+  "TooltipImportAssortiment4": "Restricții privind numărul de articole pentru importul unui sortiment într-un singur fișier. Mai puțin de 1001",
   "AssortimentFile": "Fișier pentru asortiment",
   "LicenseListDevices": "Lista de licențe pentru dispozitive",
   "DeviceSettings": "Setările dispozitivului",
@@ -823,6 +824,7 @@
     "pinUsed": "Acest PIN este deja utilizat",
     "pinDuplicate": "PIN duplicat în tabel",
     "maxRows": "Numărul maxim de rânduri în tabelul Sortiment {{count}}",
+    "maxRowsDepartments": "Numărul maxim de rânduri din tabelul Departamentului {{count}}",
     "pluRequired": "PLU este obligatoriu",
     "pluDuplicate": "PLU duplicat",
     "codeRequired": "Codul este obligatoriu",
@@ -858,5 +860,12 @@
   "Value": "Valoare",
   "SelectPeriod": "Specificați perioada",
   "Load": "Descărcați",
-  "Click to edit": "Faceți clic pentru a edita"
+  "Click to edit": "Faceți clic pentru a edita",
+  "Copy": "Copiat",
+  "NoCopy": "Nimic nu a fost copiat",
+  "OpenModal": "Deschideți o fereastră modală",
+  "DeleteSuccess": "șters cu succes",
+  "DeleteError": "eroare la ștergere",
+  "Duplicate": "Băncile Duplicate nu sunt permise",
+  "DepartmentsDuplicate": "Această gamă a fost deja atribuită unui alt departament"
 }

@@ -340,6 +340,7 @@
   "TooltipImportAssortiment1": "Format for assortment file:",
   "TooltipImportAssortiment2": "ID, PLU, Code, Name, Price, Barcode, VAT code, Group (for MCR),TME",
   "TooltipImportAssortiment3": "File must be smaller than 2 MB",
+  "TooltipImportAssortiment4": "Restrictions on the number of items for importing an assortment in one file. Less than 1001",
   "AssortimentFile": "Assortment file",
   "LicenseListDevices": "License list devices",
   "DeviceSettings": "Device settings",
@@ -822,6 +823,7 @@
     "pinUsed": "This PIN is already used",
     "pinDuplicate": "Duplicate PIN in table",
     "maxRows": "Maximum number of rows in the Assortment table {{count}}",
+    "maxRowsDepartments": "Maximum number of rows in the Department table {{count}}",
     "pluRequired": "PLU is required",
     "pluDuplicate": "Duplicate PLU",
     "codeRequired": "Code is required",
@@ -857,5 +859,12 @@
   "Value": "Value",
   "SelectPeriod": "Specify period",
   "Load": "Download",
-  "Click to edit": "Click to edit"
+  "Click to edit": "Click to edit",
+  "Copy": "Copied",
+  "NoCopy": "Nothing has been copied",
+  "OpenModal": "Open a modal window",
+  "DeleteSuccess": "Deleted successfully",
+  "DeleteError": "Deletion error",
+  "Duplicate": "Duplicate banks are not allowed",
+  "DepartmentsDuplicate": "This range has already been assigned to another department"
 }

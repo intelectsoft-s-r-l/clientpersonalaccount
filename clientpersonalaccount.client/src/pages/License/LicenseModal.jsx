@@ -3,30 +3,40 @@ import apiService from "../../services/apiService";
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
 
-function formatDate(dateStr) {
-    if (!dateStr) return "-";
+function formatDate(dateInput) {
+    if (!dateInput) return "-";
 
-    // Разбираем строку по шаблону "DD.MM.YYYY HH:mm:ss"
-    const dateTimeParts = dateStr.split(" ");
-    if (dateTimeParts.length !== 2) return "-";
+    let date;
 
-    const dateParts = dateTimeParts[0].split(".");
-    const timeParts = dateTimeParts[1].split(":");
-
-    if (
-        dateParts.length !== 3 ||
-        timeParts.length !== 3
-    ) return "-";
-
-    const [day, month, year] = dateParts.map(Number);
-    const [hours, minutes, seconds] = timeParts.map(Number);
-
-    // Создаем объект даты (месяцы в JS - 0-индексированные)
-    const date = new Date(year, month - 1, day, hours, minutes, seconds);
+    // Если приходит строка
+    if (typeof dateInput === "string") {
+        // Если строка уже в формате "DD.MM.YYYY HH:mm:ss"
+        if (dateInput.includes(" ")) {
+            const [datePart, timePart] = dateInput.split(" ");
+            const [day, month, year] = datePart.split(".").map(Number);
+            const [hours, minutes, seconds] = timePart.split(":").map(Number);
+            date = new Date(year, month - 1, day, hours, minutes, seconds);
+        } else {
+            // Попробуем создать дату напрямую из строки
+            date = new Date(dateInput);
+        }
+    } else if (dateInput instanceof Date) {
+        date = dateInput;
+    } else if (typeof dateInput === "number") {
+        date = new Date(dateInput);
+    } else {
+        return "-";
+    }
 
     if (isNaN(date.getTime())) return "-";
 
     return date.toLocaleDateString("ru-RU") + " " + date.toLocaleTimeString("ru-RU");
+}
+
+function base64DecodeUtf8(str) {
+    // atob → Uint8Array → TextDecoder('utf-8')
+    const bytes = Uint8Array.from(atob(str), c => c.charCodeAt(0));
+    return new TextDecoder('utf-8').decode(bytes);
 }
 
 export default function LicenseModal({ license, onClose }) {
@@ -68,9 +78,9 @@ export default function LicenseModal({ license, onClose }) {
                         "X-Service-Id": "16",
                     }
                 });
-
+                
                 if (data && data.cashRegister && data.cashRegister.users && data.cashRegister.users != "W10=" && data.cashRegister.users != "1") {
-                    const jsonStr = atob(data.cashRegister.users);
+                    const jsonStr = base64DecodeUtf8(data.cashRegister.users);
                     const user = JSON.parse(jsonStr);
                     setUsers(user);
                 } else {
@@ -123,11 +133,15 @@ export default function LicenseModal({ license, onClose }) {
                     </div>
                     <div className="bg-gray-100 p-3 rounded-lg">
                         <span className="font-semibold block text-gray-600">{t("Battery") }:</span>
-                        <div className="text-gray-900">{license.battery}%</div>
+                        <div className="text-gray-900">{license.batteryDisplay}</div>
+                    </div>
+                    <div className="bg-gray-100 p-3 rounded-lg col-span-2">
+                        <span className="font-semibold block text-gray-600">{t("Status")}:</span>
+                        <div className="text-gray-900">{license.licenseStatusDisplay}</div>
                     </div>
                     <div className="bg-gray-100 p-3 rounded-lg col-span-2">
                         <span className="font-semibold block text-gray-600">{t("LastUpdate") }:</span>
-                        <div className="text-gray-900">{formatDate(license.lastDateUpdate)}</div>
+                        <div className="text-gray-900">{license.lastDateUpdateDisplay}</div>
                     </div>
                 </div>
 
@@ -138,24 +152,24 @@ export default function LicenseModal({ license, onClose }) {
                 ) : users.length === 0 ? (
                         <div className="text-gray-500 text-sm">{t("NoUsers")}</div>
                 ) : (
-                    <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
-                        <thead className="bg-gray-100">
-                            <tr>
-                                <th className="text-left px-4 py-2">ID</th>
-                                <th className="text-left px-4 py-2">{t("Name")}</th>
-                                <th className="text-left px-4 py-2">PIN</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.map((user, idx) => (
-                                <tr key={idx} className="border-t hover:bg-gray-50">
-                                    <td className="px-4 py-2">{user.ID}</td>
-                                    <td className="px-4 py-2">{user.Name}</td>
-                                    <td className="px-4 py-2">{user.PIN}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+                                <thead className="bg-gray-100">
+                                    <tr>
+                                        <th className="text-left px-4 py-2 border-r border-gray-300">ID</th>
+                                        <th className="text-left px-4 py-2 border-r border-gray-300">{t("Name")}</th>
+                                        <th className="text-left px-4 py-2">PIN</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {users.map((user, idx) => (
+                                        <tr key={idx} className="border-t hover:bg-gray-50">
+                                            <td className="px-4 py-2 border-r border-gray-300">{user.ID}</td>
+                                            <td className="px-4 py-2 border-r border-gray-300">{user.Name}</td>
+                                            <td className="px-4 py-2">{user.PIN}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                 )}
             </div>
         </div>

@@ -6,6 +6,7 @@ import { Eye } from "lucide-react";
 import BankModal from "./BankModal";
 import { useTranslation } from "react-i18next";
 import apiService from '../../services/apiService';
+import Toast from "../../components/Toast";
 
 function formatDate(dateStr) {
     if (!dateStr) return "-";
@@ -20,6 +21,10 @@ export default function BankPage() {
     const [error, setError] = useState("");
     const { t } = useTranslation();
     const { token } = useAuth();
+    const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+    const [showSuccessMessage, setShowSuccessMessage] = useState(null);
+    const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
+    const [showErrorMessage, setShowErrorMessage] = useState(null);
 
     const [selectedTapxphoneSettings, setSelectedTapxphoneSettings] = useState(null);
 
@@ -76,10 +81,39 @@ export default function BankPage() {
         }
     };
 
+    const handleAddRow = () => {
+        // Очищаем выбранный банк, чтобы модал открылся в режиме "создать новый"
+        setSelectedTapxphoneSettings({});
+    };
+
     useEffect(() => {
         fetchTapxphoneSettings();
         fetchBankNames();
     }, [token]);
+
+    const handleDeleteBank = async (bank) => {
+        console.log(bank);
+        if (!bank?.oid) return;
+
+        try {
+            await apiService.proxyRequest(`/MobileCashRegister/web/DeleteTapxphoneSettings?OID=${bank.oid}`, {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Service-Id": "16",
+                },
+            });
+            fetchTapxphoneSettings();
+
+            setShowSuccessMessage(t("DeleteSuccess"));
+            setIsSuccessModalVisible(true);
+        } catch (err) {
+            console.error(err);
+            setShowErrorMessage(t("DeleteError"));
+            setIsErrorModalVisible(true);
+        }
+    };
 
     const decoratedTapxphoneSettings = tapxphoneSettings.map((tapxphoneSetting) => {
         return {
@@ -87,24 +121,46 @@ export default function BankPage() {
             nameFromApi: bankNames[tapxphoneSetting.bankOID] || "-",
             createdAtFormatted: formatDate(tapxphoneSetting.createdAt),
             updatedAtFormatted: formatDate(tapxphoneSetting.updatedAt),
-            actions: (
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedTapxphoneSettings(tapxphoneSetting);
-                    }}
-                    className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
-                    title="Просмотреть детали"
-                >
-                    <Eye className="w-4 h-4" />
-                </button>
-            ),
         };
     });
 
     const columns = [
         { key: "nameFromApi", label: t("Name"), filterable: true, width: "50%" },
-        { key: "login", label: t("Login"), filterable: true, width: "50%" }
+        { key: "login", label: t("Login"), filterable: true, width: "45%" },
+        {
+            key: "actions",
+            label: "",
+            width: "5%",
+            render: (value, row) => (
+                <div className="flex justify-center items-center gap-1 overflow-visible">
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedTapxphoneSettings(row); }}
+                        className="flex-shrink-0 text-dark-600 hover:text-dark-900 hover:bg-gray-100 p-2 rounded-full transition-all duration-200"
+                        title={t("ViewDetails")}
+                    >
+                        <img
+                            src="/icons/Show.svg"
+                            className="w-6 h-6 text-black hover:scale-125"
+                        />
+                    </button>
+
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteBank(row);
+                        }}
+                        className="flex-shrink-0 text-dark-600 hover:text-dark-900 hover:bg-gray-100 p-2 rounded-full transition-all duration-200"
+                        title={t("Delete")} /* Используем t() */
+                    >
+                        <img
+                            src="/icons/Trash.svg"
+                            className="w-5 h-5 hover:scale-125"
+                            alt={t("Delete")} /* Добавлен alt */
+                        />
+                    </button>
+                </div>
+            )
+        }
     ];
 
     return (
@@ -131,15 +187,38 @@ export default function BankPage() {
                 editable={false}
                 onRowDoubleClick={(tap) => setSelectedTapxphoneSettings(tap)}
                 selectableRow={false}
-                onRefresh={fetchTapxphoneSettings }
+                onRefresh={fetchTapxphoneSettings}
+                onAddRow={handleAddRow}
             />
 
             <BankModal
                 bank={selectedTapxphoneSettings}
+                banks={tapxphoneSettings}
                 onClose={() => setSelectedTapxphoneSettings(null)}
                 onSave={(updatedBank) => {
                     fetchTapxphoneSettings();
                 }}
+                onSuccess={() => {
+                    setShowSuccessMessage(t("SaveSuccess"));
+                    setIsSuccessModalVisible(true);
+                }}
+                onError={() => {
+                    setShowErrorMessage(t("Duplicate"));
+                    setIsErrorModalVisible(true);
+                }}
+            />
+
+            <Toast
+                visible={isSuccessModalVisible}
+                message={showSuccessMessage}
+                onClose={() => setIsSuccessModalVisible(false)}
+                type="success"
+            />
+            <Toast
+                visible={isErrorModalVisible}
+                message={showErrorMessage}
+                onClose={() => setIsErrorModalVisible(false)}
+                type="error"
             />
         </div>
     );

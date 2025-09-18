@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import FiscalDevicePage from "./FiscalDevicePage";
-import { Eye } from "lucide-react";
+import { Eye, Copy } from "lucide-react";
 import { StatusEnum, FiscalDeviceTypeEnum, FiscalDeviceBusinessTypeEnum } from "../../enums/Enums";
 import { DataTable } from "../../components/DataTable"; // Импорт универсального DataTable
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import apiService from '../../services/apiService';
 import FiscalDeviceModal from './FiscalDeviceModal';
+import Toast from "../../components/Toast";
 
 export default function FiscalDevicesListPage() {
     const [devices, setDevices] = useState([]);
@@ -16,6 +17,10 @@ export default function FiscalDevicesListPage() {
     const { token } = useAuth();
     const navigate = useNavigate();
     const [selectedDevice, setSelectedDevice] = useState(null);
+    const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+    const [showSuccessMessage, setShowSuccessMessage] = useState(null);
+    const [isWarningModalVisible, setIsWarningModalVisible] = useState(false);
+    const [showWarningMessage, setShowWarningMessage] = useState(null);
     const { t } = useTranslation();
 
     const fetchDevices = async () => {
@@ -34,7 +39,6 @@ export default function FiscalDevicesListPage() {
             if (data?.errorMessage) {
                 setError(`${data.errorName || "Ошибка"}: ${data.errorMessage}`);
             } else if (data?.fiscalDevices) {
-                console.log(data);
                 setDevices(data.fiscalDevices);
                 setError("");
             } else {
@@ -93,7 +97,7 @@ export default function FiscalDevicesListPage() {
             key: "name",
             label: t("Name"),
             filterable: true,
-            width: "14%",
+            width: "10%",
             render: (value, row) => (
                 <div className="flex items-center">
                     <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
@@ -101,15 +105,15 @@ export default function FiscalDevicesListPage() {
                 </div>
             ),
         },
-        { key: "address", label: t("Address"), filterable: true, width: "20%" },
-        { key: "model", label: t("Model"), filterable: true, width: "10%" },
-        { key: "factory", label: t("Factory"), filterable: true, width: "2%" },
-        { key: "number", label: t("NumberSTS"), filterable: true, width: "12%" },
+        { key: "address", label: t("Address"), filterable: true, width: "15%" },
+        { key: "model", label: t("Model"), filterable: true, width: "8%" },
+        { key: "factory", label: t("Factory"), filterable: true, width: "6%" },
+        { key: "number", label: t("NumberSTS"), filterable: true, width: "10%" },
         {
             key: "typeCode",
             label: t("TypeDevice"),
             filterable: true,
-            width: "14%",
+            width: "13%",
             sortable: true,
             filterOptions: [
                 { value: "0", label: t("NotFiscal") },
@@ -128,7 +132,7 @@ export default function FiscalDevicesListPage() {
             key: "businessType",
             label: t("TypeBusiness"),
             filterable: true,
-            width: "8%",
+            width: "6.5%",
             sortable: true,
             filterOptions: [
                 { value: "0", label: t("NotFiscal") },
@@ -173,7 +177,7 @@ export default function FiscalDevicesListPage() {
             label: t("IsActive"),
             filterable: true,
             sortable: true,
-            width: "6%",
+            width: "5%",
             render: (value) => formatDate(value),
         },
         {
@@ -181,16 +185,35 @@ export default function FiscalDevicesListPage() {
             label: "",
             filterable: false,
             sortable: false,
-            width: "10%",
+            width: "7%",
             render: (_, row) => (
                 <div className="flex justify-center items-center gap-1 overflow-visible">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(row.activationCode);
+                            if (row.activationCode) {
+                                setShowSuccessMessage(t("Copy"));
+                                setIsSuccessModalVisible(true);
+                            }
+                            else {
+                                setShowWarningMessage(t("NoCopy"));
+                                setIsWarningModalVisible(true);
+                            }
+                        }}
+                        className="flex-shrink-0 text-dark-600 hover:text-dark-900 hover:bg-gray-100 p-2 rounded-full transition-all duration-200"
+                        title={t("ActivationCode")}
+                    >
+                        <Copy className="w-5 h-5 hover:scale-125" />
+                    </button>
+
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/FiscalDevices/${row.id}`);
                         }}
                         className="flex-shrink-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
-                        title="Просмотреть детали"
+                        title={t("Details")}
                     >
                         <img
                             src="/icons/Globe.svg"
@@ -205,7 +228,7 @@ export default function FiscalDevicesListPage() {
                             setSelectedDevice(row);
                         }}
                         className="flex-shrink-0 text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded-full transition-all duration-200"
-                        title="Открыть модальное окно"
+                        title={t("OpenModal")}
                     >
                         <img
                             src="/icons/Show.svg"
@@ -241,11 +264,24 @@ export default function FiscalDevicesListPage() {
                     editable={false}
                     onRowClick={(device) => setSelectedDevice(device)}
                     selectableRow={false}
-                    onRefresh={fetchDevices }
+                    onRefresh={fetchDevices}
+                    tableClassName="min-w-[1600px]"
                 />
                 <FiscalDeviceModal
                     deviceId={selectedDevice != null ? selectedDevice.id : null}
                     onClose={() => setSelectedDevice(null)}
+                />
+                <Toast
+                    visible={isSuccessModalVisible}
+                    message={showSuccessMessage}
+                    onClose={() => setIsSuccessModalVisible(false)}
+                    type="success"
+                />
+                <Toast
+                    visible={isWarningModalVisible}
+                    message={showWarningMessage}
+                    onClose={() => setIsWarningModalVisible(false)}
+                    type="warning"
                 />
             </div>
         </div>

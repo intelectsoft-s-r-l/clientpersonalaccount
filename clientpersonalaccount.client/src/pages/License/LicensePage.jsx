@@ -67,14 +67,15 @@ export default function LicensePage() {
             label: "Неизвестно",
             colorClass: "bg-gray-100 text-gray-800",
         };
-
+        const date = new Date(lic.lastDateUpdate);
         return {
             ...lic,
             statusCode: String(lic.licenseStatus),
             licenseStatusDisplay: (
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusInfo.colorClass}`}><span className="ml-2">{statusInfo.label}</span></span>
             ),
-            lastDateUpdate: formatDate(lic.lastDateUpdate),
+            lastDateUpdateDisplay: formatDate(date),
+            lastDateUpdate: date,
             batteryDisplay: `${lic.battery} %`
         };
     }).sort((a, b) => b.oid - a.oid);
@@ -93,7 +94,7 @@ export default function LicensePage() {
             ],
             render: (value, row) => row.licenseStatusDisplay
         },
-        { key: "lastDateUpdate", label: t("LicenseActivationDate"), filterable: true, sortable: true, width: "15%" }
+        { key: "lastDateUpdateDisplay", label: t("LicenseActivationDate"), filterable: true, sortable: true, width: "15%", sortField: "lastDateUpdate" }
     ];
 
     columns.push({
@@ -109,7 +110,6 @@ export default function LicensePage() {
                     setSelectedLicense(row);
                 }}
                 className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
-                title="Просмотреть детали"
             >
                 <img
                     src="/icons/Show.svg"
@@ -143,7 +143,8 @@ export default function LicensePage() {
                 editable={false}
                 onRowDoubleClick={(lic) => setSelectedLicense(lic)}
                 selectableRow={false}
-                onRefresh={fetchLicenses }
+                onRefresh={fetchLicenses}
+                tableClassName="min-w-[1600px]"
             />
 
             <LicenseModal

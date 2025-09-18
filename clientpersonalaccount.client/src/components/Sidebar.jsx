@@ -57,7 +57,7 @@ const pageRoutes = {
     transactionDkv: "/TransactionDkv"
 };
 
-export default function Sidebar() {
+export default function Sidebar({ isMobile }) {
     const { activePage, setActivePage } = usePageNavigation();
     const { logout } = useAuth();
     const { t } = useTranslation();
@@ -254,11 +254,8 @@ export default function Sidebar() {
 // }
 */
       `}</style>
-
-            <aside className={`sidebar ${window.innerWidth < 768
-                    ? "fixed top-0 left-0 h-full z-40 bg-white shadow-lg"
-                    : "static"
-                }`} role="navigation" aria-label="Главное меню" >
+            <aside
+                className={`bg-white shadow-lg z-40 ${isMobile ? `fixed top-0 left-0 h-full w-64 transform transition-transform duration-300`: `sticky top-0 h-screen transition-width duration-300 ${collapsed ? "w-21" : "w-64"}`}`}>
                 <div className="sidebar-content">
                     <div className="sidebar-menu-sections">
                         {menuSections.map(({ title, items }, idx) => (
@@ -298,10 +295,15 @@ export default function Sidebar() {
                             onClick={logout}
                             aria-label={t("Logout")}
                             title={t("Logout")}
-                            className={`flex items-center justify-center w-full px-3 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform hover:scale-105 ${!collapsed ? "justify-start gap-2" : "justify-center"
+                            className={`flex items-center justify-center w-full ${collapsed ? "h-12" : "h-10"
+                                } px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform hover:scale-105 ${!collapsed ? "justify-start gap-2" : "justify-center"
                                 }`}
                         >
-                            <img src="/icons/Log_Out.svg" className="w-6 h-6" />
+                            <img
+                                src="/icons/Log_Out.svg"
+                                className="w-6 h-6"
+                                alt={t("Logout")}
+                            />
                             {!collapsed && (
                                 <span className="text-sm font-medium text-black">{t("Logout")}</span>
                             )}

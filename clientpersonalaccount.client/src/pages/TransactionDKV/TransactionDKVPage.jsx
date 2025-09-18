@@ -42,7 +42,7 @@ export default function TransactionDKVPage() {
                 `/ISDKVManagement/GetTransactions?startDate=${start}&endDate=${end}`,
                 { method: "GET", credentials: "include", headers: { "Content-Type": "application/json", "X-Service-Id": "43" } }
             );
-
+            console.log(data);
             if (data?.errorMessage) {
                 setError(`${data.errorName || "Ошибка"}: ${data.errorMessage}`);
             } else if (Array.isArray(data.transactions)) {
@@ -62,15 +62,26 @@ export default function TransactionDKVPage() {
         fetchTransactions();
     }, [token, startDate, endDate]);
 
-    const decoratedTransactions = transactions.map((transaction) => ({
-        ...transaction,
-        dateCreated: formatDate(transaction.dateCreated),
-        amountMDLFormatted: `${transaction.amountMDL?.toFixed(2)} MDL`,
-        productPriceFormatted: `${transaction.productPrice?.toFixed(2)} MDL`
-    }));
+    const decoratedTransactions = transactions.map((transaction) => {
+        const date = new Date(transaction.dateCreated);
+        return {
+            ...transaction,
+            dateCreatedDisplay: date.toLocaleDateString("ru-RU") + " " + date.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", hour12: false }),
+            dateCreated: date,
+            amountMDLFormatted: `${transaction.amountMDL?.toFixed(2)} MDL`,
+            productPriceFormatted: `${transaction.productPrice?.toFixed(2)} MDL`
+        };
+    });
 
     const columns = [
-        { key: "dateCreated", label: t("CreateDate"), filterable: true, sortable: true, width: "15%" },
+        {
+            key: "dateCreatedDisplay",
+            label: t("CreateDate"),
+            filterable: true,
+            sortable: true,
+            width: "15%",
+            sortField: "dateCreated",
+        },
         { key: "terminalID", label: t("IdTerminal"), filterable: true, width: "15%" },
         { key: "product", label: t("Product"), filterable: true, width: "15%" },
         { key: "productQuantity", label: t("ProductQuantity"), filterable: true, width: "15%" },
@@ -99,7 +110,7 @@ export default function TransactionDKVPage() {
                                 onChange={setStartDate}
                                 primaryColor="cyan"
                                 displayFormat="DD.MM.YYYY"
-                                maxDate={startDate?.endDate || new Date()}
+                                maxDate={endDate?.endDate || new Date()}
                                 minDate={new Date(2000, 0, 1)}
                                 inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
                             />
@@ -130,6 +141,7 @@ export default function TransactionDKVPage() {
                     editable={false}
                     selectableRow={false}
                     onRefresh={fetchTransactions}
+                    tableClassName="min-w-[1600px]"
                 />
             </div>
         </div>

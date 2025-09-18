@@ -73,16 +73,16 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
                 if (row.ID !== rowId) return row;
 
                 const updatedRow = { ...row };
-
-                if (columnKey === "NotVat") {
-                    updatedRow.NotVat = !!newValue;
-                    if (updatedRow.NotVat) {
+                console.log(updatedRow, columnKey);
+                if (columnKey === "NoVat") {
+                    updatedRow.NoVat = !!newValue;
+                    if (updatedRow.NoVat) {
                         updatedRow.VatValue = 0;
                         updatedRow.VatCode = "-";
                     }
                 } else {
                     updatedRow[columnKey] = newValue;
-                    if (updatedRow.NotVat) {
+                    if (updatedRow.NoVat) {
                         updatedRow.VatValue = 0;
                         updatedRow.VatCode = "";
                     }

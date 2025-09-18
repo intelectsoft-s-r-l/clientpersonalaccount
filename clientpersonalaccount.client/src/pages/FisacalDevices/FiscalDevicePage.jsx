@@ -55,13 +55,26 @@ export default function FiscalDevicePage() {
     const [isOpenFiscalSummary, setIsOpenFiscalSummary] = useState(false);
 
     const printReceipt = () => {
-        printJS({
-            printable: 'receiptDiv',
-            type: 'html',
-            scanStyles: false,
-            targetStyles: ['*'],
-            css: '/path/to/tailwind.css'
-        });
+        const isDev = import.meta.env.MODE === "development"; // Vite проверка режима
+
+        const receiptUrl = isDev
+            ? "https://freceipt.edi.md/ReceiptPrint/"
+            : "https://freceipt.eservicii.md/ReceiptPrint/";
+
+        // Если нужно печатать Z-подробный чек через системную печать
+        const receiptDiv = document.getElementById("receiptDiv");
+        if (receiptDiv) {
+            printJS({
+                printable: receiptDiv,
+                type: "html",
+                scanStyles: false,
+                targetStyles: ["*"],
+                css: "/path/to/tailwind.css",
+            });
+        } else {
+            // если нужно просто открыть URL печати для чека
+            window.open(receiptUrl, "_blank");
+        }
     };
 
     useEffect(() => {
@@ -70,14 +83,17 @@ export default function FiscalDevicePage() {
     }, [id]);
 
     useEffect(() => {
+        setSelectedBill(null);
         if (selectedShiftId) fetchBills(id, selectedShiftId);
     }, [selectedShiftId]);
 
     useEffect(() => {
+        console.log(bills);
         if (bills.length > 0) setSelectedBill(bills[0]);
     }, [bills]);
 
     useEffect(() => {
+        console.log(selectedBill);
         if (selectedBill) loadTexts(id, selectedBill);
     }, [selectedBill]);
 
@@ -119,6 +135,7 @@ export default function FiscalDevicePage() {
                     "X-Service-Id": "29",
                 }
             })
+            console.log(data.bills);
             setBills(data.bills || []);
         } catch {
             setBills([]);
@@ -210,24 +227,24 @@ export default function FiscalDevicePage() {
         userSelect: "none",
     };
 
-    const getReportLabel = (bill) => {
-        if (!bill) return null;
+    const getReportLabel = (reportType, type) => {
+        if (!reportType) return null;
 
-        if (bill.reportType === 1) {
+        if (reportType === 1) {
             return (
                 <div title="Отчёт Z" style={{ ...iconStyle, backgroundColor: "#2563eb" }}>
                     Z
                 </div>
             );
         }
-        if (bill.reportType === 2) {
+        if (reportType === 2) {
             return (
                 <div title="Отчёт X" style={{ ...iconStyle, backgroundColor: "#16a34a" }}>
                     X
                 </div>
             );
         }
-        if (bill.type === 2 && bill.reportType === 0) {
+        if (!type && type === 2 && reportType === 0) {
             return (
                 <div title="Отчёт S" style={{ ...iconStyle, backgroundColor: "#7c3aed" }}>
                     S
@@ -254,10 +271,14 @@ export default function FiscalDevicePage() {
         { key: "createDate", label: t("CreateDate"), width: "" },
     ];
 
-    const decoratedShifts = shifts.map((s) => ({
-        ...s, id: s.shiftID,
-        createDate: formatDate(s.createDate),
-    }));
+    const decoratedShifts = shifts
+        .slice()
+        .sort((a, b) => new Date(b.createDate) - new Date(a.createDate)) // самые новые сверху
+        .map((s) => ({
+            ...s,
+            id: s.shiftID,
+            createDate: formatDate(s.createDate),
+        }));
 
     const priorityOrder = (bill) => {
         if (bill.reportType === 1) return 1;    // Z - самый высокий приоритет
@@ -271,13 +292,15 @@ export default function FiscalDevicePage() {
         .sort((a, b) => priorityOrder(a) - priorityOrder(b))
         .map((bill) => ({
             ...bill,
-            reportTypeDisplay: bill.reportType,
-            totalAmountDisplay: `${bill.totalAmount.toFixed(2)} MDL`,
+            totalAmountDisplay: `${bill.totalAmount.toLocaleString("fr-FR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })} MDL`,
             date: formatDate(bill.date),
         }));
 
     const columnsBills = [
-        { key: "reportTypeDisplay", label: "", width: "16%", render: (value, row) => getReportLabel(row), },
+        { key: "reportType", label: "", width: "16%", render: (value, row) => getReportLabel(row.reportType, row.type), },
         { key: "date", label: t("Date"), width: "" },
         { key: "fiscalReceiptID", label: t("ID"), width: "18%" },
         { key: "totalAmountDisplay", label: t("TotalAmount"), width: "35%" },
@@ -323,7 +346,6 @@ export default function FiscalDevicePage() {
                         byteArrays[i] = byteCharacters.charCodeAt(i);
                     }
                     const decodedText = new TextDecoder("utf-8").decode(byteArrays);
-
                     setFiscalSummaryText(decodedText);
                     setIsOpenFiscalSummary(true);
                 }
@@ -345,43 +367,9 @@ export default function FiscalDevicePage() {
                 const receiptForPeriod = data.fiscalReceiptItems || [];
 
                 if (currentReportType === "ReceiptForPeriod") {
-                    setReportData({ ReceiptForPeriod: receiptForPeriod });
-                    exportToExcel(receiptForPeriod, "ReceiptForPeriod.xlsx");
+                    receiptForPeriodExcel(receiptForPeriod);
                 } else if (currentReportType === "ReceiptForPeriodGrouped") {
-                    const receiptGrouped = receiptForPeriod.reduce((acc, item) => {
-                        const date = new Date(item.receiptDate).toLocaleDateString("ru-RU");
-                        const key = `${date}-${item.name}`;
-                        if (!acc[key]) {
-                            acc[key] = {
-                                ReceiptDate: date,
-                                Name: item.name,
-                                TotalQuantity: 0,
-                                TotalAmount: 0,
-                                BasePrice: item.basePrice,
-                                TotalDiscount: 0,
-                                TotalTax: 0
-                            };
-                        }
-                        acc[key].TotalQuantity += item.quantity;
-                        acc[key].TotalAmount += item.totalCost;
-                        acc[key].TotalDiscount += item.discount?.amount || 0;
-                        acc[key].TotalTax += item.tax?.amount || 0;
-                        return acc;
-                    }, {});
-
-                    const groupedData = Object.values(receiptGrouped).map(item => ({
-                        ReceiptDate: String(item.ReceiptDate || ""),
-                        Name: String(item.Name || ""),
-                        TotalQuantity: Number(item.TotalQuantity || 0),
-                        TotalAmount: Number((item.TotalAmount || 0).toFixed(2)),
-                        BasePrice: Number(item.BasePrice || 0),
-                        TotalDiscount: Number((item.TotalDiscount || 0).toFixed(2)),
-                        TotalTax: Number((item.TotalTax || 0).toFixed(2))
-                    }));
-
-                    setReportData({ ReceiptForPeriodGrouped: groupedData });
-
-                    exportToExcel(groupedData, "ReceiptForPeriodGrouped.xlsx");
+                    receiptForPeriodGroupedExcel(receiptForPeriod);
                 }
             }
             closeReportModal();
@@ -394,6 +382,146 @@ export default function FiscalDevicePage() {
                 PrintFiscalReportByPeriod: []
             });
         }
+    };
+
+    const receiptForPeriodExcel = (receiptForPeriod) => {
+        const paymentTypeMap = {
+            1: "NUMERAR",
+            2: "CARD",
+            31: "VAUCHER",
+            32: "CEC_CERTIFICAT_VALORIC",
+            33: "TICHET",
+            5: "TME",
+            6: "ABONAMENT",
+            7: "ALT_IP",
+            81: "CREDIT",
+            82: "LEASING",
+            83: "AVANS",
+            84: "ARVUNA",
+            85: "GAJ",
+            86: "CARD_VALORIC_CORPORATIV",
+            87: "TESTARE_METROLOGICA",
+            88: "ALT_MOD",
+        };
+
+        const formattedData = receiptForPeriod.map(item => {
+            const date = new Date(item.receiptDate);
+
+            // Собираем строку всех типов платежей
+            const paymentsTypes = item.payments
+                ?.map(p => paymentTypeMap[p.type] || p.type)
+                .join(", ") || "";
+
+            // Ищем CARD платеж с BankResponse
+            let paymentCardOwner = "";
+            if (item.payments) {
+                const cardPayment = item.payments.find(p => p.type === 2 && p.bankResponse);
+                if (cardPayment) {
+                    try {
+                        const bankResponse = JSON.parse(cardPayment.bankResponse);
+                        paymentCardOwner = bankResponse.bank_owner || "";
+                    } catch {
+                        paymentCardOwner = "";
+                    }
+                }
+            }
+
+            return {
+                ...item,
+                formattedDate: date.toLocaleDateString("ro-RO"),
+                formattedTime: date.toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit", hour12: false }),
+                discountAmount: item.discount?.amount,
+                taxAmount: item.tax.amount,
+                taxPercent: item.tax.percent,
+                paymentsTypes,
+                paymentCardOwner
+            };
+        });
+
+        formattedData.sort((a, b) => {
+            const dateA = new Date(`${a.formattedDate} ${a.formattedTime}`);
+            const dateB = new Date(`${b.formattedDate} ${b.formattedTime}`);
+            return dateA - dateB; // возрастание
+        });
+
+        const hasPaymentCardOwner = formattedData.some(item => item.paymentCardOwner);
+
+        const columns = [
+            { key: "deviceNumber", header: "Număr de înregistrare", width: 20, alignment: "center", bgColor: "#a0a0a0" },
+            { key: "deviceFactory", header: "Numărul SFS", width: 15, alignment: "center", bgColor: "#a0a0a0" },
+            { key: "formattedDate", header: "Data", width: 15, alignment: "center", numFormat: "dd.mm.yyyy", bgColor: "#a0a0a0" },
+            { key: "formattedTime", header: "Ora", width: 10, alignment: "center", bgColor: "#a0a0a0" },
+            { key: "reportNumber", header: "Nr Raport", width: 15, bgColor: "#a0a0a0" },
+            { key: "receiptNumber", header: "Nr Bon", width: 15, bgColor: "#a0a0a0" },
+            { key: "name", header: "Denumire marfa", width: 20, bgColor: "#a0a0a0" },
+            { key: "quantity", header: "Cantitate", width: 15, alignment: "right", bgColor: "#a0a0a0" },
+            { key: "basePrice", header: "Pret", width: 10, alignment: "right", bgColor: "#a0a0a0" },
+            { key: "totalCost", header: "Suma cu TVA fără reducere", width: 25, alignment: "right", bgColor: "#a0a0a0" },
+            { key: "discountAmount", header: "Reducere", width: 10, alignment: "right", bgColor: "#a0a0a0" },
+            { key: "taxAmount", header: "Suma TVA", width: 10, alignment: "right", bgColor: "#a0a0a0" },
+            { key: "taxPercent", header: "TVA%", width: 10, alignment: "right", bgColor: "#a0a0a0" },
+            { key: "paymentsTypes", header: t("PaymentsTypes"), width: 35, alignment: "left", bgColor: "#a0a0a0" }
+        ];
+
+        if (hasPaymentCardOwner) {
+            columns.push({ key: "paymentCardOwner", header: t("PaymentCardOwner"), width: 20, alignment: "center", bgColor: "#a0a0a0" });
+        }
+
+        exportToExcel(formattedData, "ReceiptForPeriod.xlsx", columns);
+    }
+
+    const receiptForPeriodGroupedExcel = (receiptForPeriod) => {
+        // Группировка по дате и имени товара
+        const receiptGrouped = receiptForPeriod.reduce((acc, item) => {
+            const date = new Date(item.receiptDate).toLocaleDateString("ru-RU");
+            const key = `${date}-${item.name}`;
+            if (!acc[key]) {
+                acc[key] = {
+                    ReceiptDate: date,
+                    Name: item.name,
+                    TotalQuantity: 0,
+                    TotalAmount: 0,
+                    BasePrice: item.basePrice,
+                    TotalDiscount: 0,
+                    TotalTax: 0
+                };
+            }
+            acc[key].TotalQuantity += item.quantity;
+            acc[key].TotalAmount += item.totalCost;
+            acc[key].TotalDiscount += item.discount?.amount || 0;
+            acc[key].TotalTax += item.tax?.amount || 0;
+            return acc;
+        }, {});
+
+        const groupedData = Object.values(receiptGrouped).map(item => ({
+            ReceiptDate: String(item.ReceiptDate || ""),
+            Name: String(item.Name || ""),
+            TotalQuantity: Number(item.TotalQuantity || 0),
+            TotalAmount: Number((item.TotalAmount || 0).toFixed(2)),
+            BasePrice: Number(item.BasePrice || 0),
+            TotalDiscount: Number((item.TotalDiscount || 0).toFixed(2)),
+            TotalTax: Number((item.TotalTax || 0).toFixed(2))
+        }));
+
+        // Сортировка: по дате возрастание, потом по имени
+        groupedData.sort((a, b) => {
+            const dateA = new Date(a.ReceiptDate);
+            const dateB = new Date(b.ReceiptDate);
+            if (dateA - dateB !== 0) return dateA - dateB;
+            return a.Name.localeCompare(b.Name);
+        });
+
+        const columns = [
+            { key: "ReceiptDate", header: "Data", width: 15, alignment: "center", bgColor: "#a0a0a0" },
+            { key: "Name", header: "Denumire marfa", width: 25, alignment: "left", bgColor: "#a0a0a0" },
+            { key: "TotalQuantity", header: "Cantitate", width: 15, alignment: "right", bgColor: "#a0a0a0" },
+            { key: "BasePrice", header: "Pret", width: 15, alignment: "right", bgColor: "#a0a0a0" },
+            { key: "TotalAmount", header: "Suma cu TVA fără reducere", width: 25, alignment: "right", bgColor: "#a0a0a0" },
+            { key: "TotalDiscount", header: "Reducere", width: 15, alignment: "right", bgColor: "#a0a0a0" },
+            { key: "TotalTax", header: "Suma TVA", width: 20, alignment: "right", bgColor: "#a0a0a0" }
+        ];
+
+        exportToExcel(groupedData, "ReceiptForPeriodGrouped.xlsx", columns);
     };
 
     const handleDownloadKKMJournal = async () => {
@@ -588,8 +716,8 @@ export default function FiscalDevicePage() {
         }
       `}</style>
             <div className="p-6 overflow-y-auto">
-                <div className="flex flex-wrap gap-4">
-                    <div className="w-full md:w-[300px]">
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="w-full md:w-[300px] overflow-visible">
                         <DataTable
                             title={t("Shifts")}
                             columns={columnsShifts}
@@ -601,9 +729,13 @@ export default function FiscalDevicePage() {
                             customHeader={() => (
                                 <ShiftMenu openReportModal={openReportModal} t={t} />
                             )}
+                            rowClassName={(row) =>
+                                row.id === selectedRowId ? "bg-gray-200" : ""
+                            }
+                            tableClassName="w-full table-auto"
                         />
                     </div>
-                    <div className="w-full md:flex-1">
+                    <div className="w-full md:w-1/2 overflow-visible">
                         <DataTable
                             title={t("Bills")}
                             columns={columnsBills}
@@ -612,98 +744,103 @@ export default function FiscalDevicePage() {
                             selectedRowId={selectedBill?.id}
                             selectableRow={true}
                             onRefresh={() => fetchBills(id, selectedShiftId)}
+                            rowClassName={(row) =>
+                                row.id === selectedRowId ? "bg-gray-200" : ""
+                            }
+                            tableClassName="table-auto min-w-[800px] xl:w-full"
                         />
                     </div>
-                    <div className="w-full md:w-[400px]">
-                        <div className="dark:bg-gray-800 dark:text-white rounded-xl shadow-md p-4">
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="space-x-4">
-                                    <button
-                                        className={`text-white text-sm font-medium px-3 py-1 rounded border transition ${viewMode === "receipt"
-                                            ? " text-black bg-gradient-to-r from-[#72b827] to-green-600"
-                                            : "text-white bg-gradient-to-r from-[#72b827] to-green-600"}`}
-                                        onClick={() => setViewMode("receipt")}
-                                        disabled={viewMode === "receipt"}
-                                    >
-                                        <h5 className="text-lg font-semibold">{t("FiscalReceipt")}</h5>
-                                    </button>
-                                    {selectedBill?.reportType == 1 && (
+
+                    {receiptText && (
+                        <div className="w-full md:w-1/2">
+                            <div className="dark:bg-gray-800 dark:text-white rounded-xl shadow-md p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="space-x-4">
                                         <button
-                                            className={` text-white text-sm font-medium px-3 py-1 rounded border transition ${viewMode === "report"
-                                                ? "bg-gradient-to-r from-[#72b827] to-green-600"
+                                            className={`text-white text-sm font-medium px-3 py-1 rounded border transition ${viewMode === "receipt"
+                                                ? " text-black bg-gradient-to-r from-[#72b827] to-green-600"
                                                 : "text-white bg-gradient-to-r from-[#72b827] to-green-600"}`}
-                                            onClick={() => setViewMode("report")}
-                                            disabled={viewMode === "report"}
+                                            onClick={() => setViewMode("receipt")}
+                                            disabled={viewMode === "receipt"}
                                         >
-                                            <h5 className="text-lg font-semibold">{t("LongZReport")}</h5>
+                                            <h5 className="text-lg font-semibold">{t("FiscalReceipt")}</h5>
                                         </button>
+                                        {selectedBill?.reportType == 1 && (
+                                            <button
+                                                className={` text-white text-sm font-medium px-3 py-1 rounded border transition ${viewMode === "report"
+                                                    ? "bg-gradient-to-r from-[#72b827] to-green-600"
+                                                    : "text-white bg-gradient-to-r from-[#72b827] to-green-600"}`}
+                                                onClick={() => setViewMode("report")}
+                                                disabled={viewMode === "report"}
+                                            >
+                                                <h5 className="text-lg font-semibold">{t("LongZReport")}</h5>
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="text-sm whitespace-pre-wrap break-words min-h-[200px] dark:bg-gray-800 dark:text-white">
+                                    {viewMode === "report" && reportModel ? (
+                                        <LongZReport className="dark:bg-gray-800 dark:text-white" model={reportModel} />
+                                    ) : (
+                                        <div className="billStyle PrintArea">
+                                            <input id="dId" value={id} type="hidden" />
+                                            <input id="Id" value={selectedBill?.id || ""} type="hidden" />
+
+                                            <div className="receipt" id="receiptDiv">
+                                                <div className="receiptBody flex flex-col items-center">
+                                                    <div className="contentReceipt flex flex-col items-center">
+                                                        <pre className="receipt-text text-center">{receiptText || t("SelectBill")}</pre>
+
+                                                        {mevURi && (
+                                                            <div className="mt-2 text-center" style={{ fontSize: "87.5%" }}>
+                                                                Copie a bonului fiscal
+                                                                <br />
+                                                                Verificați aici:
+                                                                <br />
+                                                                <img
+                                                                    src={qr || ""}
+                                                                    width="100px"
+                                                                    height="100px"
+                                                                    alt="QR Code"
+                                                                    className="mx-auto mt-1"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="noPrint text-center mt-3">
+                                                {mevURi && (
+                                                    <div>
+                                                        <a
+                                                            href={mevURi}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            style={{ textDecoration: "underline", color: "black" }}
+                                                        >
+                                                            {t("CheckMEV")}
+                                                        </a>
+                                                    </div>
+                                                )}
+                                                <div className="mt-3">
+                                                    <button
+                                                        id="printNext"
+                                                        className="btn btn-contained border rounded border-gray-900"
+                                                        style={{ width: 140 }}
+                                                        onClick={() => printReceipt()}
+                                                    >
+                                                        {t("Print")}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
                             </div>
-
-                            <div className="text-sm whitespace-pre-wrap break-words min-h-[200px] dark:bg-gray-800 dark:text-white">
-                                {viewMode === "report" && reportModel ? (
-                                    <LongZReport className="dark:bg-gray-800 dark:text-white" model={reportModel} />
-                                ) : (
-                                    <div className="billStyle PrintArea">
-                                        <input id="dId" value={id} type="hidden" />
-                                        <input id="Id" value={selectedBill?.id || ""} type="hidden" />
-
-                                        <div className="receipt" id="receiptDiv">
-                                            <div className="receiptBody flex flex-col items-center">
-                                                <div className="contentReceipt flex flex-col items-center">
-                                                    <pre className="receipt-text text-center">{receiptText || t("SelectBill")}</pre>
-
-                                                    {mevURi && (
-                                                        <div className="mt-2 text-center" style={{ fontSize: "87.5%" }}>
-                                                            Copie a bonului fiscal
-                                                            <br />
-                                                            Verificați aici:
-                                                            <br />
-                                                            <img
-                                                                src={qr || ""}
-                                                                width="100px"
-                                                                height="100px"
-                                                                alt="QR Code"
-                                                                className="mx-auto mt-1"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="noPrint text-center mt-3">
-                                            {mevURi && (
-                                                <div>
-                                                    <a
-                                                        href={mevURi}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        style={{ textDecoration: "underline", color: "black" }}
-                                                    >
-                                                        {t("CheckMEV")}
-                                                    </a>
-                                                </div>
-                                            )}
-                                            <div className="mt-3">
-                                                <button
-                                                    id="printNext"
-                                                    className="btn btn-contained"
-                                                    style={{ width: 140 }}
-                                                    onClick={() => printReceipt()}
-                                                >
-                                                    {t("Print")}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
                         </div>
-                    </div>
 
+                    )}
                     {isReportModalOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={closeReportModal}>
                             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[400px]" onClick={(e) => e.stopPropagation()}>
@@ -844,12 +981,6 @@ export default function FiscalDevicePage() {
                             },
                         }}
                     >
-                        <button
-                            className="mb-3 px-3 py-1 bg-red-600 text-white rounded"
-                            onClick={() => setIsOpenFiscalSummary(false)}
-                        >
-                            {t("Close")}
-                        </button>
                         {pdfUrl && (
                             <iframe
                                 src={pdfUrl}
@@ -863,6 +994,22 @@ export default function FiscalDevicePage() {
                         {fiscalSummaryText && (
                             <pre className="whitespace-pre-wrap font-mono text-center">{fiscalSummaryText}</pre>
                         )}
+                        <div className="mt-3 flex items-center">
+                            <button
+                                className="mb-3 px-3 py-1 bg-red-600 text-white rounded"
+                                onClick={() => setIsOpenFiscalSummary(false)}
+                            >
+                                {t("Close")}
+                            </button>
+                            <button
+                                id="printNext"
+                                className="ml-auto mb-3 px-3 py-1 bg-gray-600 text-white rounded"
+                                style={{ width: 140 }}
+                                onClick={() => printReceipt()}
+                            >
+                                {t("Print")}
+                            </button>
+                        </div>
                     </Modal>
                 </div>
             </div>

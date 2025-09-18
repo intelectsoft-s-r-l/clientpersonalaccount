@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import ValidationModal from "./ValidationModal";
 import { validateProducts } from "../validation/validationSchemas";
 
-const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataChange, usersPin = [], onResetPayments }, ref) => {
+const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataChange, usersPin = [], onResetPayments, checkDuplicate }, ref) => {
     const [tableData, setTableData] = useState(data);
     const [usersPinData, setUsersPinData] = useState(usersPin);
     const [pinData, setPinData] = useState([]);
@@ -45,7 +45,9 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
         if (col.key === "Assortment" && extraData.products) {
             var as = {
                 ...col,
-                options: extraData.products.map((p) => ({ value: p.ID, label: p.Name })),
+                options: typeof col.options === "function"
+                    ? col.options
+                    : extraData.products.map((p) => ({ value: p.ID, label: p.Name })),
                 filterOptions: extraData.products.map((p) => ({ value: p.ID, label: p.Name })),
             };
             return as;
@@ -56,7 +58,7 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
     const handleCellUpdate = (rowId, columnKey, newValue) => {
         setTableData((prevData) => {
             const newData = prevData.map((row) =>
-                row.ID === rowId ? { ...row, [columnKey]: newValue, isEdited: true } : row
+                row.ID === rowId ? { ...row, [columnKey]: newValue } : row
             );
 
             if (onDataChange) {
@@ -70,6 +72,13 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
     const handleAddRow = () => {
         if (tableKey === "products" && tableData.length >= 1000) {
             const generalError = { general: [t("validation.maxRows", { count: 1000 })] };
+            setValidationErrors(generalError);
+            setShowErrors(true);
+            return;
+        }
+
+        if (tableKey === "departments" && tableData.length >= 30) {
+            const generalError = { general: [t("validation.maxRowsDepartments", { count: 30 })] };
             setValidationErrors(generalError);
             setShowErrors(true);
             return;
@@ -99,8 +108,7 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
 
         const newRow = {
             ID: maxId + 1 || 1,
-            ...emptyFields,
-            isNew: true,
+            ...emptyFields
         };
 
         setValidationErrors(prev => {
@@ -125,7 +133,7 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
             if (tableKey === "groups" && extraData.products) {
                 const updatedProducts = extraData.products.map((p) =>
                     p.Group?.toString() === rowId.toString()
-                        ? { ...p, Group: null, isEdited: true }
+                        ? { ...p, Group: null }
                         : p
                 );
                 onDataChange("products", updatedProducts);
@@ -137,8 +145,7 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
                     if (Array.isArray(d.Products) && d.Products.includes(rowId)) {
                         return {
                             ...d,
-                            Products: d.Products.filter(pid => pid !== rowId),
-                            isEdited: true,
+                            Products: d.Products.filter(pid => pid !== rowId)
                         };
                     }
                     return d;
@@ -159,7 +166,9 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
                 onAddRow={tableKey === "payments" ? undefined : handleAddRow}
                 onDeleteRow={handleDeleteRow}
                 extraData={extraData}
-                onResetPayments={tableKey === "payments" ? onResetPayments : undefined }
+                onResetPayments={tableKey === "payments" ? onResetPayments : undefined}
+                tableClassName="min-w-[1600px]"
+                checkDuplicate={tableKey === "departments" ? checkDuplicate : undefined}
             />
             <ValidationModal
                 errors={validationErrors}

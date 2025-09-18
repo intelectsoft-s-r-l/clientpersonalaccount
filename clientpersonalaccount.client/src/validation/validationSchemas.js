@@ -62,7 +62,11 @@ export const validateProducts = (item, tableKey, usersPin, pins, t, data) => {
         else if (barcodeSet.has(item.Barcode)) rowErrors.Barcode = t("validation.barcodeDuplicate");
         else barcodeSet.add(item.Barcode);
 
-        if (!item.VATCode || item.VATCode.trim() === "") rowErrors.VATCode = t("validation.vatRequired");
+        if (!item.VATCode || item.VATCode.trim() === "") {
+            rowErrors.VATCode = t("validation.vatRequired");
+        } else if (!/^[A-Z_]+$/.test(item.VATCode)) {
+            rowErrors.VATCode = t("validation.vatCodeLetter"); // Например, "Только A-Z или _"
+        }
     }
 
     if (tableKey === "payments") {

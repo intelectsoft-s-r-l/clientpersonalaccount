@@ -366,7 +366,7 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen">
             {/* Header */}
-            <header className="bg-white border border-gray-100 rounded-2xl">
+            <header className="bg-white border border-gray-100 rounded-2xl mb-2">
                 <div className="w-full px-2 py-2 flex flex-wrap justify-start items-center gap-2">
                     <div className="flex flex-wrap items-center gap-4">
                         {/* Device Selector */}
@@ -420,7 +420,7 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Time Range Buttons */}
-                        <div className="flex bg-gray-100 rounded-lg p-1">
+                        <div className="flex flex-wrap bg-gray-100 rounded-lg p-1 gap-2">
                             {["day", "week", "month", "year", "custom"].map((range) => (
                                 <button
                                     key={range}
@@ -484,11 +484,11 @@ export default function DashboardPage() {
             </header>
 
             {/* Main */}
-            <main className="max-w-12xl mx-auto px-6 py-8">
+            <main className="max-w-12xl mx-auto px-2 py-2">
                 {/* Top Products */}
                 {sortedTopProducts.length > 0 && (
-                    <div className="mb-2 p-4 rounded-2xl ">
-                        <h2 className="text-xl font-bold mb-2">{t("TopProducts")}</h2>
+                    <div className="mb-4 p-1 rounded-2xl">
+                        <h2 className="text-xl font-bold mb-4">{t("TopProducts")}</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:grid-cols-5 gap-6">
                             {sortedTopProducts.map((product, index) => {
                                 const bgClass =
@@ -523,13 +523,13 @@ export default function DashboardPage() {
                     </div>
                 )}
                 {/* Верхний ряд с PieChart и годовым графиком */}
-                <div className="flex flex-col xl:flex-row gap-8 mb-8">
-                    <div className="flex-shrink-0 w-full xl:w-60 p-4 rounded-2xl hover:scale-105 transition-all">
+                <div className="flex flex-col xl:flex-row gap-2 mb-2 sm:gap-4 mb-6 md:gap-6 mb-8">
+                    <div className="flex-shrink-0 w-full xl:w-60 gap-3 mb-2 sm:gap-4 mb-6 md:gap-8 mb-8 rounded-2xl hover:scale-105 transition-all">
                         <SimplePieChart data={allDevicesChartData} t={t} />
                     </div>
 
                     {yearlyAllDevicesData && (
-                        <div className="flex-1 p-4 rounded-2xl hover:scale-105 transition-all">
+                        <div className="flex-1 gap-3 mb-1 sm:gap-4 mb-6 md:gap-6 mb-8 rounded-2xl hover:scale-105 transition-all">
                             <YearlySalesChart
                                 data={yearlyAllDevicesData.data}
                                 t={t}
@@ -541,7 +541,7 @@ export default function DashboardPage() {
                 {/* Ниже — остальные графики в сетке */}
                 <div className="space-y-6">
                     {/* Сетка одиночных графиков */}
-                    <div className="grid grid-cols-6 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
                         {Object.entries(sortedChartEntries)
                             .filter(([_, { data }]) => data.length === 1)
                             .map(([posID, { title, data }]) => (
@@ -552,7 +552,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Сетка обычных графиков */}
-                    <div className="grid grid-cols-6 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
                         {Object.entries(sortedChartEntries)
                             .filter(([_, { data }]) => data.length > 1)
                             .map(([posID, { title, data }]) => (

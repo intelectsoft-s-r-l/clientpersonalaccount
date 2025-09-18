@@ -3,7 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import apiService from '../../services/apiService';
 import { useTranslation } from "react-i18next";
 
-export default function BankModal({ bank, onClose, onSave }) {
+export default function BankModal({ banks, bank, onClose, onSave, onSuccess, onError }) {
     const [formData, setFormData] = useState({
         bankOID: "",
         login: "",
@@ -13,7 +13,6 @@ export default function BankModal({ bank, onClose, onSave }) {
     const { getTokenFromServer } = useAuth();
     const [token, setToken] = useState(null);
     const [availableBanks, setAvailableBanks] = useState([]);
-    const [successMessage, setSuccessMessage] = useState("");
     const { t } = useTranslation();
 
     const fetchToken = async () => {
@@ -91,6 +90,17 @@ export default function BankModal({ bank, onClose, onSave }) {
         setError("");
 
         try {
+            // Проверяем на дубликат
+            const isDuplicate = banks.some(
+                (item) => item.bankOID === Number(formData.bankOID)
+            );
+            console.log(banks, isDuplicate, formData.bankOID);
+            if (isDuplicate) {
+                onError();
+                setLoading(false);
+                return;
+            }
+
             const payload = {
                 token: token,
                 oid: bank.oid,
@@ -109,13 +119,8 @@ export default function BankModal({ bank, onClose, onSave }) {
             })
 
             if (onSave) onSave(responseData); // callback в родителе
-            setSuccessMessage(t("SaveSuccess"));
 
-            // Скрыть через 3 секунды
-            setTimeout(() => setSuccessMessage(""), 3000);
-
-            // Закрытие модалки через 1 секунду
-            setTimeout(onClose, 1000);
+            if (onSuccess) onSuccess();
 
             onClose();
         } catch (err) {
@@ -130,7 +135,7 @@ export default function BankModal({ bank, onClose, onSave }) {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
             onMouseDown={(e) => {
                 // Закрываем только если клик по самому фону (а не дочерним элементам)
                 if (e.target === e.currentTarget) {
@@ -164,14 +169,12 @@ export default function BankModal({ bank, onClose, onSave }) {
                             required
                         >
                             <option value="">{t("ChooseBank")}</option>
-                            {availableBanks.map((b, i) => {
-                                if (!b.oid) return null; // пропустить без OID
-                                return (
+                            {availableBanks.filter(b => b.oid && b.isActive).map((b, i) => (
                                     <option key={b.bankOid} value={b.oid}>
                                         {b.name}
                                     </option>
-                                );
-                            })}
+                                )
+                            )}
                         </select>
                     </div>
                     <div>
@@ -205,11 +208,6 @@ export default function BankModal({ bank, onClose, onSave }) {
                     </div>
                 </form>
             </div>
-            {successMessage && (
-                <div className="fixed top-5 right-5 bg-green-100 text-green-800 px-4 py-2 rounded shadow-lg z-50 animate-fadeIn">
-                    {successMessage}
-                </div>
-            )}
         </div>
     );
 }
