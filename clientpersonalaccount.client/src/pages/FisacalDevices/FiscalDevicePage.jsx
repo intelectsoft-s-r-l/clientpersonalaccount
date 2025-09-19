@@ -88,12 +88,10 @@ export default function FiscalDevicePage() {
     }, [selectedShiftId]);
 
     useEffect(() => {
-        console.log(bills);
         if (bills.length > 0) setSelectedBill(bills[0]);
     }, [bills]);
 
     useEffect(() => {
-        console.log(selectedBill);
         if (selectedBill) loadTexts(id, selectedBill);
     }, [selectedBill]);
 
@@ -135,7 +133,6 @@ export default function FiscalDevicePage() {
                     "X-Service-Id": "29",
                 }
             })
-            console.log(data.bills);
             setBills(data.bills || []);
         } catch {
             setBills([]);

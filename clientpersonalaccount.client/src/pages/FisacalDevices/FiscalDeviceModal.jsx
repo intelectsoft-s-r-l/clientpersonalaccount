@@ -261,7 +261,7 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
         const fields = [
             { label: t("Name"), value: d.name },
             { label: t("ActivationCode"), value: d.activationCode },
-            { label: t("Factory"), value: d.factory ?? "-" },  // возможно отсутствует
+            { label: t("Factory"), value: d.factory ?? "-" },
             { label: t("Model"), value: d.model },
             {
                 label: t("Type"),
@@ -317,7 +317,7 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-auto"
+                className="bg-white rounded-lg shadow-lg p-6 w-full max-w-full md:max-w-4xl max-h-[90vh] overflow-auto"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex space-x-4 mb-6 border-b">

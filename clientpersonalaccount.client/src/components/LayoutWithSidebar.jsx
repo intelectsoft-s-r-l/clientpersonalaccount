@@ -77,7 +77,6 @@ export default function LayoutWithSidebar({ children }) {
 
         // Специально для fiscalDevices выводим имя + номер НГС
         if (value === "FiscalDevices" && fiscalDevice) {
-            console.log(fiscalDevice);
             return `${fiscalDevice.name} (${fiscalDevice.fiscalCode})`;
         }
 
@@ -91,22 +90,22 @@ export default function LayoutWithSidebar({ children }) {
             <Sidebar onNavigate={setActivePage} />
             <main className={`transition-[margin] duration-300 overflow-y-auto flex-1 min-w-0l p-4 dark:bg-gray-700`}>
                 {/* Верхняя панель */}
-                <div className="flex justify-between items-center w-full mb-3">
+                <div className="flex-row xl:flex justify-between items-start xl:items-center w-full mb-3">
                     {/* Левая часть: кнопка + breadcrumbs */}
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setCollapsed(!collapsed)}
-                            className="collapse-button"
-                            aria-label={collapsed ? "Развернуть меню" : "Свернуть меню"}
-                            title={collapsed ? "Развернуть меню" : "Свернуть меню"}
-                        >
-                            <i className="bi bi-list" aria-hidden="true"></i>
-                        </button>
-                        <div className="flex items-center text-sm text-gray-500 ml-16 mb-3 gap-1">
-                            <span>{user.Company}</span>
+                    <div className="flex flex-wrap items-center gap-4 xl:gap-2 xl:w-full w-auto">
+                        <div className="flex flex-wrap items-center text-gray-500 gap-1 mb-3">
+                            <button
+                                type="button"
+                                onClick={() => setCollapsed(!collapsed)}
+                                className="collapse-button"
+                                aria-label={collapsed ? "Развернуть меню" : "Свернуть меню"}
+                                title={collapsed ? "Развернуть меню" : "Свернуть меню"}
+                            >
+                                <i className="bi bi-list" aria-hidden="true"></i>
+                            </button>
+                            <span className="mb-3">{user.Company}</span>
                         </div>
-                        <nav className="flex text-sm text-gray-600 dark:text-gray-300 ml-2" aria-label="Breadcrumb">
+                        <nav className="flex flex-wrap text-sm text-gray-600 dark:text-gray-300 mb-3" aria-label="Breadcrumb">
                             <ol className="inline-flex items-center space-x-1 md:space-x-2">
                                 <li className="inline-flex items-center">
                                     <Link
@@ -129,7 +128,7 @@ export default function LayoutWithSidebar({ children }) {
                                     return (
                                         <li key={to} className="inline-flex items-center">
                                             <svg
-                                                className="w-4 h-4 text-gray-400 mx-1"
+                                                className="w-4 h-4 text-gray-400"
                                                 fill="none"
                                                 stroke="currentColor"
                                                 strokeWidth="2"
@@ -152,11 +151,12 @@ export default function LayoutWithSidebar({ children }) {
                                 })}
                             </ol>
                         </nav>
+                    </div>
 
-
-                        {/* Адрес устройства */}
+                    {/* Панель пользователя */}
+                    <div className="flex flex-wrap items-center p-2 gap-4 xl:gap-2 xl:w-full w-auto mb-3">
                         {fiscalDevice && (
-                            <div className="flex items-center text-sm text-gray-500 ml-16 mb-3 gap-2">
+                            <div className="flex items-center text-sm text-gray-500 ml-20 gap-2">
                                 {/* Иконка адреса */}
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -182,10 +182,6 @@ export default function LayoutWithSidebar({ children }) {
                                 <span>{fiscalDevice.address}</span>
                             </div>
                         )}
-                    </div>
-
-                    {/* Панель пользователя */}
-                    <div className="flex items-center gap-3">
                         <LanguageSwitcher />
                         <div className="w-9 h-9 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-sm overflow-hidden">
                             {hasPhoto ? (

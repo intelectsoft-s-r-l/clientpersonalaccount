@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import ValidationModal from "./ValidationModal";
 import { validateProducts } from "../validation/validationSchemas";
 
-const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataChange, usersPin = [], onResetPayments, checkDuplicate }, ref) => {
+const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataChange, usersPin = [], onResetPayments, checkDuplicate, loading }, ref) => {
     const [tableData, setTableData] = useState(data);
     const [usersPinData, setUsersPinData] = useState(usersPin);
     const [pinData, setPinData] = useState([]);
@@ -60,7 +60,6 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
             const newData = prevData.map((row) =>
                 row.ID === rowId ? { ...row, [columnKey]: newValue } : row
             );
-
             if (onDataChange) {
                 onDataChange(tableKey, newData);
             }
@@ -169,6 +168,7 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
                 onResetPayments={tableKey === "payments" ? onResetPayments : undefined}
                 tableClassName="min-w-[1600px]"
                 checkDuplicate={tableKey === "departments" ? checkDuplicate : undefined}
+                loading={loading}
             />
             <ValidationModal
                 errors={validationErrors}

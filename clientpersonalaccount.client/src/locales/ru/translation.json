@@ -300,7 +300,7 @@
   "HeaderActivateFiscalDevice": "Вы хотите активировать фискальное устройство",
   "HeaderDeactivateFiscalDevice": "Вы хотите деактивировать фискальное устройство",
   "HeaderReactivateFiscalDevice": "Вы хотите реактивировать фискальное устройство",
-  "Factory": "Серийный номер",
+  "Factory": "Серийный\nномер",
   "NumberSTS": "Номер НГС",
   "Model": "Модель",
   "Key": "Ключ",

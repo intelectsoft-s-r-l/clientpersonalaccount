@@ -12,6 +12,7 @@ import { validateProducts } from "../../validation/validationSchemas";
 import ValidationModal from "../../components/ValidationModal";
 import SuccessModal from "../../components/SuccessModal";
 import Toast from "../../components/Toast";
+import { FaBoxOpen, FaMoneyBillWave, FaUsers, FaLayerGroup, FaBuilding, FaGlobe } from "react-icons/fa";
 
 export default function AssortmentPage() {
     const [tabs, setTabs] = useState(assortmentConfigs);
@@ -31,6 +32,7 @@ export default function AssortmentPage() {
     const [showSuccessMessage, setShowSuccessMessage] = useState(null);
     const [isWarningModalVisible, setIsWarningModalVisible] = useState(false);
     const [showWarningMessage, setShowWarningMessage] = useState(null);
+    const [loading, setLoading] = useState(false);
 
 
     useEffect(() => {
@@ -106,6 +108,8 @@ export default function AssortmentPage() {
     useEffect(() => {
         async function fetchAndDecode() {
             try {
+                setLoading(true);
+
                 const rawData = await apiService.proxyRequest(`/MobileCashRegister/web/GetSettings`, {
                     method: "GET",
                     credentials: "include",
@@ -182,6 +186,8 @@ export default function AssortmentPage() {
                 }
             } catch (err) {
                 console.error("Ошибка при получении настроек:", err);
+            } finally {
+                setLoading(false);
             }
         }
         fetchAndDecode();
@@ -375,7 +381,6 @@ export default function AssortmentPage() {
         const type = typeMap[activeId] || 0;
 
         try {
-
             const jsonStr = JSON.stringify(Settings);
             const encodedSettings = utf8ToBase64(jsonStr);
 
@@ -622,10 +627,8 @@ export default function AssortmentPage() {
 
                         // проставляем в ассортмент ID группы
                         item.Group = group.ID;
-                        console.log(item, group);
                     }
                 });
-                console.log(processedData);
                 // Обновляем данные ассортимента
                 setDataBySetting(prev => {
                     const currentSetting = prev[activeId] || {};
@@ -794,22 +797,28 @@ export default function AssortmentPage() {
             </nav>
 
             <div className="flex flex-wrap gap-2 px-6 py-4">
-                {["products", "payments", "groups", "departments", "users", "global"].map((key) => (
+                {[
+                    { key: "products", icon: <FaBoxOpen />, label: t("Tabs.Products") },
+                    { key: "payments", icon: <FaMoneyBillWave />, label: t("Tabs.Payments") },
+                    { key: "groups", icon: <FaLayerGroup />, label: t("Tabs.Groups") },
+                    { key: "departments", icon: <FaBuilding />, label: t("Tabs.Departments") },
+                    { key: "users", icon: <FaUsers />, label: t("Tabs.Users") },
+                    { key: "global", icon: <FaGlobe />, label: t("Tabs.Global") },
+                ].map(({ key, icon, label }) => (
                     <button
                         key={key}
                         onClick={() => setActiveTable(key)}
-                        className={`hover:scale-110 px-4 py-2 border-b-2 text-center break-words min-w-[80px] 
-        ${key === activeTable
+                        className={`hover:scale-110 px-4 py-2 border-b-2 text-center break-words min-w-[80px] flex items-center justify-center gap-2
+                ${key === activeTable
                                 ? "border-green-600 text-green-600"
                                 : "border-transparent text-gray-600 dark:text-white"
                             }`}
                     >
-                        {key === "products" && t("Tabs.Products")}
-                        {key === "payments" && t("Tabs.Payments")}
-                        {key === "groups" && t("Tabs.Groups")}
-                        {key === "departments" && t("Tabs.Departments")}
-                        {key === "users" && t("Tabs.Users")}
-                        {key === "global" && t("Tabs.Global")}
+                        {/* Иконка */}
+                        <span className="text-lg sm:text-base">{icon}</span>
+
+                        {/* Текст только на больших экранах */}
+                        <span className="hidden sm:inline">{label}</span>
                     </button>
                 ))}
             </div>
@@ -818,29 +827,28 @@ export default function AssortmentPage() {
             {activeTable === "products" && (
                 <div className="flex flex-col bg-gray-50">
                     {/* Верхняя панель */}
-                    <div className="flex items-center justify-between gap-4 px-6 py-4">
+                    <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
                         {/* Текст слева */}
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-gray-600 flex-shrink-0">
                             {t("Format.Supported")}: .xlsx, .xls
                         </div>
 
                         {/* Кнопки справа + знак вопроса */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                             {/* Знак вопроса с подсказкой */}
-                            <div className="relative group">
+                            <div className="relative group flex-shrink-0">
                                 <div className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-300 text-xs font-bold text-gray-700 cursor-pointer">
                                     ?
                                 </div>
 
-                                <div className="absolute right-0 top-6 z-50 hidden group-hover:block w-[600px] bg-white shadow-lg border border-gray-200 rounded-lg p-3 text-xs text-gray-700">
+                                <div className="absolute right-0 top-6 z-50 hidden group-hover:block max-w-[90vw] max-h-[80vh] overflow-auto
+ sm:left-auto sm:right-0  left-0 right-auto bg-white shadow-lg border border-gray-200 rounded-lg p-3 text-xs text-gray-700">
                                     <p className="mb-1 font-medium">{t("TooltipImportAssortiment1")}</p>
-                                    <p className="italic text-gray-600 mb-1">
-                                        {t("TooltipImportAssortiment2")}
-                                    </p>
+                                    <p className="italic text-gray-600 mb-1">{t("TooltipImportAssortiment2")}</p>
                                     <p className="text-gray-500 mb-1">{t("TooltipImportAssortiment3")}</p>
                                     <p className="text-gray-500">{t("TooltipImportAssortiment4")}</p>
 
-                                    <div className="overflow-x-auto mt-2">
+                                    <div className="min-w-[600px] mt-2">
                                         <table className="min-w-full text-xs border border-gray-300">
                                             <thead className="bg-gray-100">
                                                 <tr>
@@ -887,7 +895,7 @@ export default function AssortmentPage() {
                             {/* Кнопка для скачивания шаблона */}
                             <button
                                 onClick={handleDownloadTemplate}
-                                className="px-2 py-1 text-white bg-indigo-600 rounded hover:bg-indigo-700 transition-colors flex items-center gap-1"
+                                className="px-2 py-1 text-white bg-indigo-600 rounded hover:bg-indigo-700 transition-colors flex items-center gap-1 flex-shrink-0"
                             >
                                 <img src="/icons/File_Download.svg" className="w-5 h-5" />
                                 <span className="text-xs">{t("Template")}</span>
@@ -896,7 +904,7 @@ export default function AssortmentPage() {
                             {/* Импорт */}
                             <label
                                 htmlFor="import-file"
-                                className="cursor-pointer px-2 py-1 text-white bg-green-600 rounded hover:bg-green-700 transition-colors flex items-center gap-1"
+                                className="cursor-pointer px-2 py-1 text-white bg-green-600 rounded hover:bg-green-700 transition-colors flex items-center gap-1 flex-shrink-0"
                             >
                                 <img src="/icons/File_Upload.svg" className="w-5 h-5" />
                             </label>
@@ -911,7 +919,7 @@ export default function AssortmentPage() {
                             {/* Экспорт */}
                             <button
                                 onClick={handleExport}
-                                className="px-2 py-1 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors flex items-center gap-1"
+                                className="px-2 py-1 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors flex items-center gap-1 flex-shrink-0"
                             >
                                 <img src="/icons/File_Download.svg" className="w-5 h-5" />
                             </button>
@@ -951,6 +959,7 @@ export default function AssortmentPage() {
                             onDataChange={handleTableDataUpdate}
                             onResetPayments={handleResetPayments}
                             checkDuplicate={checkDuplicateAssortment}
+                            loading={loading}
                         />
                     )}
             </main>

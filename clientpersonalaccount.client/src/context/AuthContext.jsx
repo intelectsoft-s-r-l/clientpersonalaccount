@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
 
     const refreshToken = async () => {
         try {
-            var token = await apiService.refreshToken();
+            await apiService.refreshToken();
             return true;
         } catch (error) {
             setUser(null);

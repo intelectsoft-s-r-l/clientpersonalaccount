@@ -57,12 +57,19 @@ const pageRoutes = {
     transactionDkv: "/TransactionDkv"
 };
 
-export default function Sidebar({ isMobile }) {
+export default function Sidebar() {
     const { activePage, setActivePage } = usePageNavigation();
     const { logout } = useAuth();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { collapsed, setCollapsed } = useSidebar();
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, [collapsed]);
 
     function handleClick(id, e) {
         e.preventDefault();
@@ -84,7 +91,7 @@ export default function Sidebar({ isMobile }) {
     }, [location.pathname]);
 
 
-
+    const isCollapsed = isMobile ? collapsed : !collapsed;
     return (
         <>
             <style>{`
@@ -254,13 +261,25 @@ export default function Sidebar({ isMobile }) {
 // }
 */
       `}</style>
+            {/* Оверлей для мобильных */}
+            {isMobile && !collapsed && (
+                <div
+                    className="fixed inset-0 z-30 duration-300"
+                    onClick={() => setCollapsed(true)}
+                />
+            )}
             <aside
-                className={`bg-white shadow-lg z-40 ${isMobile ? `fixed top-0 left-0 h-full w-64 transform transition-transform duration-300`: `sticky top-0 h-screen transition-width duration-300 ${collapsed ? "w-21" : "w-64"}`}`}>
-                <div className="sidebar-content">
-                    <div className="sidebar-menu-sections">
+                className={`bg-white shadow-lg z-40 transition-transform duration-300
+  ${isMobile
+                        ? `fixed top-0 left-0 h-full transform ${collapsed ? "-translate-x-full" : "translate-x-0 w-21"}`
+                        : `sticky top-0 h-screen transition-width ${collapsed ? "w-21" : "w-64"}`
+                    }`}
+            >
+                <div className="sidebar-content flex flex-col h-full justify-between">
+                    <div className="sidebar-menu-sections overflow-y-auto">
                         {menuSections.map(({ title, items }, idx) => (
-                            <section key={idx} className={!collapsed ? "mb-[10px]" : ""}>
-                                {!collapsed && title && <div className="sidebar-section-title">{t(title)}</div>}
+                            <section key={idx} className={isCollapsed ? "mb-[10px]" : ""}>
+                                {isCollapsed && title && <div className="sidebar-section-title">{t(title)}</div>}
                                 <nav className="nav-column" aria-label={title || t(`Section ${idx + 1}`)}>
                                     {items.map(({ id, key, icon, disabled }) => (
                                         <button
@@ -271,20 +290,18 @@ export default function Sidebar({ isMobile }) {
                                             disabled={disabled}
                                             title={t(key)}
                                         >
-                                            <img
-                                                src={icon}
-                                                className="w-6 h-6 text-black"
-                                            />
-                                            {!collapsed && <span>{t(key)}</span>}
+                                            <img src={icon} className="w-6 h-6 text-black" />
+                                            {isCollapsed && <span>{t(key)}</span>}
                                         </button>
                                     ))}
                                 </nav>
                             </section>
                         ))}
                     </div>
+
                     <div className="flex flex-col items-center mb-1 space-y-1">
                         <div className="brand-logo">
-                            {!collapsed ? (
+                            {isCollapsed ? (
                                 <img src={LongLogo} alt="Fiscal Cloud Logo" className="w-32 h-8" />
                             ) : (
                                 <img src={Logo} alt="Fiscal Cloud Logo" className="w-10 h-10" />
@@ -295,22 +312,17 @@ export default function Sidebar({ isMobile }) {
                             onClick={logout}
                             aria-label={t("Logout")}
                             title={t("Logout")}
-                            className={`flex items-center justify-center w-full ${collapsed ? "h-12" : "h-10"
-                                } px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform hover:scale-105 ${!collapsed ? "justify-start gap-2" : "justify-center"
-                                }`}
+                            className={`flex items-center justify-center w-full ${isCollapsed ? "h-12" : "h-10"} px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform hover:scale-105 ${isCollapsed ? "justify-start gap-2" : "justify-center"}`}
                         >
-                            <img
-                                src="/icons/Log_Out.svg"
-                                className="w-6 h-6"
-                                alt={t("Logout")}
-                            />
-                            {!collapsed && (
-                                <span className="text-sm font-medium text-black">{t("Logout")}</span>
-                            )}
+                            <img src="/icons/Log_Out.svg" className="w-6 h-6" alt={t("Logout")} />
+                            {isCollapsed && <span className="text-sm font-medium text-black">{t("Logout")}</span>}
                         </button>
                     </div>
                 </div>
             </aside>
+
+
+
         </>
     );
 }

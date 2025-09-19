@@ -94,7 +94,6 @@ export default function BankModal({ banks, bank, onClose, onSave, onSuccess, onE
             const isDuplicate = banks.some(
                 (item) => item.bankOID === Number(formData.bankOID)
             );
-            console.log(banks, isDuplicate, formData.bankOID);
             if (isDuplicate) {
                 onError();
                 setLoading(false);

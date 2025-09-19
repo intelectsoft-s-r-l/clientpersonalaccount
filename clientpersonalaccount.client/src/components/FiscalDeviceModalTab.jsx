@@ -73,7 +73,6 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
                 if (row.ID !== rowId) return row;
 
                 const updatedRow = { ...row };
-                console.log(updatedRow, columnKey);
                 if (columnKey === "NoVat") {
                     updatedRow.NoVat = !!newValue;
                     if (updatedRow.NoVat) {
@@ -148,7 +147,7 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
     };
 
     return (
-        <div>
+        <div className="overflow-x-auto">
             <DataTable
                 title={tableDef.title}
                 columns={columns}
@@ -157,6 +156,7 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
                 onCellUpdate={handleCellUpdate}
                 onAddRow={tableKey === "vatHistory" ? undefined : handleAddRow}
                 onDeleteRow={tableKey === "vatHistory" ? undefined : handleDeleteRow}
+                tableClassName="min-w-[1200px] xl:min-w-[100px]"
             />
             <ValidationModal
                 errors={validationErrors}

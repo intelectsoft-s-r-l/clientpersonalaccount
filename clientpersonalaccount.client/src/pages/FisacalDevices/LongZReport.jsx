@@ -3,7 +3,6 @@ import "../../styles/receipt.css";
 
 export default function LongZReport({ model }) {
     if (!model) return null;
-    console.log(model.fiscalReceiptItems);
     // Подсчёт TOTAL_BRUT
     const totalBrut = model.fiscalReceiptItems
         ? model.fiscalReceiptItems.reduce((sum, item) => sum + (item.tax?.brut || 0), 0)

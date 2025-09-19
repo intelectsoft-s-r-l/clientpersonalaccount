@@ -89,7 +89,7 @@ export default function FiscalDevicesListPage() {
             typeCode: device.type,
             typeBusiness: device.bu
         };
-    });
+    }).sort((a, b) => new Date(b.activated) - new Date(a.activated));;
 
     // Описание колонок для DataTable
     const columns = [

@@ -17,7 +17,6 @@ export const getFiscalPrintUrl = (deviceId, shiftId) => {
 };
 
 export const usePrintService = ({ deviceId, shiftId, contentRef }) => {
-    console.log(contentRef.current);
     const handleLocalPrint = useReactToPrint({
         content: () => contentRef.current,
         documentTitle: "Receipt",

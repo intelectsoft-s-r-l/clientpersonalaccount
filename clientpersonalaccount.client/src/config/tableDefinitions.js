@@ -4,10 +4,10 @@ export const tableDefinitions = (t, data) => [
         title: t("Tabs.Payments"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "25%", filterable: true, align: "left" },
-            { key: "Name", label: t("Name"), width: "25%", filterable: true, align: "left" },
-            { key: "IsActive", label: t("IsActive"), type: "boolean", width: "25%", editable: true, filterable: true },
-            { key: "MaxPaymentAmount", label: t("MaxPaymentAmount"), type: "price", editable: true, filterable: true, align: "right" },
+            { key: "ID", label: "ID", width: "2%", filterable: true, align: "left" },
+            { key: "Name", label: t("Name"), width: "50%", filterable: true, align: "left" },
+            { key: "IsActive", label: t("IsActive"), type: "boolean", width: "5%", editable: true, filterable: true },
+            { key: "MaxPaymentAmount", label: t("MaxPaymentAmount"), width: "10%", type: "price", editable: true, filterable: true, align: "right" },
         ],
     },
     {
@@ -15,7 +15,7 @@ export const tableDefinitions = (t, data) => [
         title: `${t("Tabs.Products")} (${data?.length || 0})`,
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "5%", editable: false, filterable: true, align: "left" },
+            { key: "ID", label: "ID", width: "3%", editable: false, filterable: true, align: "left" },
             { key: "PLU", label: "Plu", editable: true, type: "number", width: "5%", filterable: true, align: "left" },
             { key: "Code", label: t("Code"), editable: true, type: "number", width: "5%", filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, width: "30%", filterable: true, align: "left" },
@@ -43,8 +43,8 @@ export const tableDefinitions = (t, data) => [
         title: t("Tabs.Groups"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "50%", editable: false, filterable: true, align: "left" },
-            { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
+            { key: "ID", label: "ID", width: "2%", editable: false, filterable: true, align: "left" },
+            { key: "Name", label: t("Name"), editable: true, width: "50%", filterable: true, align: "left" },
         ],
     },
     {
@@ -52,8 +52,8 @@ export const tableDefinitions = (t, data) => [
         title: t("Tabs.Departments"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "33%", editable: false, filterable: true, align: "left" },
-            { key: "Name", label: t("Name"), editable: true, width: "33%", filterable: true, align: "left" },
+            { key: "ID", label: "ID", width: "3%", editable: false, filterable: true, align: "left" },
+            { key: "Name", label: t("Name"), editable: true, width: "80%", filterable: true, align: "left" },
             {
                 key: "Assortment",
                 label: t("Assortment"),
@@ -84,9 +84,9 @@ export const tableDefinitions = (t, data) => [
         title: t("Tabs.Users"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "33%", editable: false, filterable: true, align: "left" },
-            { key: "Name", label: t("Name"), editable: true, width: "33%", filterable: true, align: "left" },
-            { key: "PIN", label: "PIN", editable: true, type: "number", filterable: true, align: "left" },
+            { key: "ID", label: "ID", width: "3%", editable: false, filterable: true, align: "left" },
+            { key: "Name", label: t("Name"), editable: true, width: "55%", filterable: true, align: "left" },
+            { key: "PIN", label: "PIN", width: "5%", editable: true, type: "number", filterable: true, align: "left" },
         ],
     },
     {

@@ -92,7 +92,6 @@ export default function BankPage() {
     }, [token]);
 
     const handleDeleteBank = async (bank) => {
-        console.log(bank);
         if (!bank?.oid) return;
 
         try {
@@ -125,12 +124,12 @@ export default function BankPage() {
     });
 
     const columns = [
-        { key: "nameFromApi", label: t("Name"), filterable: true, width: "50%" },
-        { key: "login", label: t("Login"), filterable: true, width: "45%" },
+        { key: "nameFromApi", label: t("Name"), filterable: true, width: "30%" },
+        { key: "login", label: t("Login"), filterable: true, width: "30%" },
         {
             key: "actions",
             label: "",
-            width: "5%",
+            width: "3%",
             render: (value, row) => (
                 <div className="flex justify-center items-center gap-1 overflow-visible">
                     <button
@@ -173,53 +172,54 @@ export default function BankPage() {
                         </h1>
                     </div>
                 </div>
+
+                {error && (
+                    <div className="mb-4 text-red-600 font-semibold text-center">{error}</div>
+                )}
+
+                <DataTable
+                    title={`${t("Banks")} (${tapxphoneSettings.length})`}
+                    columns={columns}
+                    data={decoratedTapxphoneSettings}
+                    loading={loading}
+                    editable={false}
+                    onRowDoubleClick={(tap) => setSelectedTapxphoneSettings(tap)}
+                    selectableRow={false}
+                    onRefresh={fetchTapxphoneSettings}
+                    onAddRow={handleAddRow}
+                    tableClassName="min-w-[1300px]"
+                />
+
+                <BankModal
+                    bank={selectedTapxphoneSettings}
+                    banks={tapxphoneSettings}
+                    onClose={() => setSelectedTapxphoneSettings(null)}
+                    onSave={(updatedBank) => {
+                        fetchTapxphoneSettings();
+                    }}
+                    onSuccess={() => {
+                        setShowSuccessMessage(t("SaveSuccess"));
+                        setIsSuccessModalVisible(true);
+                    }}
+                    onError={() => {
+                        setShowErrorMessage(t("Duplicate"));
+                        setIsErrorModalVisible(true);
+                    }}
+                />
+
+                <Toast
+                    visible={isSuccessModalVisible}
+                    message={showSuccessMessage}
+                    onClose={() => setIsSuccessModalVisible(false)}
+                    type="success"
+                />
+                <Toast
+                    visible={isErrorModalVisible}
+                    message={showErrorMessage}
+                    onClose={() => setIsErrorModalVisible(false)}
+                    type="error"
+                />
             </div>
-
-            {error && (
-                <div className="mb-4 text-red-600 font-semibold text-center">{error}</div>
-            )}
-
-            <DataTable
-                title={`${t("Banks")} (${tapxphoneSettings.length})`}
-                columns={columns}
-                data={decoratedTapxphoneSettings}
-                loading={loading}
-                editable={false}
-                onRowDoubleClick={(tap) => setSelectedTapxphoneSettings(tap)}
-                selectableRow={false}
-                onRefresh={fetchTapxphoneSettings}
-                onAddRow={handleAddRow}
-            />
-
-            <BankModal
-                bank={selectedTapxphoneSettings}
-                banks={tapxphoneSettings}
-                onClose={() => setSelectedTapxphoneSettings(null)}
-                onSave={(updatedBank) => {
-                    fetchTapxphoneSettings();
-                }}
-                onSuccess={() => {
-                    setShowSuccessMessage(t("SaveSuccess"));
-                    setIsSuccessModalVisible(true);
-                }}
-                onError={() => {
-                    setShowErrorMessage(t("Duplicate"));
-                    setIsErrorModalVisible(true);
-                }}
-            />
-
-            <Toast
-                visible={isSuccessModalVisible}
-                message={showSuccessMessage}
-                onClose={() => setIsSuccessModalVisible(false)}
-                type="success"
-            />
-            <Toast
-                visible={isErrorModalVisible}
-                message={showErrorMessage}
-                onClose={() => setIsErrorModalVisible(false)}
-                type="error"
-            />
         </div>
     );
 }

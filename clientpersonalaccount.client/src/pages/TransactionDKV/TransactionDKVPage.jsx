@@ -42,7 +42,6 @@ export default function TransactionDKVPage() {
                 `/ISDKVManagement/GetTransactions?startDate=${start}&endDate=${end}`,
                 { method: "GET", credentials: "include", headers: { "Content-Type": "application/json", "X-Service-Id": "43" } }
             );
-            console.log(data);
             if (data?.errorMessage) {
                 setError(`${data.errorName || "Ошибка"}: ${data.errorMessage}`);
             } else if (Array.isArray(data.transactions)) {
