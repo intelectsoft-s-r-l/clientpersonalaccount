@@ -47,20 +47,20 @@ export const validateProducts = (item, tableKey, usersPin, pins, t, data) => {
     }
 
     if (tableKey === "products") {
+        const pluCount = data.filter(x => x.PLU === item.PLU).length;
         if (!item.PLU || item.PLU.trim() === "") rowErrors.PLU = t("validation.pluRequired");
-        else if (pluSet.has(item.PLU)) rowErrors.PLU = t("validation.pluDuplicate");
-        else pluSet.add(item.PLU);
+        else if (pluCount > 1) rowErrors.PLU = t("validation.pluDuplicate");
 
+        const codeCount = data.filter(x => x.Code === item.Code).length;
         if (!item.Code || item.Code.trim() === "") rowErrors.Code = t("validation.codeRequired");
-        else if (codeSet.has(item.Code)) rowErrors.Code = t("validation.codeDuplicate");
-        else codeSet.add(item.Code);
+        else if (codeCount > 1) rowErrors.Code = t("validation.codeDuplicate");
 
         const normalizedPrice = Number(item.Price?.toString().replace(",", "."));
         if (!normalizedPrice || normalizedPrice <= 0) rowErrors.Price = t("validation.pricePositive");
 
+        const barcodeCount = data.filter(x => x.Barcode === item.Barcode).length;
         if (!item.Barcode || item.Barcode.trim() === "") rowErrors.Barcode = t("validation.barcodeRequired");
-        else if (barcodeSet.has(item.Barcode)) rowErrors.Barcode = t("validation.barcodeDuplicate");
-        else barcodeSet.add(item.Barcode);
+        else if (barcodeCount > 1) rowErrors.Barcode = t("validation.barcodeDuplicate");
 
         if (!item.VATCode || item.VATCode.trim() === "") {
             rowErrors.VATCode = t("validation.vatRequired");

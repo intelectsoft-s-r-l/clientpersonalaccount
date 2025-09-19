@@ -60,7 +60,6 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
     // Правильно мапим колонки
     const columns = tableDef.columns.map((col) => ({
         ...col,
-        label: t(col.labelKey || col.key),
         editable: col.editable ?? true,
         dateEditor: col.key === "StartOfPeriod" || col.key === "EndOfPeriod" ? TimeSelectEditor : undefined,
     }));
@@ -120,11 +119,10 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
 
         const newRow = {
             ID: maxId + 1 || 1,
-            ...emptyFields,
-            isNew: true,
+            ...emptyFields
         };
 
-        setTableData((prev) => [...prev, newRow]);
+        setTableData((prev) => [newRow, ...prev]);
     };
 
     const handleDeleteRow = (rowId) => {
@@ -141,7 +139,7 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
                 return row;
             });
 
-            onDataChange && onDataChange(newData.filter(r => !r.isNew));
+            onDataChange && onDataChange(newData);
             return newData;
         });
     };

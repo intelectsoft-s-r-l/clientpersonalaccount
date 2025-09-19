@@ -53,7 +53,7 @@ function toPascalCaseKeys(obj) {
 
 const tableKeys = ["device", "vatRates", "vatHistory", "taxiTariffs"];
 
-export default function FiscalDeviceModal({ deviceId, onClose }) {
+export default function FiscalDeviceModal({ deviceId, onClose, onSuccess }) {
 
     const { t } = useTranslation();
     const { getTokenFromServer } = useAuth();
@@ -191,8 +191,10 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
             setValidationErrors(serverErrors);
             setShowErrors(true);
         } else {
-            setShowSuccessMessage("Ставки НДС успешно сохранены");
-            setIsSuccessModalVisible(true);
+            if (onSuccess) onSuccess();
+
+
+            onClose();
         }
     };
 
@@ -220,8 +222,10 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
             setValidationErrors(serverErrors);
             setShowErrors(true);
         } else {
-            setShowSuccessMessage("Тарифы такси успешно сохранены");
-            setIsSuccessModalVisible(true);
+            if (onSuccess) onSuccess();
+
+
+            onClose();
         }
     };
 
@@ -231,8 +235,7 @@ export default function FiscalDeviceModal({ deviceId, onClose }) {
         } else if (activeTab === "taxiTariffs") {
             saveTaxiTariffs();
         } else {
-            setShowSuccessMessage("Нет данных для сохранения или вкладка не поддерживается.");
-            setIsSuccessModalVisible(true);
+            if (onError) onError();
         }
     };
 

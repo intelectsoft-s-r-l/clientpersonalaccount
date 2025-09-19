@@ -867,5 +867,6 @@
   "DeleteSuccess": "șters cu succes",
   "DeleteError": "eroare la ștergere",
   "Duplicate": "Băncile Duplicate nu sunt permise",
-  "DepartmentsDuplicate": "Această gamă a fost deja atribuită unui alt departament"
+  "DepartmentsDuplicate": "Această gamă a fost deja atribuită unui alt departament",
+  "NoData": "Nu există date de salvat"
 }

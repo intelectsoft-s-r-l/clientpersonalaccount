@@ -229,21 +229,21 @@ export default function FiscalDevicePage() {
 
         if (reportType === 1) {
             return (
-                <div title="Отчёт Z" style={{ ...iconStyle, backgroundColor: "#2563eb" }}>
+                <div style={{ ...iconStyle, backgroundColor: "#2563eb" }}>
                     Z
                 </div>
             );
         }
         if (reportType === 2) {
             return (
-                <div title="Отчёт X" style={{ ...iconStyle, backgroundColor: "#16a34a" }}>
+                <div style={{ ...iconStyle, backgroundColor: "#16a34a" }}>
                     X
                 </div>
             );
         }
         if (!type && type === 2 && reportType === 0) {
             return (
-                <div title="Отчёт S" style={{ ...iconStyle, backgroundColor: "#7c3aed" }}>
+                <div style={{ ...iconStyle, backgroundColor: "#7c3aed" }}>
                     S
                 </div>
             );
@@ -297,10 +297,10 @@ export default function FiscalDevicePage() {
         }));
 
     const columnsBills = [
-        { key: "reportType", label: "", width: "16%", render: (value, row) => getReportLabel(row.reportType, row.type), },
-        { key: "date", label: t("Date"), width: "" },
-        { key: "fiscalReceiptID", label: t("ID"), width: "18%" },
-        { key: "totalAmountDisplay", label: t("TotalAmount"), width: "35%" },
+        { key: "reportType", label: "", width: "10%", render: (value, row) => getReportLabel(row.reportType, row.type), },
+        { key: "date", label: t("Date"), width: "16%" },
+        { key: "fiscalReceiptID", label: t("ID"), width: "7%" },
+        { key: "totalAmountDisplay", label: t("TotalAmount"), width: "16%" },
         {
             key: "paymentType",
             label: t("Type"),
@@ -710,11 +710,13 @@ export default function FiscalDevicePage() {
         .receipt-text {
         font-family: 'Courier Prime', monospace;
         text-align: center;
+        white-space: pre-wrap;
+        max-width: 100%; 
         }
       `}</style>
-            <div className="p-6 overflow-y-auto">
-                <div className="flex flex-col md:flex-row gap-4">
-                    <div className="w-full md:w-[300px] overflow-visible">
+            <div className="p-1 overflow-y-auto">
+                <div className="flex flex-col md:flex-row gap-2">
+                    <div className="w-full md:w-[490px] overflow-visible">
                         <DataTable
                             title={t("Shifts")}
                             columns={columnsShifts}
@@ -744,12 +746,12 @@ export default function FiscalDevicePage() {
                             rowClassName={(row) =>
                                 row.id === selectedRowId ? "bg-gray-200" : ""
                             }
-                            tableClassName="table-auto min-w-[800px] xl:w-full"
+                            tableClassName="table-auto min-w-[200px] xl:w-full"
                         />
                     </div>
 
                     {receiptText && (
-                        <div className="w-full md:w-1/2">
+                        <div className="w-full md:w-1/4">
                             <div className="dark:bg-gray-800 dark:text-white rounded-xl shadow-md p-4">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="space-x-4">
@@ -776,6 +778,7 @@ export default function FiscalDevicePage() {
                                     </div>
                                 </div>
                                 <div className="text-sm whitespace-pre-wrap break-words min-h-[200px] dark:bg-gray-800 dark:text-white">
+                                    {console.log(reportModel) }
                                     {viewMode === "report" && reportModel ? (
                                         <LongZReport className="dark:bg-gray-800 dark:text-white" model={reportModel} />
                                     ) : (
@@ -786,7 +789,7 @@ export default function FiscalDevicePage() {
                                             <div className="receipt" id="receiptDiv">
                                                 <div className="receiptBody flex flex-col items-center">
                                                     <div className="contentReceipt flex flex-col items-center">
-                                                        <pre className="receipt-text text-center">{receiptText || t("SelectBill")}</pre>
+                                                            <pre className="receipt-text break-words whitespace-pre-wrap text-center">{receiptText || t("SelectBill")}</pre>
 
                                                         {mevURi && (
                                                             <div className="mt-2 text-center" style={{ fontSize: "87.5%" }}>

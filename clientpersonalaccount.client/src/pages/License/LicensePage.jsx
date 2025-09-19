@@ -121,20 +121,6 @@ export default function LicensePage() {
 
     return (
         <div  className="min-h-screen bg-gradient-to-br to-indigo-100 p-0 m-0">
-            <div className="w-full px-0">
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 className="text-4xl font-bold bg-gradient-to-r from-[#72b827] to-green-600 bg-clip-text text-transparent leading-normal">
-                            {t("Licenses")}
-                        </h1>
-                    </div>
-                </div>
-            </div>
-
-            {error && (
-                <div className="mb-4 text-red-600 font-semibold text-center">{error}</div>
-            )}
-
             <DataTable
                 title={`${t("Licenses")} (${licenses.length})`}
                 columns={columns}

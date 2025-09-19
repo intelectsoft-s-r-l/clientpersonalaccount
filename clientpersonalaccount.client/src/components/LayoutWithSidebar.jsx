@@ -90,74 +90,75 @@ export default function LayoutWithSidebar({ children }) {
             <Sidebar onNavigate={setActivePage} />
             <main className={`transition-[margin] duration-300 overflow-y-auto flex-1 min-w-0l p-4 dark:bg-gray-700`}>
                 {/* Верхняя панель */}
-                <div className="flex-row xl:flex justify-between items-start xl:items-center w-full mb-3">
+                <div className="flex flex-wrap sm:flex-nowrap justify-between items-center w-full mb-1 gap-2">
+
                     {/* Левая часть: кнопка + breadcrumbs */}
-                    <div className="flex flex-wrap items-center gap-4 xl:gap-2 xl:w-full w-auto">
-                        <div className="flex flex-wrap items-center text-gray-500 gap-1 mb-3">
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center text-gray-500 gap-2">
+                            <span className="mb-3">{user.Company}</span>
                             <button
                                 type="button"
                                 onClick={() => setCollapsed(!collapsed)}
-                                className="collapse-button"
+                                className="collapse-button "
                                 aria-label={collapsed ? "Развернуть меню" : "Свернуть меню"}
                                 title={collapsed ? "Развернуть меню" : "Свернуть меню"}
                             >
                                 <i className="bi bi-list" aria-hidden="true"></i>
                             </button>
-                            <span className="mb-3">{user.Company}</span>
                         </div>
-                        <nav className="flex flex-wrap text-sm text-gray-600 dark:text-gray-300 mb-3" aria-label="Breadcrumb">
-                            <ol className="inline-flex items-center space-x-1 md:space-x-2">
-                                <li className="inline-flex items-center">
-                                    <Link
-                                        to="/Dashboard"
-                                        className="inline-flex items-center text-gray-600 dark:text-gray-300 no-underline"
-                                    >
-                                        <img src="/icons/House_01.svg" className="w-6 h-6" />
-                                    </Link>
-                                </li>
-                                {pathnames.map((value, index) => {
-                                    const to = `/${pathnames.slice(0, index + 1).join("/")}`;
-                                    const isLast = index === pathnames.length - 1;
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                            <nav aria-label="Breadcrumb">
+                                <ol className="inline-flex items-center space-x-1 md:space-x-2">
+                                    <li className="inline-flex items-center">
+                                        <Link
+                                            to="/Dashboard"
+                                            className="inline-flex items-center text-gray-600 dark:text-gray-300 "
+                                        >
+                                            <img src="/icons/House_01.svg" className="w-6 h-6" />
+                                        </Link>
+                                    </li>
+                                    {pathnames.map((value, index) => {
+                                        const to = `/${pathnames.slice(0, index + 1).join("/")}`;
+                                        const isLast = index === pathnames.length - 1;
+                                        let text = breadcrumbNameMap[value] || decodeURIComponent(value);
 
-                                    let text = breadcrumbNameMap[value] || decodeURIComponent(value);
+                                        if (isLast && value === currentDeviceId && fiscalDevice) {
+                                            text = `${fiscalDevice.name} (${fiscalDevice.number})`;
+                                        }
 
-                                    if (isLast && value === currentDeviceId && fiscalDevice) {
-                                        text = `${fiscalDevice.name} (${fiscalDevice.number})`;
-                                    }
-
-                                    return (
-                                        <li key={to} className="inline-flex items-center">
-                                            <svg
-                                                className="w-4 h-4 text-gray-400"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                            </svg>
-                                            {isLast ? (
-                                                <span className="text-gray-600 dark:text-gray-300">{text}</span>
-                                            ) : (
-                                                <Link
-                                                    to={to}
-                                                    className="text-gray-600 dark:text-gray-300 no-underline"
+                                        return (
+                                            <li key={to} className="inline-flex items-center">
+                                                <svg
+                                                    className="w-4 h-4 text-gray-400"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    viewBox="0 0 24 24"
                                                 >
-                                                    {text}
-                                                </Link>
-                                            )}
-                                        </li>
-                                    );
-                                })}
-                            </ol>
-                        </nav>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                                {isLast ? (
+                                                    <span className="text-gray-600 dark:text-gray-300">{text}</span>
+                                                ) : (
+                                                    <Link
+                                                        to={to}
+                                                        className="text-gray-600 dark:text-gray-300 no-underline"
+                                                    >
+                                                        {text}
+                                                    </Link>
+                                                )}
+                                            </li>
+                                        );
+                                    })}
+                                </ol>
+                            </nav>
+                        </div>
                     </div>
 
                     {/* Панель пользователя */}
-                    <div className="flex flex-wrap items-center p-2 gap-4 xl:gap-2 xl:w-full w-auto mb-3">
+                    <div className="flex items-center gap-3 xl:gap-2 mb-3">
                         {fiscalDevice && (
-                            <div className="flex items-center text-sm text-gray-500 ml-20 gap-2">
-                                {/* Иконка адреса */}
+                            <div className="flex items-center text-sm text-gray-500 gap-2">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     className="h-4 w-4 text-gray-400"
@@ -178,7 +179,6 @@ export default function LayoutWithSidebar({ children }) {
                                         d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                                     />
                                 </svg>
-
                                 <span>{fiscalDevice.address}</span>
                             </div>
                         )}
@@ -193,7 +193,6 @@ export default function LayoutWithSidebar({ children }) {
                         <span className="dark:text-white">{fullName}</span>
                     </div>
                 </div>
-
                 {children}
             </main>
         </div>

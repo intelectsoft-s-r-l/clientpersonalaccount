@@ -111,6 +111,7 @@ export const AuthProvider = ({ children }) => {
                 } else {
                 }
             } else {
+                await logout();
             }
         } catch (err) {
             console.error('Ошибка в initialize:', err);

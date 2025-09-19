@@ -866,5 +866,6 @@
   "DeleteSuccess": "Deleted successfully",
   "DeleteError": "Deletion error",
   "Duplicate": "Duplicate banks are not allowed",
-  "DepartmentsDuplicate": "This range has already been assigned to another department"
+  "DepartmentsDuplicate": "This range has already been assigned to another department",
+  "NoData": "No data to save"
 }

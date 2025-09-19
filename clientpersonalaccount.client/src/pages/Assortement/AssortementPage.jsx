@@ -250,7 +250,7 @@ export default function AssortmentPage() {
                     settings: encodedSettings,
                     type: type,
                 };
-                
+
                 const resp = await apiService.proxyRequest(`/MobileCashRegister/web/UpsertSettings`, {
                     method: "POST",
                     credentials: "include",
@@ -840,7 +840,7 @@ export default function AssortmentPage() {
                                 <div className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-300 text-xs font-bold text-gray-700 cursor-pointer">
                                     ?
                                 </div>
-
+                                <div className="absolute -inset-6"></div>
                                 <div className="absolute right-0 top-6 z-50 hidden group-hover:block max-w-[90vw] max-h-[80vh] overflow-auto
  sm:left-auto sm:right-0  left-0 right-auto bg-white shadow-lg border border-gray-200 rounded-lg p-3 text-xs text-gray-700">
                                     <p className="mb-1 font-medium">{t("TooltipImportAssortiment1")}</p>
@@ -929,39 +929,47 @@ export default function AssortmentPage() {
             )}
 
             <main className="flex-1 overflow-x-auto">
-                    {activeTable === "global" ? (
-                        <GlobalSettingsForm
-                            initialSettings={currentGlobalSettings}
-                            ref={globalSettingsRef}
-                            onChange={(newSettings) => {
-                                setDataBySetting((prev) => {
-                                    const updated = {
-                                        ...prev[activeId],
-                                        GlobalSettings: newSettings,
-                                    };
-                                    return {
-                                        ...prev,
-                                        [activeId]: updated,
-                                    };
-                                });
-                            }}
-                        />
-                    ) : (
-                        <AssortmentTab
-                            key={`${activeId}-${activeTable}`}
-                            ref={(ref) => {
-                                if (ref) tabsRefs.current[`${activeId}-${activeTable}`] = ref;
-                            }}
-                            tableKey={activeTable}
-                            data={transformedData}
-                            extraData={{ groups, products, users, payments, departments }}
-                            usersPin={usersPin}
-                            onDataChange={handleTableDataUpdate}
-                            onResetPayments={handleResetPayments}
-                            checkDuplicate={checkDuplicateAssortment}
-                            loading={loading}
-                        />
-                    )}
+                {activeTable === "global" ? (
+                    <GlobalSettingsForm
+                        initialSettings={currentGlobalSettings}
+                        ref={globalSettingsRef}
+                        onChange={(newSettings) => {
+                            setDataBySetting((prev) => {
+                                const updated = {
+                                    ...prev[activeId],
+                                    GlobalSettings: newSettings,
+                                };
+                                return {
+                                    ...prev,
+                                    [activeId]: updated,
+                                };
+                            });
+                        }}
+                    />
+                ) : (
+                    <AssortmentTab
+                        key={`${activeId}-${activeTable}`}
+                        ref={(ref) => {
+                            if (ref) tabsRefs.current[`${activeId}-${activeTable}`] = ref;
+                        }}
+                        tableKey={activeTable}
+                        data={transformedData}
+                        extraData={{ groups, products, users, payments, departments }}
+                        usersPin={usersPin}
+                        onDataChange={handleTableDataUpdate}
+                        onResetPayments={handleResetPayments}
+                        checkDuplicate={checkDuplicateAssortment}
+                        loading={loading}
+                    />
+                )}
+                <div className="gap-2 py-4">
+                    <button
+                        onClick={handleSaveAll}
+                        className="px-4 py-2 bg-gradient-to-r from-[#72b827] to-green-600 text-white rounded transition"
+                    >
+                        {t("Save")}
+                    </button>
+                </div>
             </main>
 
             <ValidationModal
@@ -981,14 +989,6 @@ export default function AssortmentPage() {
                 onClose={() => setIsWarningModalVisible(false)}
                 type="warning"
             />
-            <footer className="p-6">
-                <button
-                    onClick={handleSaveAll}
-                    className="px-4 py-2 bg-gradient-to-r from-[#72b827] to-green-600 text-white rounded transition"
-                >
-                    {t("Save")}
-                </button>
-            </footer>
         </div>
     );
 }

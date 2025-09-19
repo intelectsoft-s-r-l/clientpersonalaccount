@@ -116,7 +116,7 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
             return updated;
         });
 
-        setTableData(prev => [newRow, ...prev]);
+        setTableData(prev => [...prev, newRow]);
     };
 
     const handleDeleteRow = (rowId) => {

@@ -524,12 +524,12 @@ export default function DashboardPage() {
                 )}
                 {/* Верхний ряд с PieChart и годовым графиком */}
                 <div className="flex flex-col xl:flex-row gap-2 mb-2 sm:gap-4 mb-6 md:gap-6 mb-8">
-                    <div className="flex-shrink-0 w-full xl:w-60 gap-3 mb-2 sm:gap-4 mb-6 md:gap-8 mb-8 rounded-2xl hover:scale-105 transition-all">
+                    <div className="flex-shrink-0 w-full xl:w-60 gap-3 mb-2 sm:gap-4 mb-6 md:gap-8 mb-8 rounded-2xl transition-all">
                         <SimplePieChart data={allDevicesChartData} t={t} />
                     </div>
 
                     {yearlyAllDevicesData && (
-                        <div className="flex-1 gap-3 mb-1 sm:gap-4 mb-6 md:gap-6 mb-8 rounded-2xl hover:scale-105 transition-all">
+                        <div className="flex-1 gap-3 mb-1 sm:gap-4 mb-6 md:gap-6 mb-8 rounded-2xl transition-all">
                             <YearlySalesChart
                                 data={yearlyAllDevicesData.data}
                                 t={t}

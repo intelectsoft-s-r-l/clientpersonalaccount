@@ -1,4 +1,5 @@
 import React from "react";
+import { useMediaQuery } from "react-responsive";
 import {
     BarChart,
     Bar,
@@ -85,6 +86,8 @@ export default function YearlySalesChart({ title, data, t }) {
             };
         });
 
+    const isSmallScreen = useMediaQuery({ query: "(max-width: 768px)" });
+
     return (
         <div className="bg-white rounded-2xl border border-gray-100 w-full max-w-full flex flex-col">
             <div className="px-6 py-3 border-b border-gray-100 flex items-center justify-between">
@@ -109,8 +112,10 @@ export default function YearlySalesChart({ title, data, t }) {
                             dataKey="date"
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: "#374151", fontSize: 14, fontWeight: "600" }}
-                            padding={{ left: 20, right: 20 }}
+                            tick={{ fill: "#374151", fontSize: isSmallScreen ? 9 : 14, fontWeight: "600" }}
+                            padding={{ left: isSmallScreen ? 2 : 20, right: isSmallScreen ? 2 : 20 }}
+                            interval={0}
+                            tickFormatter={(month) => month.slice(0, 3)}
                         />
                         <YAxis
                             axisLine={false}

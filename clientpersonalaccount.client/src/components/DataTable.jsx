@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from "react-i18next";
 import Select from "react-select";
@@ -53,6 +53,22 @@ export function DataTable({
     const { t } = useTranslation();
     const [selectSearch, setSelectSearch] = useState("");
     const [activeFilter, setActiveFilter] = useState(null);
+    const thRef = useRef(null);
+    const [filterWidth, setFilterWidth] = useState(undefined);
+    useEffect(() => {
+        if (!thRef.current) return;
+
+        const resizeObserver = new ResizeObserver(() => {
+            if (thRef.current) {
+                setFilterWidth(thRef.current.offsetWidth);
+            }
+        });
+
+        resizeObserver.observe(thRef.current);
+        setFilterWidth(thRef.current.offsetWidth); // сразу при монтировании
+
+        return () => resizeObserver.disconnect();
+    }, [thRef.current]);
 
     const handleClick = (key) => {
         setActiveFilter(key);
@@ -293,7 +309,7 @@ export function DataTable({
             <div className="bg-white rounded-3xl">
                 {/* Заголовок и кнопки */}
                 <div className="flex flex-wrap justify-between items-center gap-1 p-3">
-                    <h2 className="text-lg sm:text-xl font-semibold truncate max-w-[70%]">
+                    <h2 className="text-lg sm:text-xl font-semibold truncate max-w-[70%] font-bold bg-gradient-to-r from-[#72b827] to-green-600 bg-clip-text text-transparent leading-normal">
                         {title}
                     </h2>
 
@@ -360,6 +376,7 @@ export function DataTable({
                                             return (
                                                 <th
                                                     key={col.key}
+                                                    ref={thRef}
                                                     style={{ width: col.width || "auto", minWidth: isActions ? "120px" : undefined, whiteSpace: "pre-line" }}
                                                     className={`"px-2 py-1 border text-sm font-semibold text-center relative "`}
                                                     onClick={() => col.sortable !== false && handleSort(col.sortField ?? col.key)}
@@ -400,7 +417,18 @@ export function DataTable({
                                                             onClick={(e) => e.stopPropagation()}
                                                             className="absolute top-full left-0 mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-300 rounded shadow-lg"
                                                         >
-                                                            {col.filterOptions ? (
+                                                            {col.type === "boolean" ? (
+                                                                <select
+                                                                    value={filters[col.key] ?? ""}
+                                                                    onChange={(e) => handleFilterChange(col.key, e.target.value.trim())}
+                                                                    className="w-full p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                >
+                                                                    <option value="">{t("All")}</option>
+                                                                    <option value="true">{t("True")}</option>
+                                                                    <option value="false">{t("False")}</option>
+                                                                </select>
+                                                            ) : col.filterOptions ? (
                                                                 <select
                                                                     value={filters[col.key] ?? ""}
                                                                     onChange={(e) => handleFilterChange(col.key, e.target.value.trim())}
@@ -423,7 +451,7 @@ export function DataTable({
                                                                     value={filters[col.key] || ""}
                                                                     onChange={(e) => handleFilterChange(col.key, e.target.value.trim())}
                                                                     placeholder={`${t("Filter")}...`}
-                                                                    className="absolute top-full left-0 mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-300 rounded shadow-lg"
+                                                                    className="w-full p-1 border border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
                                                                     onClick={(e) => e.stopPropagation()}
                                                                 />
                                                             )}
@@ -467,7 +495,7 @@ export function DataTable({
                                                     className={`${onRowClick ? "cursor-pointer" : ""} ${isSelected
                                                         ? "bg-gray-100 dark:bg-gray-700"
                                                         : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                                                        } border border-[#dbdbdb]`}
+                                                        } break-words border border-[#dbdbdb]`}
                                                     onClick={
                                                         onRowClick
                                                             ? () => {
@@ -579,7 +607,7 @@ export function DataTable({
                                                                     key={col.key}
                                                                     className={`p-2 border border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                                         col
-                                                                    )} dark:bg-gray-800 dark:text-white`}
+                                                                    )} break-words dark:bg-gray-800 dark:text-white`}
                                                                 >
                                                                     <input
                                                                         type="text"
@@ -639,16 +667,32 @@ export function DataTable({
                                                                     key={col.key}
                                                                     className={`p-2 border border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                                         col
-                                                                    )} dark:bg-gray-800 dark:text-white`}
+                                                                    )} break-words dark:bg-gray-800 dark:text-white`}
                                                                 >
-                                                                    <input
+                                                                    <textarea
                                                                         type={inputType}
                                                                         value={editValue || ""}
-                                                                        onChange={(e) => setEditValue(e.target.value)}
+                                                                        onChange={(e) => {
+                                                                            let val = e.target.value.trim();
+                                                                            // Для чисел и цены фильтруем только цифры и запятую/точку
+                                                                            if (col.type === "price")
+                                                                                val = val.replace(/[^0-9.,]/g, "");
+
+                                                                            if (col.type === "number")
+                                                                                val = val.replace(/[^0-9.]/g, "");
+
+                                                                            setEditValue(val);
+
+                                                                            // Авто-рост textarea
+                                                                            e.target.style.height = "auto"; // сбрасываем высоту
+                                                                            e.target.style.height = `${e.target.scrollHeight}px`;
+                                                                        }}
                                                                         onBlur={saveEdit}
                                                                         onKeyDown={handleKeyDown}
                                                                         autoFocus
-                                                                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white"
+                                                                        rows={1}
+                                                                        className="break-words w-full border border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white resize-none"
+                                                                        style={{ minHeight: "1.5rem", overflow: "hidden" }}
                                                                     />
                                                                 </td>
                                                             );
@@ -716,8 +760,9 @@ export function DataTable({
                             </table>
                         </div>
                         {/* Пагинация */}
-                        <div className="flex justify-between items-center p-1 text-sm">
-                            <div className="relative inline-block w-18 p-2">
+                        <div className="flex flex-col sm:flex-row justify-between items-center p-1 text-sm">
+                            {/* Левая часть: select и информация о странице */}
+                            <div className="relative inline-block w-20 sm:w-auto p-2">
                                 <select
                                     value={itemsPerPage}
                                     onChange={handleItemsPerPageChange}
@@ -736,7 +781,9 @@ export function DataTable({
                                     </svg>
                                 </div>
                             </div>
-                            <div className="flex justify-center items-center space-x-1 p-2">
+
+                            {/* Правая часть: кнопки пагинации */}
+                            <div className="flex flex-wrap justify-center items-center space-x-1 p-2">
                                 {onRefresh && (
                                     <button
                                         onClick={onRefresh}
@@ -753,10 +800,10 @@ export function DataTable({
                                 {totalPages > 1 && (
                                     <div className="flex flex-wrap justify-center gap-1 p-2">
                                         {/* Назад */}
-                                        < button
+                                        <button
                                             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                                             disabled={currentPage === 1}
-                                            className="px-2 py-1 rounded disabled:opacity-50 hover:bg-gray-200"
+                                            className="px-1 py-1 rounded disabled:opacity-50 hover:bg-gray-200"
                                         >
                                             &lt;
                                         </button>
@@ -778,14 +825,14 @@ export function DataTable({
                                                     <button
                                                         key={1}
                                                         onClick={() => setCurrentPage(1)}
-                                                        className={`px-3 py-1 rounded ${currentPage === 1 ? "bg-gray-200 text-black" : "hover:bg-gray-200"
+                                                        className={`px-1 py-1 rounded ${currentPage === 1 ? "bg-gray-200 text-black" : "hover:bg-gray-200"
                                                             }`}
                                                     >
                                                         1
                                                     </button>
                                                 );
                                                 if (startPage > 2) {
-                                                    pages.push(<span key="start-dots" className="px-2">...</span>);
+                                                    pages.push(<span key="start-dots" className="px-0">...</span>);
                                                 }
                                             }
 
@@ -795,7 +842,7 @@ export function DataTable({
                                                     <button
                                                         key={i}
                                                         onClick={() => setCurrentPage(i)}
-                                                        className={`px-3 py-1 rounded ${currentPage === i ? "bg-gray-200 text-black" : "hover:bg-gray-200"
+                                                        className={`px-2 py-1 rounded ${currentPage === i ? "bg-gray-200 text-black" : "hover:bg-gray-200"
                                                             }`}
                                                     >
                                                         {i}
@@ -806,13 +853,13 @@ export function DataTable({
                                             // Последняя страница и "..."
                                             if (endPage < totalPages) {
                                                 if (endPage < totalPages - 1) {
-                                                    pages.push(<span key="end-dots" className="px-2">...</span>);
+                                                    pages.push(<span key="end-dots" className="px-0">...</span>);
                                                 }
                                                 pages.push(
                                                     <button
                                                         key={totalPages}
                                                         onClick={() => setCurrentPage(totalPages)}
-                                                        className={`px-3 py-1 rounded ${currentPage === totalPages ? "bg-gray-200 text-black" : "hover:bg-gray-200"
+                                                        className={`px-1 py-1 rounded ${currentPage === totalPages ? "bg-gray-200 text-black" : "hover:bg-gray-200"
                                                             }`}
                                                     >
                                                         {totalPages}
@@ -833,7 +880,6 @@ export function DataTable({
                                         </button>
                                     </div>
                                 )}
-
                             </div>
                         </div>
                     </div>

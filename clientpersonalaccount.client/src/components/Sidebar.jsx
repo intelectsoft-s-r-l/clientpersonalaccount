@@ -271,8 +271,8 @@ export default function Sidebar() {
             <aside
                 className={`bg-white shadow-lg z-40 transition-transform duration-300
   ${isMobile
-                        ? `fixed top-0 left-0 h-full transform ${collapsed ? "-translate-x-full" : "translate-x-0 w-21"}`
-                        : `sticky top-0 h-screen transition-width ${collapsed ? "w-21" : "w-64"}`
+                        ? `fixed top-0 left-0 h-full transform ${collapsed ? "-translate-x-full" : "translate-x-0 w-20"}`
+                        : `sticky top-0 h-screen transition-width ${collapsed ? "w-20" : "w-64"}`
                     }`}
             >
                 <div className="sidebar-content flex flex-col h-full justify-between">
@@ -285,7 +285,7 @@ export default function Sidebar() {
                                         <button
                                             key={id}
                                             type="button"
-                                            className={`hover:scale-110 nav-link${activePage === id ? " active" : ""}${disabled ? " disabled" : ""}`}
+                                            className={`hover:bg-gray-100 nav-link${activePage === id ? " active" : ""}${disabled ? " disabled" : ""}`}
                                             onClick={disabled ? undefined : (e) => handleClick(id, e)}
                                             disabled={disabled}
                                             title={t(key)}

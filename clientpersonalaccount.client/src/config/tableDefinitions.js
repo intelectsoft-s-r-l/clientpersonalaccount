@@ -4,7 +4,7 @@ export const tableDefinitions = (t, data) => [
         title: t("Tabs.Payments"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "2%", filterable: true, align: "left" },
+            { key: "ID", label: "ID", width: "2.5%", filterable: true, align: "left" },
             { key: "Name", label: t("Name"), width: "50%", filterable: true, align: "left" },
             { key: "IsActive", label: t("IsActive"), type: "boolean", width: "5%", editable: true, filterable: true },
             { key: "MaxPaymentAmount", label: t("MaxPaymentAmount"), width: "10%", type: "price", editable: true, filterable: true, align: "right" },
@@ -43,7 +43,7 @@ export const tableDefinitions = (t, data) => [
         title: t("Tabs.Groups"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "2%", editable: false, filterable: true, align: "left" },
+            { key: "ID", label: "ID", width: "1.95%", editable: false, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, width: "50%", filterable: true, align: "left" },
         ],
     },
@@ -52,7 +52,7 @@ export const tableDefinitions = (t, data) => [
         title: t("Tabs.Departments"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "3%", editable: false, filterable: true, align: "left" },
+            { key: "ID", label: "ID", width: "3.55%", editable: false, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, width: "80%", filterable: true, align: "left" },
             {
                 key: "Assortment",
@@ -84,7 +84,7 @@ export const tableDefinitions = (t, data) => [
         title: t("Tabs.Users"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "3%", editable: false, filterable: true, align: "left" },
+            { key: "ID", label: "ID", width: "2.3%", editable: false, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, width: "55%", filterable: true, align: "left" },
             { key: "PIN", label: "PIN", width: "5%", editable: true, type: "number", filterable: true, align: "left" },
         ],
@@ -104,9 +104,10 @@ export const tableDefinitions = (t, data) => [
         title: t("VatSetting"),
         idField: "ID",
         columns: [
+
+            { key: "VatCode", label: t("VATCode"), width: "30%", editable: true },
             { key: "VatValue", label: t("VatValue"), width: "30%", type: "number", editable: true },
-            { key: "VatCode", label: t("VatCode"), width: "30%", editable: true },
-            { key: "NoVat", label: t("NotVat"), width: "30%", type: "boolean", editable: true },
+            { key: "NoVat", label: t("NotVat"), width: "5%", type: "boolean", editable: true },
         ],
     },
     {
