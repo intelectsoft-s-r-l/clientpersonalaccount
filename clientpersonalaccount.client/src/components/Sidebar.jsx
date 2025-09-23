@@ -299,9 +299,9 @@ export default function Sidebar() {
                         ))}
                     </div>
 
-                    <div className="flex flex-col items-center">
+                    <div className="flex flex-col">
                         {/* Лого */}
-                        <div className="flex-shrink-0 brand-logo">
+                        <div className="flex flex-shrink-0 items-center justify-center mb-3 ml-3">
                             {!isCollapsed ? (
                                 <img src={Logo} alt="Fiscal Cloud Logo" className="w-10 h-10" />
                             ) : (
@@ -314,8 +314,7 @@ export default function Sidebar() {
                             onClick={logout}
                             aria-label={t("Logout")}
                             title={t("Logout")}
-                            className={`flex items-center justify-center w-18 h-18 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform hover:scale-105 ${isCollapsed ? "justify-center" : "justify-start px-3"
-                                }`}
+                            className={`flex items-center justify-center w-18 h-18 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform hover:scale-105`}
                         >
                             <img
                                 src="/icons/Log_Out.svg"
