@@ -368,12 +368,12 @@ export default function DashboardPage() {
             {/* Header */}
             <header className="bg-white border border-gray-100 rounded-2xl mb-2">
                 <div className="w-full px-2 py-2 flex flex-wrap justify-start items-center gap-2">
-                    <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-2">
                         {/* Device Selector */}
                         <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setIsOpen(!isOpen)}
-                                className="flex items-center gap-2 bg-white border rounded-xl px-3 py-2 text-sm font-medium text-gray-700 hover:border-cyan-400 hover:shadow-md transition"
+                                className="flex items-center gap-1 bg-white border rounded-xl px-2 py-2 text-sm font-medium text-gray-700 hover:border-cyan-400 hover:shadow-md transition"
                             >
                                 {allDevices
                                     ? t("AllDevices")
@@ -420,12 +420,12 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Time Range Buttons */}
-                        <div className="flex flex-wrap bg-gray-100 rounded-lg p-1 gap-2">
+                        <div className="flex flex-wrap bg-gray-100 rounded-lg p-2 gap-2">
                             {["day", "week", "month", "year", "custom"].map((range) => (
                                 <button
                                     key={range}
                                     onClick={() => setSelectedRange(range)}
-                                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors hover:scale-105 ${selectedRange === range
+                                    className={`px-2 py-2 rounded-md text-sm font-medium transition-colors hover:scale-105 ${selectedRange === range
                                         ? "bg-white shadow text-gray-900"
                                         : "text-gray-600 hover:text-gray-900"
                                         }`}
@@ -442,7 +442,7 @@ export default function DashboardPage() {
 
                                 <div className="flex gap-2">
                                     {/* От */}
-                                    <div className="flex-1 inset-0 z-50">
+                                    <div className="flex-1 inset-0 z-30">
                                         <label className="text-xs text-gray-500">{t("StartDate")}</label>
                                         <Datepicker
                                             asSingle={true}
@@ -464,7 +464,7 @@ export default function DashboardPage() {
                                     </div>
 
                                     {/* До */}
-                                    <div className="flex-1 inset-0 z-50">
+                                    <div className="flex-1 inset-0 z-30">
                                         <label className="text-xs text-gray-500">{t("DateEnd")}</label>
                                         <Datepicker
                                             asSingle={true}

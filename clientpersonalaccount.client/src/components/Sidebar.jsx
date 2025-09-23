@@ -269,7 +269,7 @@ export default function Sidebar() {
                 />
             )}
             <aside
-                className={`bg-white shadow-lg z-40 transition-transform duration-300
+                className={`bg-white/90 backdrop-opacity-60 shadow-lg z-40 transition-transform duration-300
   ${isMobile
                         ? `fixed top-0 left-0 h-full transform ${collapsed ? "-translate-x-full" : "translate-x-0 w-20"}`
                         : `sticky top-0 h-screen transition-width ${collapsed ? "w-20" : "w-64"}`
