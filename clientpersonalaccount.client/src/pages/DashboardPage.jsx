@@ -373,7 +373,7 @@ export default function DashboardPage() {
                         <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setIsOpen(!isOpen)}
-                                className="flex items-center gap-2 bg-white border rounded-xl px-4 py-2 text-sm font-medium text-gray-700 hover:border-cyan-400 hover:shadow-md transition"
+                                className="flex items-center gap-2 bg-white border rounded-xl px-3 py-2 text-sm font-medium text-gray-700 hover:border-cyan-400 hover:shadow-md transition"
                             >
                                 {allDevices
                                     ? t("AllDevices")
@@ -425,7 +425,7 @@ export default function DashboardPage() {
                                 <button
                                     key={range}
                                     onClick={() => setSelectedRange(range)}
-                                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors hover:scale-105 ${selectedRange === range
+                                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors hover:scale-105 ${selectedRange === range
                                         ? "bg-white shadow text-gray-900"
                                         : "text-gray-600 hover:text-gray-900"
                                         }`}
@@ -442,7 +442,7 @@ export default function DashboardPage() {
 
                                 <div className="flex gap-2">
                                     {/* От */}
-                                    <div className="flex-1">
+                                    <div className="flex-1 inset-0 z-50">
                                         <label className="text-xs text-gray-500">{t("StartDate")}</label>
                                         <Datepicker
                                             asSingle={true}
@@ -456,12 +456,15 @@ export default function DashboardPage() {
                                             displayFormat="DD.MM.YYYY"
                                             maxDate={period?.endDate || new Date()}
                                             minDate={new Date(2000, 0, 1)}
-                                            inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
+                                            inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+                                            useRange={false}
+                                            withPortal={true}
+                                            popperPlacement="top-end"
                                         />
                                     </div>
 
                                     {/* До */}
-                                    <div className="flex-1">
+                                    <div className="flex-1 inset-0 z-50">
                                         <label className="text-xs text-gray-500">{t("DateEnd")}</label>
                                         <Datepicker
                                             asSingle={true}
@@ -473,7 +476,10 @@ export default function DashboardPage() {
                                             displayFormat="DD.MM.YYYY"
                                             minDate={period?.startDate || new Date()}
                                             maxDate={new Date()}
-                                            inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
+                                            inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+                                            useRange={false}
+                                            withPortal={true}
+                                            popperPlacement="top-end"
                                         />
                                     </div>
                                 </div>

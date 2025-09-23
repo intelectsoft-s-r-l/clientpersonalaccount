@@ -5,12 +5,17 @@ import { tableDefinitions } from "../config/tableDefinitions";
 import { useTranslation } from "react-i18next";
 import { validateDevice } from "../validation/validationSchemas";
 import ValidationModal from "./ValidationModal";
+import Toast from "../components/Toast";
 
 const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, ref) => {
     const [tableData, setTableData] = useState(data);
     const { t } = useTranslation();
     const [validationErrors, setValidationErrors] = useState({});
     const [showErrors, setShowErrors] = useState(false);
+    const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+    const [showSuccessMessage, setShowSuccessMessage] = useState(null);
+    const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
+    const [showErrorMessage, setShowErrorMessage] = useState(null);
 
     const TimeSelectEditor = ({ value, onChange, onBlur }) => {
 
@@ -58,11 +63,26 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
     if (!tableDef) return null;
 
     // Правильно мапим колонки
-    const columns = tableDef.columns.map((col) => ({
-        ...col,
-        editable: col.editable ?? true,
-        dateEditor: col.key === "StartOfPeriod" || col.key === "EndOfPeriod" ? TimeSelectEditor : undefined,
-    }));
+    const columns = tableDef.columns.map((col) => {
+        if (col.key === "DateOfChange") {
+            return {
+                ...col,
+                editable: col.editable ?? true,
+                render: (value) => {
+                    if (!value) return "";
+                    const date = new Date(value);
+                    const pad = (n) => n.toString().padStart(2, "0");
+                    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+                },
+            };
+        }
+
+        return {
+            ...col,
+            editable: col.editable ?? true,
+            dateEditor: col.key === "StartOfPeriod" || col.key === "EndOfPeriod" ? TimeSelectEditor : undefined,
+        };
+    });
 
     const handleCellUpdate = (rowId, columnKey, newValue, callback) => {
         setTableData((prevData) => {
@@ -105,11 +125,26 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
     };
 
     const handleAddRow = () => {
+        // Проверяем, есть ли строки с незаполненными полями (кроме ID)
+        const hasEmptyRow = tableData.some(row =>
+            tableDef.columns.some(col =>
+                col.key !== "ID" && (!row[col.key] || row[col.key].toString().trim() === "")
+            )
+        );
+
+        if (hasEmptyRow) {
+            setShowErrorMessage(t("FieldsControlerForNull"));
+            setIsErrorModalVisible(true);
+            return;
+        }
+
+        // Находим максимальный ID
         const maxId = tableData.reduce((max, row) => {
             const id = Number(row.ID);
             return !isNaN(id) && id > max ? id : max;
         }, 0);
 
+        // Создаём пустые поля для новой строки
         const emptyFields = tableDef.columns.reduce((acc, col) => {
             if (col.key !== "ID") {
                 acc[col.key] = "";
@@ -127,18 +162,20 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
 
     const handleDeleteRow = (rowId) => {
         setTableData((prevData) => {
-            const newData = prevData.map(row => {
-                if (row.ID === rowId) {
-                    return {
-                        ...row,
-                        VatValue: 0,
-                        NotVat: false,
-                        VatCode: "-",
-                    };
-                }
-                return row;
-            });
-
+            let newData = null;
+            if (tableKey === "vatRates")
+                newData = prevData.map(row => {
+                    if (row.ID === rowId) {
+                        return {
+                            ...row,
+                            VatValue: 0,
+                            NotVat: false,
+                            VatCode: "-",
+                        };
+                    }
+                });
+            else
+                newData = tableData.filter((row) => row.ID !== rowId);
             onDataChange && onDataChange(newData);
             return newData;
         });
@@ -154,7 +191,19 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
                 onCellUpdate={handleCellUpdate}
                 onAddRow={tableKey === "vatHistory" ? undefined : handleAddRow}
                 onDeleteRow={tableKey === "vatHistory" ? undefined : handleDeleteRow}
-                tableClassName="min-w-[1200px] xl:min-w-[100px]"
+                tableClassName="min-w-[100px]"
+            />
+            <Toast
+                visible={isSuccessModalVisible}
+                message={showSuccessMessage}
+                onClose={() => setIsSuccessModalVisible(false)}
+                type="success"
+            />
+            <Toast
+                visible={isErrorModalVisible}
+                message={showErrorMessage}
+                onClose={() => setIsErrorModalVisible(false)}
+                type="error"
             />
             <ValidationModal
                 errors={validationErrors}

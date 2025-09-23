@@ -867,5 +867,10 @@
   "DeleteError": "Deletion error",
   "Duplicate": "Duplicate banks are not allowed",
   "DepartmentsDuplicate": "This range has already been assigned to another department",
-  "NoData": "No data to save"
+  "NoData": "No data to save",
+  "True": "True",
+  "False": "False",
+  "AreYouSureDelete": "Are you sure you want to delete this entry",
+  "EnterLoginToConfirm": "Do you really want to delete this bank? To confirm, first enter \"Bank login\"",
+  "FieldsControlerForNull": "Please fill in all fields of the previous line before adding a new one"
 }

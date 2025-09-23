@@ -134,7 +134,7 @@ export default function BankModal({ banks, bank, onClose, onSave, onSuccess, onE
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 pl-4 pr-4"
             onMouseDown={(e) => {
                 // Закрываем только если клик по самому фону (а не дочерним элементам)
                 if (e.target === e.currentTarget) {

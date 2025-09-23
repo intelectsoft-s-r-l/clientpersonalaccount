@@ -88,77 +88,86 @@ export default function LayoutWithSidebar({ children }) {
     return (
         <div className="flex h-screen">
             <Sidebar onNavigate={setActivePage} />
-            <main className={`transition-[margin] duration-300 overflow-y-auto flex-1 min-w-0l p-4 dark:bg-gray-700`}>
+            <main className="transition-[margin] duration-300 overflow-y-auto flex-1 min-w-0 p-4 dark:bg-gray-700">
                 {/* Верхняя панель */}
-                <div className="flex flex-wrap sm:flex-nowrap justify-between items-center w-full mb-1 gap-2">
-
-                    {/* Левая часть: кнопка + breadcrumbs */}
-                    <div className="flex items-center gap-2">
+                <div className="flex flex-col w-full mb-2 gap-2">
+                    {/* Первая строка: компания + кнопка меню (слева), панель пользователя (справа) */}
+                    <div className="flex flex-wrap justify-between items-center w-full">
+                        {/* Левая часть */}
                         <div className="flex items-center text-gray-500 gap-2">
                             <span className="mb-3">{user.Company}</span>
                             <button
                                 type="button"
                                 onClick={() => setCollapsed(!collapsed)}
-                                className="collapse-button "
+                                className="collapse-button"
                                 aria-label={collapsed ? "Развернуть меню" : "Свернуть меню"}
                                 title={collapsed ? "Развернуть меню" : "Свернуть меню"}
                             >
                                 <i className="bi bi-list" aria-hidden="true"></i>
                             </button>
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-300">
-                            <nav aria-label="Breadcrumb">
-                                <ol className="inline-flex items-center space-x-1 md:space-x-2">
-                                    <li className="inline-flex items-center">
-                                        <Link
-                                            to="/Dashboard"
-                                            className="inline-flex items-center text-gray-600 dark:text-gray-300 "
-                                        >
-                                            <img src="/icons/House_01.svg" className="w-6 h-6" />
-                                        </Link>
-                                    </li>
-                                    {pathnames.map((value, index) => {
-                                        const to = `/${pathnames.slice(0, index + 1).join("/")}`;
-                                        const isLast = index === pathnames.length - 1;
-                                        let text = breadcrumbNameMap[value] || decodeURIComponent(value);
 
-                                        if (isLast && value === currentDeviceId && fiscalDevice) {
-                                            text = `${fiscalDevice.name} (${fiscalDevice.number})`;
-                                        }
-
-                                        return (
-                                            <li key={to} className="inline-flex items-center">
-                                                <svg
-                                                    className="w-4 h-4 text-gray-400"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                                </svg>
-                                                {isLast ? (
-                                                    <span className="text-gray-600 dark:text-gray-300">{text}</span>
-                                                ) : (
-                                                    <Link
-                                                        to={to}
-                                                        className="text-gray-600 dark:text-gray-300 no-underline"
-                                                    >
-                                                        {text}
-                                                    </Link>
-                                                )}
-                                            </li>
-                                        );
-                                    })}
-                                </ol>
-                            </nav>
+                        {/* Правая часть: панель пользователя */}
+                        <div className="flex flex-wrap items-center gap-3 xl:gap-2 ml-auto mb-3">
+                            <LanguageSwitcher />
+                            <div className="w-9 h-9 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-sm overflow-hidden">
+                                {hasPhoto ? (
+                                    <img src={userPhoto} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                                ) : (
+                                    initials || "U"
+                                )}
+                            </div>
+                            <span className="dark:text-white">{fullName}</span>
                         </div>
                     </div>
 
-                    {/* Панель пользователя */}
-                    <div className="flex items-center gap-3 xl:gap-2 mb-3">
+                    {/* Вторая строка: breadcrumbs */}
+                    <div className="flex items-center text-gray-500 gap-2 flex-wrap">
+                        <nav aria-label="Breadcrumb" className="flex-1">
+                            <ol className="flex flex-wrap items-center space-x-1 md:space-x-2 pl-0">
+                                <li className="inline-flex items-center">
+                                    <Link
+                                        to="/Dashboard"
+                                        className="inline-flex items-center text-gray-600 dark:text-gray-300 flex-shrink-0"
+                                    >
+                                        <img src="/icons/House_01.svg" className="w-6 h-6" />
+                                    </Link>
+                                </li>
+                                {pathnames.map((value, index) => {
+                                    const to = `/${pathnames.slice(0, index + 1).join("/")}`;
+                                    const isLast = index === pathnames.length - 1;
+                                    let text = breadcrumbNameMap[value] || decodeURIComponent(value);
+
+                                    if (isLast && value === currentDeviceId && fiscalDevice) {
+                                        text = `${fiscalDevice.name} (${fiscalDevice.number})`;
+                                    }
+
+                                    return (
+                                        <li key={to} className="inline-flex items-center">
+                                            <svg
+                                                className="w-4 h-4 text-gray-400"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                            {isLast ? (
+                                                <span className="text-gray-600 dark:text-gray-300">{text}</span>
+                                            ) : (
+                                                <Link to={to} className="text-gray-600 dark:text-gray-300 no-underline">
+                                                    {text}
+                                                </Link>
+                                            )}
+                                        </li>
+                                    );
+                                })}
+                            </ol>
+                        </nav>
+
                         {fiscalDevice && (
-                            <div className="flex items-center text-sm text-gray-500 gap-2">
+                            <div className="flex items-center text-sm text-gray-500 gap-2 ml-auto flex-shrink-0 mb-3">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     className="h-4 w-4 text-gray-400"
@@ -179,22 +188,18 @@ export default function LayoutWithSidebar({ children }) {
                                         d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                                     />
                                 </svg>
-                                <span>{fiscalDevice.address}</span>
+                                <span className="mt-1 text-gray-500 truncate max-w-xs">
+                                    {fiscalDevice.address}
+                                </span>
                             </div>
                         )}
-                        <LanguageSwitcher />
-                        <div className="w-9 h-9 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-sm overflow-hidden">
-                            {hasPhoto ? (
-                                <img src={userPhoto} alt="Avatar" className="w-full h-full object-cover rounded-full" />
-                            ) : (
-                                initials || "U"
-                            )}
-                        </div>
-                        <span className="dark:text-white">{fullName}</span>
                     </div>
+
                 </div>
+
                 {children}
             </main>
+
         </div>
     );
 }

@@ -5,9 +5,9 @@ export const tableDefinitions = (t, data) => [
         idField: "ID",
         columns: [
             { key: "ID", label: "ID", width: "2.5%", filterable: true, align: "left" },
-            { key: "Name", label: t("Name"), width: "50%", filterable: true, align: "left" },
-            { key: "IsActive", label: t("IsActive"), type: "boolean", width: "5%", editable: true, filterable: true },
-            { key: "MaxPaymentAmount", label: t("MaxPaymentAmount"), width: "10%", type: "price", editable: true, filterable: true, align: "right" },
+            { key: "Name", label: t("Name"), filterable: true, align: "left" },
+            { key: "IsActive", label: t("IsActive"), type: "boolean", editable: true, filterable: true },
+            { key: "MaxPaymentAmount", label: t("MaxPaymentAmount"), type: "price", editable: true, filterable: true, align: "right" },
         ],
     },
     {
@@ -16,18 +16,17 @@ export const tableDefinitions = (t, data) => [
         idField: "ID",
         columns: [
             { key: "ID", label: "ID", width: "3%", editable: false, filterable: true, align: "left" },
-            { key: "PLU", label: "Plu", editable: true, type: "number", width: "5%", filterable: true, align: "left" },
-            { key: "Code", label: t("Code"), editable: true, type: "number", width: "5%", filterable: true, align: "left" },
-            { key: "Name", label: t("Name"), editable: true, width: "30%", filterable: true, align: "left" },
-            { key: "Price", label: t("Price"), editable: true, type: "price", width: "5%", filterable: true, align: "right" },
-            { key: "Barcode", label: t("Barcode"), editable: true, type: "number", width: "12%", filterable: true, align: "left" },
-            { key: "VATCode", label: t("VATCode"), editable: true, width: "6%", filterable: true, align: "left" },
+            { key: "PLU", label: "Plu", editable: true, type: "number", filterable: true, align: "left" },
+            { key: "Code", label: t("Code"), editable: true, type: "number", filterable: true, align: "left" },
+            { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
+            { key: "Price", label: t("Price"), editable: true, type: "price", filterable: true, align: "right" },
+            { key: "Barcode", label: t("Barcode"), editable: true, type: "number", filterable: true, align: "left" },
+            { key: "VATCode", label: t("VATCode"), editable: true, filterable: true, align: "left" },
             {
                 key: "Group",
                 label: t("Group"),
                 editable: true,
                 type: "select",
-                width: "14%",
                 // options будут подставлены динамически в AssortmentTab из extraData.groups
                 render: (value, row, extraData) => {
                     const option = extraData.groups.find(g => g.ID.toString() === value || g.ID === value);
@@ -35,7 +34,7 @@ export const tableDefinitions = (t, data) => [
                 },
                 filterable: true, align: "left"
             },
-            { key: "TME", label: "Tme", editable: true, type: "boolean", width: "4%", filterable: true, align: "left" }
+            { key: "TME", label: "Tme", editable: true, type: "boolean", filterable: true, align: "left" }
         ],
     },
     {
@@ -44,7 +43,7 @@ export const tableDefinitions = (t, data) => [
         idField: "ID",
         columns: [
             { key: "ID", label: "ID", width: "1.95%", editable: false, filterable: true, align: "left" },
-            { key: "Name", label: t("Name"), editable: true, width: "50%", filterable: true, align: "left" },
+            { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
         ],
     },
     {
@@ -53,12 +52,13 @@ export const tableDefinitions = (t, data) => [
         idField: "ID",
         columns: [
             { key: "ID", label: "ID", width: "3.55%", editable: false, filterable: true, align: "left" },
-            { key: "Name", label: t("Name"), editable: true, width: "80%", filterable: true, align: "left" },
+            { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
             {
                 key: "Assortment",
                 label: t("Assortment"),
                 editable: true,
                 type: "select",
+                width: 160,
                 filterable: true,
                 // Опции будут подставлены динамически из extraData.products
                 render: (value, row, extraData) => {
@@ -85,8 +85,8 @@ export const tableDefinitions = (t, data) => [
         idField: "ID",
         columns: [
             { key: "ID", label: "ID", width: "2.3%", editable: false, filterable: true, align: "left" },
-            { key: "Name", label: t("Name"), editable: true, width: "55%", filterable: true, align: "left" },
-            { key: "PIN", label: "PIN", width: "5%", editable: true, type: "number", filterable: true, align: "left" },
+            { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
+            { key: "PIN", label: "PIN", editable: true, type: "number", filterable: true, align: "left", width: 80 },
         ],
     },
     {
@@ -94,9 +94,9 @@ export const tableDefinitions = (t, data) => [
         title: t("VATHistory"),
         idField: "ID",
         columns: [
-            { key: "VatValue", label: t("VatValue"), width: "33%", editable: false },
-            { key: "VatCode", label: t("VatCode"), width: "33%", editable: false },
-            { key: "DateOfChange", label: t("DateOfChange"), width: "36%", editable: false },
+            { key: "VatValue", label: t("VatValue"), editable: false },
+            { key: "VatCode", label: t("VATCode"), editable: false },
+            { key: "DateOfChange", label: t("DateOfChange"), editable: false },
         ],
     },
     {
@@ -105,9 +105,9 @@ export const tableDefinitions = (t, data) => [
         idField: "ID",
         columns: [
 
-            { key: "VatCode", label: t("VATCode"), width: "30%", editable: true },
-            { key: "VatValue", label: t("VatValue"), width: "30%", type: "number", editable: true },
-            { key: "NoVat", label: t("NotVat"), width: "5%", type: "boolean", editable: true },
+            { key: "VatCode", label: t("VATCode"), editable: true },
+            { key: "VatValue", label: t("VatValue"), type: "number", editable: true },
+            { key: "NoVat", label: t("NotVat"), type: "boolean", editable: true },
         ],
     },
     {
@@ -115,14 +115,14 @@ export const tableDefinitions = (t, data) => [
         title: t("TaxiTariff"),
         idField: "ID",
         columns: [
-            { key: "Name", label: t("Name"), width: "13%", editable: true, align: "left" },
-            { key: "Number", label: t("Number"), type: "number", width: "8%", editable: true },
-            { key: "PricePerHour", label: t("PricePerHour"), type: "number", width: "12%", editable: true },
-            { key: "PricePerKm", label: t("PricePerKm"), type: "number", width: "16%", editable: true },
-            { key: "PriceStart", label: t("PriceStart"), type: "number", width: "12%", editable: true },
-            { key: "VatCode", label: t("VatCode"), width: "10%", editable: true },
-            { key: "StartOfPeriod", label: t("StartOfPeriod"), width: "12%", editable: true },
-            { key: "EndOfPeriod", label: t("EndOfPeriod"), width: "12%", editable: true },
+            { key: "Name", label: t("Name"), editable: true, align: "left" },
+            { key: "Number", label: t("Number"), type: "number", editable: true },
+            { key: "PricePerHour", label: t("PricePerHour"), type: "number", editable: true },
+            { key: "PricePerKm", label: t("PricePerKm"), type: "number", editable: true },
+            { key: "PriceStart", label: t("PriceStart"), type: "number", editable: true },
+            { key: "VatCode", label: t("VATCode"), editable: true },
+            { key: "StartOfPeriod", label: t("StartOfPeriod"), editable: true },
+            { key: "EndOfPeriod", label: t("EndOfPeriod"), editable: true },
         ],
     }
 ];

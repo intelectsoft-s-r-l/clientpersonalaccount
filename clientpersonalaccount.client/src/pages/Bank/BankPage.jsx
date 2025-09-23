@@ -14,6 +14,80 @@ function formatDate(dateStr) {
     return date.toLocaleDateString("ru-RU") + " " + date.toLocaleTimeString("ru-RU");
 }
 
+function ConfirmDeleteBankModal({ isOpen, onClose, onConfirm, bank, t }) {
+    const [inputLogin, setInputLogin] = useState("");
+
+    useEffect(() => {
+        if (!isOpen) setInputLogin("");
+    }, [isOpen]);
+
+    if (!isOpen || !bank) return null;
+
+    return (
+         <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            onMouseDown={(e) => {
+                // Закрываем только если клик по самому фону (а не дочерним элементам)
+                if (e.target === e.currentTarget) {
+                    onClose();
+                }
+            }}
+        >
+            <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 pl-4 pr-4"
+                onClick={onClose}
+            >
+                <div
+                    className="relative bg-white w-full max-w-2xl rounded-2xl shadow-xl p-6 animate-fadeIn"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <button
+                        onClick={onClose}
+                        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-2xl"
+                    >
+                        &times;
+                    </button>
+                    <h3 className="font-semibold block mb-3">
+                        {t("EnterLoginToConfirm")}: <strong>{bank.login}</strong>
+                    </h3>
+                    <div className="mb-3">
+                        <input
+                            name="login"
+                            value={inputLogin}
+                            onChange={(e) => setInputLogin(e.target.value)}
+                            className="w-full border px-3 py-2 rounded"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="mb-4 text-gray-500 rounded dark:text-gray-300">
+                        <input
+                            name="nameFromApi"
+                            value={bank.nameFromApi}
+                            className="w-full border px-3 py-2 rounded"
+                            required
+                            disabled
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-2">
+                        <button onClick={onClose} className="px-4 py-2 rounded border mr-auto">
+                            {t("Cancel")}
+                        </button>
+                        <button
+                            onClick={() => onConfirm(inputLogin)}
+                            disabled={inputLogin !== bank.login}
+                            className="px-4 py-2 rounded bg-red-600 text-white disabled:opacity-50"
+                        >
+                            {t("Delete")}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function BankPage() {
     const [tapxphoneSettings, setTapxphoneSettings] = useState([]);
     const [bankNames, setBankNames] = useState({});
@@ -25,7 +99,8 @@ export default function BankPage() {
     const [showSuccessMessage, setShowSuccessMessage] = useState(null);
     const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
     const [showErrorMessage, setShowErrorMessage] = useState(null);
-
+    const [deleteBankModalOpen, setDeleteBankModalOpen] = useState(false);
+    const [bankToDelete, setBankToDelete] = useState(null);
     const [selectedTapxphoneSettings, setSelectedTapxphoneSettings] = useState(null);
 
     const fetchBankNames = async () => {
@@ -91,11 +166,21 @@ export default function BankPage() {
         fetchBankNames();
     }, [token]);
 
-    const handleDeleteBank = async (bank) => {
-        if (!bank?.oid) return;
+    const handleDeleteBankClick = (bank) => {
+        setBankToDelete(bank);
+        setDeleteBankModalOpen(true);
+    };
+
+    const handleConfirmDeleteBank = async (enteredLogin) => {
+        if (!bankToDelete) return;
+
+        if (enteredLogin !== bankToDelete.login) {
+            alert(t("LoginMismatch"));
+            return;
+        }
 
         try {
-            await apiService.proxyRequest(`/MobileCashRegister/web/DeleteTapxphoneSettings?OID=${bank.oid}`, {
+            await apiService.proxyRequest(`/MobileCashRegister/web/DeleteTapxphoneSettings?OID=${bankToDelete.oid}`, {
                 method: "GET",
                 credentials: "include",
                 headers: {
@@ -104,13 +189,15 @@ export default function BankPage() {
                 },
             });
             fetchTapxphoneSettings();
-
             setShowSuccessMessage(t("DeleteSuccess"));
             setIsSuccessModalVisible(true);
         } catch (err) {
             console.error(err);
             setShowErrorMessage(t("DeleteError"));
             setIsErrorModalVisible(true);
+        } finally {
+            setDeleteBankModalOpen(false);
+            setBankToDelete(null);
         }
     };
 
@@ -124,17 +211,17 @@ export default function BankPage() {
     });
 
     const columns = [
-        { key: "nameFromApi", label: t("Name"), filterable: true, width: "30%" },
-        { key: "login", label: t("Login"), filterable: true, width: "30%" },
+        { key: "nameFromApi", label: t("Name"), filterable: true, minWidth: 20 },
+        { key: "login", label: t("Login"), filterable: true, minWidth: 20 },
         {
             key: "actions",
             label: "",
-            width: "3%",
+            minWidth: 1,
             render: (value, row) => (
                 <div className="flex justify-center items-center gap-1 overflow-visible">
                     <button
                         onClick={(e) => { e.stopPropagation(); setSelectedTapxphoneSettings(row); }}
-                        className="flex-shrink-0 text-dark-600 hover:text-dark-900 hover:bg-gray-100 p-2 rounded-full transition-all duration-200"
+                        className="flex-shrink-0 text-dark-600 hover:text-dark-900 hover:bg-gray-100 pl-5 pr-1 rounded-full transition-all duration-200"
                         title={t("ViewDetails")}
                     >
                         <img
@@ -146,9 +233,9 @@ export default function BankPage() {
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteBank(row);
+                            handleDeleteBankClick(row);
                         }}
-                        className="flex-shrink-0 text-dark-600 hover:text-dark-900 hover:bg-gray-100 p-2 rounded-full transition-all duration-200"
+                        className="flex-shrink-0 text-dark-600 hover:text-dark-900 hover:bg-gray-100 pr-5 rounded-full transition-all duration-200"
                         title={t("Delete")} /* Используем t() */
                     >
                         <img
@@ -175,7 +262,7 @@ export default function BankPage() {
                     selectableRow={false}
                     onRefresh={fetchTapxphoneSettings}
                     onAddRow={handleAddRow}
-                    tableClassName="min-w-[1300px]"
+                    tableClassName="min-w-[60px]"
                 />
 
                 <BankModal
@@ -206,6 +293,13 @@ export default function BankPage() {
                     message={showErrorMessage}
                     onClose={() => setIsErrorModalVisible(false)}
                     type="error"
+                />
+                <ConfirmDeleteBankModal
+                    isOpen={deleteBankModalOpen}
+                    onClose={() => setDeleteBankModalOpen(false)}
+                    onConfirm={handleConfirmDeleteBank}
+                    bank={bankToDelete}
+                    t={t}
                 />
             </div>
         </div>

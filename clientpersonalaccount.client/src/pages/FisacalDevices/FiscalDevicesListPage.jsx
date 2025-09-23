@@ -97,7 +97,7 @@ export default function FiscalDevicesListPage() {
             key: "name",
             label: t("Name"),
             filterable: true,
-            width: "10%",
+            minWidth: 20,
             render: (value, row) => (
                 <div className="flex items-center">
                     <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
@@ -185,9 +185,10 @@ export default function FiscalDevicesListPage() {
             label: "",
             filterable: false,
             sortable: false,
-            width: "7%",
+            width: 100,
+            minWidth: 100,
             render: (_, row) => (
-                <div className="flex justify-center items-center gap-1 overflow-visible">
+                <div className="flex justify-center items-center gap-1 pr-2 pl-2 overflow-hidden">
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
@@ -201,7 +202,7 @@ export default function FiscalDevicesListPage() {
                                 setIsWarningModalVisible(true);
                             }
                         }}
-                        className="flex-shrink-0 text-dark-600 hover:text-dark-900 hover:bg-gray-100 p-2 rounded-full transition-all duration-200"
+                        className="flex-shrink-0 text-dark-600 hover:text-dark-900 hover:bg-gray-100 rounded-full transition-all duration-200"
                         title={t("ActivationCode")}
                     >
                         <Copy className="w-5 h-5 hover:scale-125" />
@@ -212,7 +213,7 @@ export default function FiscalDevicesListPage() {
                             e.stopPropagation();
                             navigate(`/FiscalDevices/${row.id}`);
                         }}
-                        className="flex-shrink-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
+                        className="flex-shrink-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-all duration-200"
                         title={t("Details")}
                     >
                         <img
@@ -227,7 +228,7 @@ export default function FiscalDevicesListPage() {
                             e.stopPropagation();
                             setSelectedDevice(row);
                         }}
-                        className="flex-shrink-0 text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded-full transition-all duration-200"
+                        className="flex-shrink-0 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-full transition-all duration-200"
                         title={t("OpenModal")}
                     >
                         <img
@@ -253,7 +254,7 @@ export default function FiscalDevicesListPage() {
                     onRowClick={(device) => setSelectedDevice(device)}
                     selectableRow={false}
                     onRefresh={fetchDevices}
-                    tableClassName="min-w-[1600px]"
+                    tableClassName="min-w-[900px]"
                 />
                 <FiscalDeviceModal
                     deviceId={selectedDevice != null ? selectedDevice.id : null}

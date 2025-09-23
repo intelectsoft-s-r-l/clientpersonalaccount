@@ -166,7 +166,7 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
                 onDeleteRow={handleDeleteRow}
                 extraData={extraData}
                 onResetPayments={tableKey === "payments" ? onResetPayments : undefined}
-                tableClassName="min-w-[1600px]"
+                tableClassName="min-w-[100px]"
                 checkDuplicate={tableKey === "departments" ? checkDuplicate : undefined}
                 loading={loading}
             />

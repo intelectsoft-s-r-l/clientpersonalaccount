@@ -201,6 +201,16 @@ export default function FiscalDeviceModal({ deviceId, onClose, onSuccess }) {
     const saveTaxiTariffs = async () => {
         if (!token) return null;
 
+        const errors = validateDevice(tableData.taxiTariffs || [], activeTab, t);
+        if (Object.keys(errors).length > 0) {
+            setValidationErrors(errors);
+            setShowErrors(true);
+            return;
+        } else {
+            setValidationErrors({});
+            setShowErrors(false);
+        }
+
         const payload = {
             token: token,
             id: deviceId,

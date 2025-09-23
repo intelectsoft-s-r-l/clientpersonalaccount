@@ -1,7 +1,7 @@
 import React from "react";
 import "../../styles/receipt.css";
 
-export default function LongZReport({ model }) {
+export default function LongZReport({ model, t }) {
     if (!model) return null;
     // Подсчёт TOTAL_BRUT
     const totalBrut = model.fiscalReceiptItems
@@ -23,10 +23,38 @@ export default function LongZReport({ model }) {
         minute: "2-digit",
         hour12: false,
     });
+
+    const printReport = () => {
+        const isDev = import.meta.env.MODE === "development"; // Vite проверка режима
+
+        const receiptUrl = isDev
+            ? "https://freceipt.edi.md/ReceiptPrint/"
+            : "https://freceipt.eservicii.md/ReceiptPrint/";
+
+        // Если нужно печатать Z-подробный чек через системную печать
+        const reportDiv = document.getElementById("reportDiv");
+        if (reportDiv) {
+            printJS({
+                printable: "reportDiv",
+                type: "html",
+                scanStyles: true,
+                targetStyles: ["*"],
+                css: [
+                    "/styles/receipt.css",
+                    "/path/to/tailwind.css"
+                ]
+            });
+        } else {
+            // если нужно просто открыть URL печати для чека
+            window.open(receiptUrl, "_blank");
+        }
+    };
+
+
     return (
         <div className="billStyle dark:bg-gray-800 dark:text-white">
             <div className="receipt">
-                <div className="receiptBody">
+                <div className="receiptBody" id="reportDiv">
                     <div className="contentReceipt d-flex flex-column">
                         <div style={{ flex: "0 0 auto", width: "100%" }}>
                             <div style={{ textAlign: "center" }}>
@@ -182,6 +210,16 @@ export default function LongZReport({ model }) {
 
                         <div className="text-center">--- BON DE SERVICIU ---</div>
                     </div>
+                </div>
+                <div className="mt-3 text-center">
+                    <button
+                        id="printNext"
+                        className="btn btn-contained border rounded border-gray-900"
+                        style={{ width: 140 }}
+                        onClick={() => printReport()}
+                    >
+                        {t("Print")}
+                    </button>
                 </div>
             </div>
         </div>

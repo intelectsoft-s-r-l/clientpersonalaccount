@@ -32,6 +32,8 @@ export default function CustomDatepicker({ asSingle, value, onChange, maxDate, m
                 displayFormat="DD.MM.YYYY"
                 minDate={minDate}
                 maxDate={maxDate}
+                useRange={false}
+                withPortal={true}
                 inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
             />
         </div>

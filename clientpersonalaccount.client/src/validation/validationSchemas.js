@@ -120,5 +120,23 @@ export const validateDevice = (data, tableKey, t) => {
         });
     }
 
+    if (tableKey === "taxiTariffs") {
+        data.forEach((item, idx) => {
+            const rowErrors = {};
+            const id = item.ID || idx;
+
+            if (!item.Name || item.Name.trim() === "")
+                rowErrors.Name = t("validation.nameRequired");
+
+            if (!item.VatCode || item.VatCode.trim() === "") {
+                rowErrors.VATCode = t("validation.vatRequired");
+            } else if (!/^[A-Z_]+$/.test(item.VatCode)) {
+                rowErrors.VATCode = t("validation.vatCodeLetter"); // Например, "Только A-Z или _"
+            }
+
+            if (Object.keys(rowErrors).length > 0) errors[id] = rowErrors;
+        });
+    }
+
     return errors;
 };

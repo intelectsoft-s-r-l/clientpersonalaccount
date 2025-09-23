@@ -62,7 +62,7 @@ export default function SalesChart({ title, data, t }) {
     return (
         <div className="bg-white rounded-2xl border border-gray-100 w-full max-w-xl flex flex-col">
             {/* Header */}
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center justify-between">
                 <h6 className="text-lg font-semibold text-gray-800 mb-0">{title}</h6>
                 <select
                     className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"

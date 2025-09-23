@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from "react-i18next";
 import Select from "react-select";
+import Pagination from "../components/Pagination";
 
 export const formatPrice = (value) => {
     if (value === null || value === undefined || value === "") return "0,00";
@@ -18,6 +19,53 @@ export const formatPrice = (value) => {
         maximumFractionDigits: 2,
     }).format(num);
 };
+
+function ConfirmDeleteModal({ isOpen, onClose, onConfirm, itemName, t }) {
+    if (!isOpen) return null;
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            onMouseDown={(e) => {
+                // Закрываем только если клик по самому фону (а не дочерним элементам)
+                if (e.target === e.currentTarget) {
+                    onClose();
+                }
+            }}
+        >
+            <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 pl-4 pr-4"
+                onClick={onClose}
+            >
+                <div
+                    className="relative bg-white w-full max-w-2xl rounded-2xl shadow-xl p-6 animate-fadeIn"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <button
+                        onClick={onClose}
+                        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-2xl"
+                    >
+                        &times;
+                    </button>
+                    <p className="mb-4">
+                        {t("AreYouSureDelete")} <span className="font-bold">{itemName}</span>?
+                    </p>
+                    <div className="flex justify-end gap-2">
+                        <button onClick={onClose} className="px-4 py-2 rounded border mr-auto">
+                            {t("Cancel")}
+                        </button>
+                        <button
+                            onClick={onConfirm}
+                            className="px-4 py-2 rounded bg-red-600 text-white"
+                        >
+                            {t("Delete")}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export function DataTable({
     title,
@@ -55,6 +103,9 @@ export function DataTable({
     const [activeFilter, setActiveFilter] = useState(null);
     const thRef = useRef(null);
     const [filterWidth, setFilterWidth] = useState(undefined);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [deleteItem, setDeleteItem] = useState(null);
+
     useEffect(() => {
         if (!thRef.current) return;
 
@@ -72,6 +123,19 @@ export function DataTable({
 
     const handleClick = (key) => {
         setActiveFilter(key);
+    };
+
+    const handleDeleteClick = (row) => {
+        setDeleteItem(row);
+        setDeleteModalOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (onDeleteRow && deleteItem) {
+            onDeleteRow(deleteItem.ID);
+        }
+        setDeleteModalOpen(false);
+        setDeleteItem(null);
     };
 
     const startEdit = (rowId, columnKey, currentValue) => {
@@ -314,11 +378,6 @@ export function DataTable({
                     </h2>
 
                     <div className="flex items-center gap-2 flex-wrap">
-                        {customHeader && (
-                            <div className="mr-2">
-                                {typeof customHeader === "function" ? customHeader() : customHeader}
-                            </div>
-                        )}
 
                         {onAddRow && (
                             <button
@@ -351,6 +410,7 @@ export function DataTable({
                             </button>
                         )}
                         <div className="flex justify-end p-0 sm:p-4">
+                            {customHeader && (<div>{typeof customHeader === "function" ? customHeader() : customHeader}</div>)}
                             <input
                                 type="text"
                                 placeholder={t("Search")}
@@ -367,7 +427,7 @@ export function DataTable({
                     {/* Таблица */}
                     <div className="overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent rounded-b-3xl border border-[#dbdbdb] scrollbar-rounded">
                         <div className="overflow-x-auto">
-                            <table className={`w-full table-fixed border-collapse ${tableClassName}`}>
+                            <table className={`w-full border-collapse ${tableClassName}`}>
                                 <thead>
                                     <tr className="bg-gray-100">
                                         {columns.map((col) => {
@@ -377,12 +437,12 @@ export function DataTable({
                                                 <th
                                                     key={col.key}
                                                     ref={thRef}
-                                                    style={{ width: col.width || "auto", minWidth: isActions ? "120px" : undefined, whiteSpace: "pre-line" }}
+                                                    style={{ width: col.width || "auto", minWidth: col.minWidth || "15px", whiteSpace: "pre-line" }}
                                                     className={`"px-2 py-1 border text-sm font-semibold text-center relative "`}
                                                     onClick={() => col.sortable !== false && handleSort(col.sortField ?? col.key)}
                                                 >
                                                     <div className={`flex items-center ${getAlignmentFlex(col)} space-x-1`}>
-                                                        <span className="break-words pl-2">{col.label}</span>
+                                                        <span className="break-words pl-1">{col.label}</span>
 
                                                         {/* Маленький зелёный кружок для активного фильтра */}
                                                         {isFiltered && (
@@ -460,7 +520,7 @@ export function DataTable({
                                                 </th>
                                             );
                                         })}
-                                        {showDeleteColumn && <th className="sticky right-0 dark:bg-gray-800 z-20 border font-semibold text-center relative " style={{ width: "3%", whiteSpace: "nowrap" }}></th>}
+                                        {showDeleteColumn && <th className="sticky right-0 dark:bg-gray-800 z-20 border font-semibold text-center relative " style={{ width: 30, minWidth: 30, whiteSpace: "nowrap" }}></th>}
                                     </tr>
                                 </thead>
 
@@ -589,11 +649,9 @@ export function DataTable({
                                                                             isClearable
                                                                             placeholder="Выберите..."
                                                                             menuPlacement="auto"
+                                                                            menuPortalTarget={document.body}
                                                                             styles={{
-                                                                                menu: (provided) => ({
-                                                                                    ...provided,
-                                                                                    maxHeight: 200, // максимум высоты меню
-                                                                                }),
+                                                                                menuPortal: (base) => ({ ...base, zIndex: 9999 }), // чтобы точно было поверх всего
                                                                             }}
                                                                         />
                                                                     </td>
@@ -739,7 +797,7 @@ export function DataTable({
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    onDeleteRow(row.ID);
+                                                                    handleDeleteClick(row);
                                                                 }}
                                                                 className="text-red-600 hover:text-red-800 dark:text-white"
                                                                 title={t("Delete")} /* Используем t() */
@@ -760,9 +818,8 @@ export function DataTable({
                             </table>
                         </div>
                         {/* Пагинация */}
-                        <div className="flex flex-col sm:flex-row justify-between items-center p-1 text-sm">
-                            {/* Левая часть: select и информация о странице */}
-                            <div className="relative inline-block w-20 sm:w-auto p-2">
+                        <div className="flex items-center justify-between p-2 text-sm">
+                            <div className="relative flex-shrink-0 flex mr-auto">
                                 <select
                                     value={itemsPerPage}
                                     onChange={handleItemsPerPageChange}
@@ -782,108 +839,23 @@ export function DataTable({
                                 </div>
                             </div>
 
-                            {/* Правая часть: кнопки пагинации */}
-                            <div className="flex flex-wrap justify-center items-center space-x-1 p-2">
-                                {onRefresh && (
-                                    <button
-                                        onClick={onRefresh}
-                                        title={t("Refresh")}
-                                        className="w-6 h-6 flex items-center justify-center rounded-full bg-transparent text-blue-600 hover:text-blue-800 transition hover:scale-125"
-                                    >
-                                        <ArrowPathIcon className="w-5 h-5 text-gray-500" />
-                                    </button>
-                                )}
-
-                                <div className="text-xs sm:text-sm text-gray-600 dark:text-white">
-                                    {t("Page")} {totalPages ? currentPage : 0} {t("Of")} {totalPages}
-                                </div>
-                                {totalPages > 1 && (
-                                    <div className="flex flex-wrap justify-center gap-1 p-2">
-                                        {/* Назад */}
-                                        <button
-                                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                            disabled={currentPage === 1}
-                                            className="px-1 py-1 rounded disabled:opacity-50 hover:bg-gray-200"
-                                        >
-                                            &lt;
-                                        </button>
-
-                                        {(() => {
-                                            const pages = [];
-                                            const maxVisible = 3;
-                                            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-                                            let endPage = startPage + maxVisible - 1;
-
-                                            if (endPage > totalPages) {
-                                                endPage = totalPages;
-                                                startPage = Math.max(1, endPage - maxVisible + 1);
-                                            }
-
-                                            // Первая страница и "..."
-                                            if (startPage > 1) {
-                                                pages.push(
-                                                    <button
-                                                        key={1}
-                                                        onClick={() => setCurrentPage(1)}
-                                                        className={`px-1 py-1 rounded ${currentPage === 1 ? "bg-gray-200 text-black" : "hover:bg-gray-200"
-                                                            }`}
-                                                    >
-                                                        1
-                                                    </button>
-                                                );
-                                                if (startPage > 2) {
-                                                    pages.push(<span key="start-dots" className="px-0">...</span>);
-                                                }
-                                            }
-
-                                            // Основные страницы
-                                            for (let i = startPage; i <= endPage; i++) {
-                                                pages.push(
-                                                    <button
-                                                        key={i}
-                                                        onClick={() => setCurrentPage(i)}
-                                                        className={`px-2 py-1 rounded ${currentPage === i ? "bg-gray-200 text-black" : "hover:bg-gray-200"
-                                                            }`}
-                                                    >
-                                                        {i}
-                                                    </button>
-                                                );
-                                            }
-
-                                            // Последняя страница и "..."
-                                            if (endPage < totalPages) {
-                                                if (endPage < totalPages - 1) {
-                                                    pages.push(<span key="end-dots" className="px-0">...</span>);
-                                                }
-                                                pages.push(
-                                                    <button
-                                                        key={totalPages}
-                                                        onClick={() => setCurrentPage(totalPages)}
-                                                        className={`px-1 py-1 rounded ${currentPage === totalPages ? "bg-gray-200 text-black" : "hover:bg-gray-200"
-                                                            }`}
-                                                    >
-                                                        {totalPages}
-                                                    </button>
-                                                );
-                                            }
-
-                                            return pages;
-                                        })()}
-
-                                        {/* Кнопка вперед */}
-                                        <button
-                                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                                            disabled={currentPage === totalPages}
-                                            className="px-2 py-1 rounded disabled:opacity-50 hover:bg-gray-200"
-                                        >
-                                            &gt;
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                setCurrentPage={setCurrentPage}
+                                onRefresh={onRefresh}
+                                t={t}
+                            />
                         </div>
                     </div>
                 </div>
+                <ConfirmDeleteModal
+                    isOpen={deleteModalOpen}
+                    onClose={() => setDeleteModalOpen(false)}
+                    onConfirm={handleConfirmDelete}
+                    itemName={deleteItem?.Name || deleteItem?.Title || deleteItem?.ID}
+                    t={t}
+                />
             </div>
         </>
     );

@@ -78,17 +78,17 @@ export default function TransactionDKVPage() {
             label: t("CreateDate"),
             filterable: true,
             sortable: true,
-            width: "15%",
+            minWidth: 80,
             sortField: "dateCreated",
         },
-        { key: "terminalID", label: t("IdTerminal"), filterable: true, width: "15%" },
-        { key: "product", label: t("Product"), filterable: true, width: "15%" },
-        { key: "productQuantity", label: t("ProductQuantity"), filterable: true, width: "15%" },
-        { key: "productPriceFormatted", label: t("ProductPrice"), filterable: true, sortable: true, width: "15%" },
-        { key: "amountMDLFormatted", label: t("SummaMDL"), filterable: true, width: "15%" },
-        { key: "olaAppCode", label: t("CodeActivatedOla"), filterable: true, width: "15%" },
-        { key: "stan", label: "Stan", filterable: true, width: "15%" },
-        { key: "pan", label: "Pan", filterable: true, sortable: true, width: "15%" },
+        { key: "terminalID", label: t("IdTerminal"), filterable: true, minWidth: 50, },
+        { key: "product", label: t("Product"), filterable: true, minWidth: 50, },
+        { key: "productQuantity", label: t("ProductQuantity"), filterable: true, minWidth:50, },
+        { key: "productPriceFormatted", label: t("ProductPrice"), filterable: true, sortable: true, minWidth:50, },
+        { key: "amountMDLFormatted", label: t("SummaMDL"), filterable: true, minWidth: 50, },
+        { key: "olaAppCode", label: t("CodeActivatedOla"), filterable: true, minWidth: 50, },
+        { key: "stan", label: "Stan", filterable: true, minWidth: 50, },
+        { key: "pan", label: "Pan", filterable: true, sortable: true, minWidth: 50, },
     ];
 
     return (
@@ -107,7 +107,9 @@ export default function TransactionDKVPage() {
                                 displayFormat="DD.MM.YYYY"
                                 maxDate={endDate?.endDate || new Date()}
                                 minDate={new Date(2000, 0, 1)}
-                                inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
+                                inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+                                useRange={false}
+                                withPortal={true}
                             />
                         </div>
 
@@ -121,7 +123,9 @@ export default function TransactionDKVPage() {
                                 primaryColor="cyan"
                                 displayFormat="DD.MM.YYYY"
                                 minDate={startDate?.startDate || new Date()}
-                                inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200"
+                                inputClassName="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+                                useRange={false}
+                                withPortal={true}
                             />
                         </div>
                     </div>
@@ -136,7 +140,7 @@ export default function TransactionDKVPage() {
                     editable={false}
                     selectableRow={false}
                     onRefresh={fetchTransactions}
-                    tableClassName="min-w-[1600px]"
+                    tableClassName="min-w-[1100px]"
                 />
             </div>
         </div>

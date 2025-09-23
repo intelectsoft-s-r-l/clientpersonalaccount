@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import AssortmentTab from "../../components/AssortmentTab";
 import GlobalSettingsForm from "../../components/GlobalSettingsForm";
 import { assortmentConfigs } from "../../config/assortmentConfigs";
@@ -13,6 +14,71 @@ import ValidationModal from "../../components/ValidationModal";
 import SuccessModal from "../../components/SuccessModal";
 import Toast from "../../components/Toast";
 import { FaBoxOpen, FaMoneyBillWave, FaUsers, FaLayerGroup, FaBuilding, FaGlobe } from "react-icons/fa";
+
+function Tooltip({ targetRef, children, offset = 8, onMouseEnter, onMouseLeave }) {
+    const [position, setPosition] = useState({ top: 0, left: 0, visibility: "hidden" });
+    const tooltipRef = useRef(null);
+
+    const updatePosition = () => {
+        if (!targetRef.current || !tooltipRef.current) return;
+
+        const rect = targetRef.current.getBoundingClientRect();
+        const tooltipRect = tooltipRef.current.getBoundingClientRect();
+
+        let left = rect.left + window.scrollX;
+        let top = rect.bottom + window.scrollY + offset;
+
+        // Не выходит за правый край
+        if (left + tooltipRect.width > window.innerWidth) {
+            left = window.innerWidth - tooltipRect.width - 8;
+        }
+
+        // Не выходит за левый край
+        if (left < 0) left = 8;
+
+        // Если не помещается снизу, показываем сверху
+        if (top + tooltipRect.height > window.scrollY + window.innerHeight) {
+            top = rect.top + window.scrollY - tooltipRect.height - offset;
+        }
+
+        setPosition({ top, left, visibility: "visible" });
+    };
+
+    useEffect(() => {
+        updatePosition();
+    }, []);
+
+    useEffect(() => {
+        if (!targetRef.current || !tooltipRef.current) return;
+
+        const handleResize = () => updatePosition();
+        window.addEventListener("resize", handleResize);
+
+        // сразу обновляем позицию при появлении
+        updatePosition();
+
+        return () => window.removeEventListener("resize", handleResize);
+    }, [targetRef.current]);
+
+    return createPortal(
+        <div
+            ref={tooltipRef}
+            style={{
+                position: "absolute",
+                top: position.top,
+                left: position.left,
+                visibility: position.visibility,
+                zIndex: 1000,
+            }}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            className="absolute z-50 bg-white border border-gray-200 shadow-lg rounded-2xl p-2 text-sm"
+        >
+            {children}
+        </div>,
+        document.body
+    );
+}
 
 export default function AssortmentPage() {
     const [tabs, setTabs] = useState(assortmentConfigs);
@@ -33,7 +99,32 @@ export default function AssortmentPage() {
     const [isWarningModalVisible, setIsWarningModalVisible] = useState(false);
     const [showWarningMessage, setShowWarningMessage] = useState(null);
     const [loading, setLoading] = useState(false);
+    const iconRef = useRef(null);
+    const [showTooltip, setShowTooltip] = useState(false);
+    const [isHoverTooltip, setIsHoverTooltip] = useState(false);
+    const hideTimeout = useRef(null);
 
+    const handleIconEnter = () => {
+        if (hideTimeout.current) {
+            clearTimeout(hideTimeout.current);
+        }
+        setShowTooltip(true);
+    };
+
+    const handleIconLeave = () => {
+        hideTimeout.current = setTimeout(() => setShowTooltip(false), 200);
+    };
+
+    const handleTooltipEnter = () => {
+        if (hideTimeout.current) {
+            clearTimeout(hideTimeout.current);
+        }
+        setShowTooltip(true);
+    };
+
+    const handleTooltipLeave = () => {
+        hideTimeout.current = setTimeout(() => setShowTooltip(false), 200);
+    };
 
     useEffect(() => {
         const fetchToken = async () => {
@@ -784,7 +875,7 @@ export default function AssortmentPage() {
                         <button
                             key={tab.id}
                             onClick={() => setActiveId(tab.id)}
-                            className={`px-4 py-2 rounded flex-none whitespace-normal break-words
+                            className={`px-3 py-2 rounded flex-none whitespace-normal break-words
                 ${tab.id === activeId
                                     ? "bg-gradient-to-r from-[#72b827] to-green-600 text-white"
                                     : "hover:bg-gray-200"
@@ -836,19 +927,26 @@ export default function AssortmentPage() {
                         {/* Кнопки справа + знак вопроса */}
                         <div className="flex flex-wrap items-center gap-3">
                             {/* Знак вопроса с подсказкой */}
-                            <div className="relative group flex-shrink-0">
-                                <div className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-300 text-xs font-bold text-gray-700 cursor-pointer">
-                                    ?
-                                </div>
-                                <div className="absolute -inset-6"></div>
-                                <div className="absolute right-0 top-6 z-50 hidden group-hover:block max-w-[90vw] max-h-[80vh] overflow-auto
- sm:left-auto sm:right-0  left-0 right-auto bg-white shadow-lg border border-gray-200 rounded-lg p-3 text-xs text-gray-700">
+                            <div
+                                ref={iconRef}
+                                onMouseEnter={handleIconEnter}
+                                onMouseLeave={handleIconLeave}
+                                className="w-6 h-6 flex items-center justify-center bg-gray-300 rounded-full cursor-pointer"
+                            >
+                                <span className="text-xs">?</span>
+                            </div>
+                            {showTooltip && (
+                                <Tooltip
+                                    targetRef={iconRef}
+                                    onMouseEnter={handleTooltipEnter}
+                                    onMouseLeave={handleTooltipLeave}
+                                >
                                     <p className="mb-1 font-medium">{t("TooltipImportAssortiment1")}</p>
                                     <p className="italic text-gray-600 mb-1">{t("TooltipImportAssortiment2")}</p>
                                     <p className="text-gray-500 mb-1">{t("TooltipImportAssortiment3")}</p>
                                     <p className="text-gray-500">{t("TooltipImportAssortiment4")}</p>
 
-                                    <div className="min-w-[600px] mt-2">
+                                    <div className="mt-2 max-w-[90vw] overflow-auto">
                                         <table className="min-w-full text-xs border border-gray-300">
                                             <thead className="bg-gray-100">
                                                 <tr>
@@ -889,8 +987,8 @@ export default function AssortmentPage() {
                                             </tbody>
                                         </table>
                                     </div>
-                                </div>
-                            </div>
+                                </Tooltip>
+                            )}
 
                             {/* Кнопка для скачивания шаблона */}
                             <button
@@ -928,7 +1026,7 @@ export default function AssortmentPage() {
                 </div>
             )}
 
-            <main className="flex-1 overflow-x-auto">
+            <main className="flex-1">
                 {activeTable === "global" ? (
                     <GlobalSettingsForm
                         initialSettings={currentGlobalSettings}

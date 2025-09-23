@@ -278,7 +278,7 @@ export default function Sidebar() {
                 <div className="sidebar-content flex flex-col h-full justify-between">
                     <div className="sidebar-menu-sections overflow-y-auto">
                         {menuSections.map(({ title, items }, idx) => (
-                            <section key={idx} className={isCollapsed ? "mb-[10px]" : ""}>
+                            <section key={idx} className={`pt-1 ${isCollapsed ? "mb-[10px]" : ""}`}>
                                 {isCollapsed && title && <div className="sidebar-section-title">{t(title)}</div>}
                                 <nav className="nav-column" aria-label={title || t(`Section ${idx + 1}`)}>
                                     {items.map(({ id, key, icon, disabled }) => (
@@ -291,7 +291,7 @@ export default function Sidebar() {
                                             title={t(key)}
                                         >
                                             <img src={icon} className="w-6 h-6 text-black" />
-                                            {isCollapsed && <span>{t(key)}</span>}
+                                            {isCollapsed && <span className="pl-1">{t(key)}</span>}
                                         </button>
                                     ))}
                                 </nav>
@@ -299,23 +299,32 @@ export default function Sidebar() {
                         ))}
                     </div>
 
-                    <div className="flex flex-col items-center mb-1 space-y-1">
-                        <div className="brand-logo">
-                            {isCollapsed ? (
-                                <img src={LongLogo} alt="Fiscal Cloud Logo" className="w-32 h-8" />
-                            ) : (
+                    <div className="flex flex-col items-center">
+                        {/* Лого */}
+                        <div className="flex-shrink-0 brand-logo">
+                            {!isCollapsed ? (
                                 <img src={Logo} alt="Fiscal Cloud Logo" className="w-10 h-10" />
+                            ) : (
+                                <img src={LongLogo} alt="Fiscal Cloud Logo" className="w-32 h-8" />
                             )}
                         </div>
 
+                        {/* Кнопка выхода */}
                         <button
                             onClick={logout}
                             aria-label={t("Logout")}
                             title={t("Logout")}
-                            className={`flex items-center justify-center w-full ${isCollapsed ? "h-12" : "h-10"} px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform hover:scale-105 ${isCollapsed ? "justify-start gap-2" : "justify-center"}`}
+                            className={`flex items-center justify-center w-18 h-18 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform hover:scale-105 ${isCollapsed ? "justify-center" : "justify-start px-3"
+                                }`}
                         >
-                            <img src="/icons/Log_Out.svg" className="w-6 h-6" alt={t("Logout")} />
-                            {isCollapsed && <span className="text-sm font-medium text-black">{t("Logout")}</span>}
+                            <img
+                                src="/icons/Log_Out.svg"
+                                className="w-6 h-6 flex-shrink-0"
+                                alt={t("Logout")}
+                            />
+                            {isCollapsed && (
+                                <span className="text-sm font-medium text-black ml-2">{t("Logout")}</span>
+                            )}
                         </button>
                     </div>
                 </div>

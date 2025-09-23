@@ -81,11 +81,11 @@ export default function LicensePage() {
     }).sort((a, b) => b.oid - a.oid);
 
     const columns = [
-        { key: "deviceName", label: t("DeviceName"), filterable: true, width: "25%" },
-        { key: "address", label: t("Address"), filterable: true, width: "36%" },
-        { key: "batteryDisplay", label: t("Battery"), filterable: true, sortable: true, width: "6%" },
+        { key: "deviceName", label: t("DeviceName"), filterable: true, minWidth: 140, },
+        { key: "address", label: t("Address"), filterable: true, minWidth: 140, },
+        { key: "batteryDisplay", label: t("Battery"), filterable: true, sortable: true, minWidth: 40, },
         {
-            key: "licenseStatus", label: t("Status"), filterable: true, width: "12%", sortable: true,
+            key: "licenseStatus", label: t("Status"), filterable: true, minWidth: 160, sortable: true,
             filterOptions: [
                 { value: "0", label: t("NotActivated") },
                 { value: "1", label: t("Activated") },
@@ -94,7 +94,7 @@ export default function LicensePage() {
             ],
             render: (value, row) => row.licenseStatusDisplay
         },
-        { key: "lastDateUpdateDisplay", label: t("LicenseActivationDate"), filterable: true, sortable: true, width: "15%", sortField: "lastDateUpdate" }
+        { key: "lastDateUpdateDisplay", label: t("LicenseActivationDate"), filterable: true, sortable: true, minWidth: 140, sortField: "lastDateUpdate" }
     ];
 
     columns.push({
@@ -102,25 +102,28 @@ export default function LicensePage() {
         label: "", // или t("Actions")
         filterable: false,
         sortable: false,
-        width: "5%",
+        minWidth: 40,
+        width: 40,
         render: (value, row) => (
-            <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedLicense(row);
-                }}
-                className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
-            >
-                <img
-                    src="/icons/Show.svg"
-                    className="w-6 h-6 text-black hover:scale-125"
-                />
-            </button>
+            <div className="flex justify-center items-center gap-1 overflow-visible">
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedLicense(row);
+                    }}
+                    className="flex-shrink-0 text-green-600 hover:text-green-800 hover:bg-green-50 pr-1 pl-1 rounded-full transition-all duration-200"
+                >
+                    <img
+                        src="/icons/Show.svg"
+                        className="w-6 h-6 text-black hover:scale-125"
+                    />
+                </button>
+            </div>
         ),
     });
 
     return (
-        <div  className="min-h-screen bg-gradient-to-br to-indigo-100 p-0 m-0">
+        <div className="min-h-screen bg-gradient-to-br to-indigo-100 p-0 m-0">
             <DataTable
                 title={`${t("Licenses")} (${licenses.length})`}
                 columns={columns}
@@ -130,7 +133,7 @@ export default function LicensePage() {
                 onRowDoubleClick={(lic) => setSelectedLicense(lic)}
                 selectableRow={false}
                 onRefresh={fetchLicenses}
-                tableClassName="min-w-[1600px]"
+                tableClassName="min-w-[100px]"
             />
 
             <LicenseModal

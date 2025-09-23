@@ -28,7 +28,12 @@ export default function FiscalDevicePage() {
     const [selectedBill, setSelectedBill] = useState(null);
     const [receiptText, setReceiptText] = useState("");
     const [reportModel, setReportModel] = useState(null);
-    const [viewMode, setViewMode] = useState("receipt");
+    const [viewMode, setViewMode] = useState(() => {
+        // Инициализация при первом рендере
+        if (receiptText) return "receipt";
+        if (selectedBill?.reportType === 1 && reportModel) return "report";
+        return null; // ничего не показываем пока нет данных
+    });
     const [mevURi, setMevURi] = useState(null);
     const [qr, setQr] = useState(null);
     const { t } = useTranslation();
@@ -78,6 +83,15 @@ export default function FiscalDevicePage() {
     };
 
     useEffect(() => {
+        // Автоматическое переключение, если receiptText появился или пропал
+        if (!receiptText && selectedBill?.reportType === 1 && reportModel) {
+            setViewMode("report");
+        } else if (receiptText && viewMode !== "receipt") {
+            setViewMode("receipt");
+        }
+    }, [receiptText, reportModel, selectedBill]);
+
+    useEffect(() => {
         if (!id) return;
         fetchShifts(id);
     }, [id]);
@@ -92,7 +106,9 @@ export default function FiscalDevicePage() {
     }, [bills]);
 
     useEffect(() => {
-        if (selectedBill) loadTexts(id, selectedBill);
+        if (selectedBill) {
+            loadTexts(id, selectedBill);
+        }
     }, [selectedBill]);
 
     const fetchShifts = async (deviceId) => {
@@ -163,6 +179,11 @@ export default function FiscalDevicePage() {
                 }
             })
 
+            if (standardJson && standardJson.dataToPrint == '') {
+                setMevURi(null);
+                setReceiptText(null);
+            }
+
             let decodedText = "";
             try {
                 const byteCharacters = atob(standardJson.dataToPrint || "");
@@ -229,7 +250,7 @@ export default function FiscalDevicePage() {
 
         if (reportType === 1) {
             return (
-                <div style={{ ...iconStyle, backgroundColor: "#2563eb" }}>
+                <div className="flex justify-center items-center" style={{ ...iconStyle, backgroundColor: "#2563eb" }}>
                     Z
                 </div>
             );
@@ -241,7 +262,7 @@ export default function FiscalDevicePage() {
                 </div>
             );
         }
-        if (!type && type === 2 && reportType === 0) {
+        if (type === 2 && reportType === 0) {
             return (
                 <div style={{ ...iconStyle, backgroundColor: "#7c3aed" }}>
                     S
@@ -264,8 +285,8 @@ export default function FiscalDevicePage() {
     };
 
     const columnsShifts = [
-        { key: "shiftID", label: "ID", width: "100px" },
-        { key: "createDate", label: t("CreateDate"), width: "" },
+        { key: "shiftID", label: "ID", minWidth: 10 },
+        { key: "createDate", label: t("CreateDate"), minWidth: 10 },
     ];
 
     const decoratedShifts = shifts
@@ -293,18 +314,18 @@ export default function FiscalDevicePage() {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             })} MDL`,
-            date: formatDate(bill.date),
+            date: formatDate(bill.date)
         }));
 
     const columnsBills = [
-        { key: "reportType", label: "", width: "10%", render: (value, row) => getReportLabel(row.reportType, row.type), },
-        { key: "date", label: t("Date"), width: "16%" },
-        { key: "fiscalReceiptID", label: t("ID"), width: "7%" },
-        { key: "totalAmountDisplay", label: t("TotalAmount"), width: "16%" },
+        { key: "reportType", label: "", width: 40, render: (value, row) => getReportLabel(row.reportType, row.type), },
+        { key: "date", label: t("Date"), width: 140 },
+        { key: "fiscalReceiptID", label: t("ID"), width: 50 },
+        { key: "totalAmountDisplay", label: t("TotalAmount"), width: 120 },
         {
             key: "paymentType",
             label: t("Type"),
-            width: "32%"
+            width: 100
         },
     ];
 
@@ -714,9 +735,9 @@ export default function FiscalDevicePage() {
         max-width: 100%; 
         }
       `}</style>
-            <div className="p-1 overflow-y-auto">
-                <div className="flex flex-col md:flex-row gap-2">
-                    <div className="w-full md:w-[490px] overflow-visible">
+            <div className="p-2">
+                <div className="flex flex-wrap gap-4 justify-center">
+                    <div className="w-[490px] min-w-1/1">
                         <DataTable
                             title={t("Shifts")}
                             columns={columnsShifts}
@@ -731,10 +752,10 @@ export default function FiscalDevicePage() {
                             rowClassName={(row) =>
                                 row.id === selectedRowId ? "bg-gray-200" : ""
                             }
-                            tableClassName="w-full table-auto"
+                            tableClassName="min-w-[10px] table-auto"
                         />
                     </div>
-                    <div className="w-full md:w-1/2 overflow-visible">
+                    <div className="w-[490px] min-w-1/1">
                         <DataTable
                             title={t("Bills")}
                             columns={columnsBills}
@@ -746,50 +767,54 @@ export default function FiscalDevicePage() {
                             rowClassName={(row) =>
                                 row.id === selectedRowId ? "bg-gray-200" : ""
                             }
-                            tableClassName="table-auto min-w-[200px] xl:w-full"
+                            tableClassName="table-auto min-w-[100px] xl:w-full"
                         />
                     </div>
 
-                    {receiptText && (
-                        <div className="w-full md:w-1/4">
-                            <div className="dark:bg-gray-800 dark:text-white rounded-xl shadow-md p-4">
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="space-x-4">
+                    {(receiptText || (selectedBill?.reportType == 1 && reportModel)) && (
+                        <div className="flex min-w-[400px]">
+                            <div className="bg-white rounded-xl shadow-md p-4">
+                                <div className="flex items-center justify-between mb-3 w-full">
+                                    {/* Левая кнопка: FiscalReceipt */}
+                                    {receiptText && (
                                         <button
-                                            className={`text-white text-sm font-medium px-3 py-1 rounded border transition ${viewMode === "receipt"
-                                                ? " text-black bg-gradient-to-r from-[#72b827] to-green-600"
-                                                : "text-white bg-gradient-to-r from-[#72b827] to-green-600"}`}
+                                            className={`text-black text-sm px-1 pt-1 pb-0 py-1 hover:bg-gray-200 rounded transition ${viewMode === "receipt"
+                                                ? "bg-gray-200"
+                                                : ""}`}
                                             onClick={() => setViewMode("receipt")}
                                             disabled={viewMode === "receipt"}
                                         >
-                                            <h5 className="text-lg font-semibold">{t("FiscalReceipt")}</h5>
+                                            <h5 className="text-center font-semibold">{t("FiscalReceipt")}</h5>
                                         </button>
-                                        {selectedBill?.reportType == 1 && (
-                                            <button
-                                                className={` text-white text-sm font-medium px-3 py-1 rounded border transition ${viewMode === "report"
-                                                    ? "bg-gradient-to-r from-[#72b827] to-green-600"
-                                                    : "text-white bg-gradient-to-r from-[#72b827] to-green-600"}`}
-                                                onClick={() => setViewMode("report")}
-                                                disabled={viewMode === "report"}
-                                            >
-                                                <h5 className="text-lg font-semibold">{t("LongZReport")}</h5>
-                                            </button>
-                                        )}
-                                    </div>
+                                    )}
+
+                                    {/* Правая кнопка: LongZReport */}
+                                    {selectedBill?.reportType === 1 && (
+                                        <button
+                                            className={`text-black text-sm px-1 pt-1 pb-0 py-1 hover:bg-gray-200 rounded transition ${viewMode === "report"
+                                                ? "bg-gray-200"
+                                                : ""}`}
+                                            onClick={() => setViewMode("report")}
+                                            disabled={viewMode === "report"}
+                                        >
+                                            <h5 className="text-center font-semibold">{t("LongZReport")}</h5>
+                                        </button>
+                                    )}
                                 </div>
-                                <div className="text-sm whitespace-pre-wrap break-words min-h-[200px] dark:bg-gray-800 dark:text-white">
-                                    {console.log(reportModel) }
-                                    {viewMode === "report" && reportModel ? (
-                                        <LongZReport className="dark:bg-gray-800 dark:text-white" model={reportModel} />
+
+
+                                <div className="text-sm whitespace-pre-wrap break-words min-h-[200px] bg-white PrintArea rounded">
+                                    {viewMode === "report" ? (
+                                        <LongZReport className="bg-white" model={reportModel} t={t} />
                                     ) : (
-                                        <div className="billStyle PrintArea">
+                                        <div className="billStyle">
                                             <input id="dId" value={id} type="hidden" />
                                             <input id="Id" value={selectedBill?.id || ""} type="hidden" />
 
                                             <div className="receipt" id="receiptDiv">
                                                 <div className="receiptBody flex flex-col items-center">
                                                     <div className="contentReceipt flex flex-col items-center">
-                                                            <pre className="receipt-text break-words whitespace-pre-wrap text-center">{receiptText || t("SelectBill")}</pre>
+                                                        <pre className="receipt-text break-words whitespace-pre-wrap text-center">{receiptText || t("SelectBill")}</pre>
 
                                                         {mevURi && (
                                                             <div className="mt-2 text-center" style={{ fontSize: "87.5%" }}>
@@ -823,7 +848,7 @@ export default function FiscalDevicePage() {
                                                         </a>
                                                     </div>
                                                 )}
-                                                <div className="mt-3">
+                                                <div className="mt-3 ">
                                                     <button
                                                         id="printNext"
                                                         className="btn btn-contained border rounded border-gray-900"
@@ -843,11 +868,11 @@ export default function FiscalDevicePage() {
                     )}
                     {isReportModalOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={closeReportModal}>
-                            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[400px]" onClick={(e) => e.stopPropagation()}>
-                                <h3 className="text-lg font-semibold mb-4">{t("SelectPeriod")}</h3>
+                            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[450px]" onClick={(e) => e.stopPropagation()}>
+                                <h3 className="text-lg font-semibold mb-2">{t("SelectPeriod")}</h3>
                                 {/* Для FiscalSummary показываем переключатель */}
                                 {currentReportType === "FiscalSummary" && (
-                                    <div className="flex gap-4 mb-4">
+                                    <div className="flex gap-4 mb-2">
                                         <label className="flex items-center gap-2">
                                             <input
                                                 type="radio"
@@ -871,7 +896,7 @@ export default function FiscalDevicePage() {
 
                                 {/* Если выбран режим по датам */}
                                 {(!currentReportType || period.mode === "date" || period.mode === undefined) && (
-                                    <div className="flex flex-col gap-3 mb-4">
+                                    <div className="flex flex-col gap-3 mb-2 relative z-50">
                                         <label className="text-sm font-medium">{t("StartDate")}:</label>
                                         <Datepicker
                                             asSingle
@@ -884,6 +909,8 @@ export default function FiscalDevicePage() {
                                             maxDate={period?.endDate || new Date()}
                                             minDate={new Date(2000, 0, 1)}
                                             inputClassName="w-full px-4 py-2 text-sm border rounded"
+                                            useRange={false}
+                                            withPortal={true}
                                         />
 
                                         <label className="text-sm font-medium">{t("DateEnd")}:</label>
@@ -898,13 +925,15 @@ export default function FiscalDevicePage() {
                                             minDate={period?.startDate || new Date()}
                                             maxDate={new Date()}
                                             inputClassName="w-full px-4 py-2 text-sm border rounded"
+                                            useRange={false}
+                                            withPortal={true}
                                         />
                                     </div>
                                 )}
 
                                 {/* Если выбран режим по диапазону (только для FiscalSummary) */}
                                 {currentReportType === "FiscalSummary" && period.mode === "range" && (
-                                    <div className="flex flex-col gap-3 mb-4">
+                                    <div className="flex flex-col gap-3 mb-2">
                                         <label className="text-sm font-medium">{t("RangeStart")}:</label>
                                         <input
                                             type="number"

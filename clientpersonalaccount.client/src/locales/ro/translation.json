@@ -868,5 +868,10 @@
   "DeleteError": "eroare la ștergere",
   "Duplicate": "Băncile Duplicate nu sunt permise",
   "DepartmentsDuplicate": "Această gamă a fost deja atribuită unui alt departament",
-  "NoData": "Nu există date de salvat"
+  "NoData": "Nu există date de salvat",
+  "True": "Adevărat",
+  "False": "Fals",
+  "AreYouSureDelete": "Sunteți sigur că doriți să ștergeți această intrare",
+  "EnterLoginToConfirm": "Chiar vrei să ștergi această bancă? Pentru a confirma, introduceți mai întâi \"autentificare bancară\"",
+  "FieldsControlerForNull": "Vă rugăm să completați toate câmpurile liniei anterioare înainte de a adăuga unul nou"
 }
