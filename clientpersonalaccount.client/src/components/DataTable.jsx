@@ -370,6 +370,29 @@ export function DataTable({
 
     return (
         <>
+            <style>{`
+            table {
+                border-collapse: collapse;
+                }
+                
+            td, th {
+                padding: 8px;
+            }
+                
+            /* Применяет рамки только к нужным сторонам ячеек */
+            td, th {
+                border-right: 1px solid #ddd;
+            }
+
+            th {
+                border-bottom: 1px solid #ddd;
+            }
+            
+            /* Убирает правую рамку с последней ячейки в каждой строке */
+            tr td:last-child, tr th:last-child {
+                border-right: none;
+                }
+            `}</style>
             <div className="bg-white rounded-3xl">
                 {/* Заголовок и кнопки */}
                 <div className="flex flex-wrap justify-between items-center gap-1 p-3">
@@ -438,7 +461,7 @@ export function DataTable({
                                                     key={col.key}
                                                     ref={thRef}
                                                     style={{ width: col.width || "auto", minWidth: col.minWidth || "15px", whiteSpace: "pre-line" }}
-                                                    className={`"px-2 py-1 border text-sm font-semibold text-center relative "`}
+                                                    className={`"px-2 py-1 text-sm font-semibold text-center relative "`}
                                                     onClick={() => col.sortable !== false && handleSort(col.sortField ?? col.key)}
                                                 >
                                                     <div className={`flex items-center ${getAlignmentFlex(col)} space-x-1`}>
@@ -520,7 +543,7 @@ export function DataTable({
                                                 </th>
                                             );
                                         })}
-                                        {showDeleteColumn && <th className="sticky right-0 dark:bg-gray-800 z-20 border font-semibold text-center relative " style={{ width: 30, minWidth: 30, whiteSpace: "nowrap" }}></th>}
+                                        {showDeleteColumn && <th className="sticky right-0 dark:bg-gray-800 z-20 font-semibold text-center relative " style={{ width: 35, minWidth: 35, whiteSpace: "nowrap" }}></th>}
                                     </tr>
                                 </thead>
 
@@ -555,7 +578,7 @@ export function DataTable({
                                                     className={`${onRowClick ? "cursor-pointer" : ""} ${isSelected
                                                         ? "bg-gray-100 dark:bg-gray-700"
                                                         : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                                                        } break-words border border-[#dbdbdb]`}
+                                                        } break-words border-b border-[#dbdbdb]`}
                                                     onClick={
                                                         onRowClick
                                                             ? () => {
@@ -759,7 +782,7 @@ export function DataTable({
                                                         return (
                                                             <td
                                                                 key={col.key}
-                                                                className={`p-2 border border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
+                                                                className={`p-2 border-r border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                                     col
                                                                 )} break-words dark:bg-gray-800 dark:text-white`}
                                                                 onClick={() =>
@@ -793,7 +816,7 @@ export function DataTable({
                                                         );
                                                     })}
                                                     {showDeleteColumn && (
-                                                        <td className="text-center border border-[#dbdbdb] dark:bg-gray-800 dark:text-white flex-shrink-0">
+                                                        <td className="text-center dark:bg-gray-800 dark:text-white flex-shrink-0">
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();

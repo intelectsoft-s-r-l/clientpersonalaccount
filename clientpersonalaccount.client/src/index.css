@@ -3,6 +3,34 @@
 @tailwind components;
 @tailwind utilities;
 
+@media (max-width: 1025px) {
+    .w-12 {
+        width: 2rem;
+    }
+
+    .h-12 {
+        height: 2rem;
+    }
+
+    .min-h-\[285px\] {
+        min-height: 200px;
+    }
+}
+
+@media (max-width: 760px) {
+    .w-12 {
+        width: 2rem;
+    }
+
+    .h-12 {
+        height: 2rem;
+    }
+
+    .min-h-\[285px\] {
+        min-height: 200px;
+    }
+}
+
 html, body, #root {
     height: 100%;
     margin: 0;
