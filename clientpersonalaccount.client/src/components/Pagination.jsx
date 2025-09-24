@@ -113,8 +113,7 @@ export default function Pagination({
                 }
                 {renderCurrentPage()}
             </div>
-
-            <div className="flex items-center gap-1">
+            {totalPages > 1 && (<div className="flex items-center gap-1">
                 <button
                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
@@ -132,7 +131,7 @@ export default function Pagination({
                 >
                     &gt;
                 </button>
-            </div>
+            </div>)}
         </div>
     );
 }
