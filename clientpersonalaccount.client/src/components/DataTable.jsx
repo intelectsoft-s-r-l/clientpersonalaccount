@@ -86,7 +86,8 @@ export function DataTable({
     onResetPayments,
     rowClassName,
     tableClassName,
-    checkDuplicate
+    checkDuplicate,
+    onVisibleRowsChange
 }) {
     const [editCell, setEditCell] = useState({ rowId: null, columnKey: null });
     const [editValue, setEditValue] = useState("");
@@ -253,6 +254,12 @@ export function DataTable({
         });
     }, [data, filters, columns, globalFilter]);
 
+    useEffect(() => {
+        if (onVisibleRowsChange) {
+            onVisibleRowsChange(filteredData.length);
+        }
+    }, [filteredData, onVisibleRowsChange]);
+
     const sortedData = useMemo(() => {
         if (!sortConfig.key) return filteredData;
         const { key, direction } = sortConfig;
@@ -315,6 +322,19 @@ export function DataTable({
         setItemsPerPage(value);
         localStorage.setItem("itemsPerPage", value); // сохраняем выбор
     };
+
+    useEffect(() => {
+        if (sortedData.length === 0) {
+            setCurrentPage(0);  // ✅ если пусто, страница = 0
+        } else if (currentPage === 0) {
+            setCurrentPage(1);  // если появились данные, возвращаемся на 1
+        } else {
+            const maxPage = Math.ceil(sortedData.length / itemsPerPage);
+            if (currentPage > maxPage) {
+                setCurrentPage(maxPage);
+            }
+        }
+    }, [sortedData, itemsPerPage, currentPage]);
 
     useEffect(() => {
         // Таймер для автоматического скрытия через 5 секунд
@@ -460,12 +480,12 @@ export function DataTable({
                                                 <th
                                                     key={col.key}
                                                     ref={thRef}
-                                                    style={{ width: col.width || "auto", minWidth: col.minWidth || "15px", whiteSpace: "pre-line" }}
+                                                    style={{ width: col.width || "auto", minWidth: col.minWidth || "15px", whiteSpace: "nowrap" }}
                                                     className={`"px-2 py-1 text-sm font-semibold text-center relative "`}
                                                     onClick={() => col.sortable !== false && handleSort(col.sortField ?? col.key)}
                                                 >
                                                     <div className={`flex items-center ${getAlignmentFlex(col)} space-x-1`}>
-                                                        <span className="break-words pl-1">{col.label}</span>
+                                                        <span className="pl-1">{col.label}</span>
 
                                                         {/* Маленький зелёный кружок для активного фильтра */}
                                                         {isFiltered && (
@@ -498,7 +518,7 @@ export function DataTable({
                                                         <div
                                                             id={`filter-${col.key}`}
                                                             onClick={(e) => e.stopPropagation()}
-                                                            className="absolute top-full left-0 mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-300 rounded shadow-lg"
+                                                            className=" w-full left-0 mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-300 rounded shadow-lg"
                                                         >
                                                             {col.type === "boolean" ? (
                                                                 <select
@@ -512,22 +532,38 @@ export function DataTable({
                                                                     <option value="false">{t("False")}</option>
                                                                 </select>
                                                             ) : col.filterOptions ? (
-                                                                <select
-                                                                    value={filters[col.key] ?? ""}
-                                                                    onChange={(e) => handleFilterChange(col.key, e.target.value.trim())}
-                                                                    className="w-full p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                >
-                                                                    <option value="">{t("All")}</option>
-                                                                    {(col.filterOptions || []).map((opt) => (
-                                                                        <option
-                                                                            key={typeof opt === "object" ? opt.value : opt}
-                                                                            value={typeof opt === "object" ? opt.value : opt}
-                                                                        >
-                                                                            {typeof opt === "object" ? opt.label : opt}
-                                                                        </option>
-                                                                    ))}
-                                                                </select>
+                                                                    <Select
+                                                                        value={col.filterOptions.find(
+                                                                            (opt) => String(opt.value ?? opt) === String(filters[col.key])
+                                                                        ) || null}
+                                                                        onChange={(selected) =>
+                                                                            handleFilterChange(col.key, selected?.value ?? "")
+                                                                        }
+                                                                        options={col.filterOptions.map((opt) => ({
+                                                                            value: typeof opt === "object" ? opt.value : opt,
+                                                                            label: typeof opt === "object" ? opt.label : opt,
+                                                                        }))}
+                                                                        isClearable
+                                                                        placeholder={t("Filter") + "..."}
+                                                                        menuPortalTarget={document.body}
+                                                                        styles={{
+                                                                            container: (base) => ({ ...base, minWidth: "150px" }),
+                                                                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                                                            menu: (base) => ({ ...base, zIndex: 9999 }),
+                                                                            control: (base) => ({
+                                                                                ...base,
+                                                                                fontSize: window.innerWidth < 640 ? "14px" : "12px", // уменьшение шрифта на маленьких экранах
+                                                                            }),
+                                                                            option: (base) => ({
+                                                                                ...base,
+                                                                                fontSize: window.innerWidth < 640 ? "14px" : "12px",
+                                                                            }),
+                                                                            singleValue: (base) => ({
+                                                                                ...base,
+                                                                                fontSize: window.innerWidth < 640 ? "14px" : "12px",
+                                                                            }),
+                                                                        }}
+                                                                    />
                                                             ) : (
                                                                 <input
                                                                     type="text"
@@ -578,7 +614,7 @@ export function DataTable({
                                                     className={`${onRowClick ? "cursor-pointer" : ""} ${isSelected
                                                         ? "bg-gray-100 dark:bg-gray-700"
                                                         : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                                                        } break-words border-b border-[#dbdbdb]`}
+                                                        } border-b border-[#dbdbdb]`}
                                                     onClick={
                                                         onRowClick
                                                             ? () => {
@@ -674,7 +710,20 @@ export function DataTable({
                                                                             menuPlacement="auto"
                                                                             menuPortalTarget={document.body}
                                                                             styles={{
-                                                                                menuPortal: (base) => ({ ...base, zIndex: 9999 }), // чтобы точно было поверх всего
+                                                                                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                                                                menu: (base) => ({ ...base, zIndex: 9999 }),
+                                                                                control: (base) => ({
+                                                                                    ...base,
+                                                                                    fontSize: window.innerWidth < 640 ? "14px" : "12px", // уменьшение шрифта на маленьких экранах
+                                                                                }),
+                                                                                option: (base) => ({
+                                                                                    ...base,
+                                                                                    fontSize: window.innerWidth < 640 ? "14px" : "12px",
+                                                                                }),
+                                                                                singleValue: (base) => ({
+                                                                                    ...base,
+                                                                                    fontSize: window.innerWidth < 640 ? "14px" : "12px",
+                                                                                }),
                                                                             }}
                                                                         />
                                                                     </td>
@@ -688,7 +737,7 @@ export function DataTable({
                                                                     key={col.key}
                                                                     className={`p-2 border border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                                         col
-                                                                    )} break-words dark:bg-gray-800 dark:text-white`}
+                                                                    )} dark:bg-gray-800 dark:text-white`}
                                                                 >
                                                                     <input
                                                                         type="text"
@@ -748,7 +797,7 @@ export function DataTable({
                                                                     key={col.key}
                                                                     className={`p-2 border border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                                         col
-                                                                    )} break-words dark:bg-gray-800 dark:text-white`}
+                                                                    )} dark:bg-gray-800 dark:text-white`}
                                                                 >
                                                                     <textarea
                                                                         type={inputType}
@@ -772,7 +821,7 @@ export function DataTable({
                                                                         onKeyDown={handleKeyDown}
                                                                         autoFocus
                                                                         rows={1}
-                                                                        className="break-words w-full border border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white resize-none"
+                                                                        className=" w-full border border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white resize-none"
                                                                         style={{ minHeight: "1.5rem", overflow: "hidden" }}
                                                                     />
                                                                 </td>
@@ -784,7 +833,7 @@ export function DataTable({
                                                                 key={col.key}
                                                                 className={`p-2 border-r border-[#dbdbdb] text-sm text-gray-900 ${getAlignment(
                                                                     col
-                                                                )} break-words dark:bg-gray-800 dark:text-white`}
+                                                                )} dark:bg-gray-800 dark:text-white`}
                                                                 onClick={() =>
                                                                     col.editable && startEdit(row.ID, col.key, cellValue)
                                                                 }
@@ -792,6 +841,7 @@ export function DataTable({
                                                                 style={{
                                                                     cursor: col.editable ? "pointer" : "default",
                                                                     userSelect: "text",
+                                                                    whiteSpace: "nowrap",
                                                                 }}
                                                             >
                                                                 {col.render

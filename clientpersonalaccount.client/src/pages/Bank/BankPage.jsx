@@ -102,6 +102,7 @@ export default function BankPage() {
     const [deleteBankModalOpen, setDeleteBankModalOpen] = useState(false);
     const [bankToDelete, setBankToDelete] = useState(null);
     const [selectedTapxphoneSettings, setSelectedTapxphoneSettings] = useState(null);
+    const [visibleCount, setVisibleCount] = useState(0);
 
     const fetchBankNames = async () => {
         try {
@@ -211,12 +212,13 @@ export default function BankPage() {
     });
 
     const columns = [
-        { key: "nameFromApi", label: t("Name"), filterable: true, minWidth: 20 },
-        { key: "login", label: t("Login"), filterable: true, minWidth: 20 },
+        { key: "nameFromApi", label: t("Name"), filterable: true, minWidth: 120 },
+        { key: "login", label: t("Login"), filterable: true, minWidth: 120 },
         {
             key: "actions",
             label: "",
-            minWidth: 1,
+            width: 100,
+            minWidth: 100,
             render: (value, row) => (
                 <div className="flex justify-center items-center gap-1 overflow-visible">
                     <button
@@ -253,7 +255,7 @@ export default function BankPage() {
         <div className="min-h-screen bg-gradient-to-br to-indigo-100 p-0 m-0">
             <div className="w-full px-0">
                 <DataTable
-                    title={`${t("Banks")} (${tapxphoneSettings.length})`}
+                    title={`${t("Banks")} (${visibleCount ?? (tapxphoneSettings.length || 0)})`}
                     columns={columns}
                     data={decoratedTapxphoneSettings}
                     loading={loading}
@@ -263,6 +265,7 @@ export default function BankPage() {
                     onRefresh={fetchTapxphoneSettings}
                     onAddRow={handleAddRow}
                     tableClassName="min-w-[60px]"
+                    onVisibleRowsChange={(count) => setVisibleCount(count)}
                 />
 
                 <BankModal

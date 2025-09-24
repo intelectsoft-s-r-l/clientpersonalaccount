@@ -12,6 +12,7 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
     const { t } = useTranslation();
     const [validationErrors, setValidationErrors] = useState({});
     const [showErrors, setShowErrors] = useState(false);
+    const [visibleCount, setVisibleCount] = useState(data.length);
 
     useImperativeHandle(ref, () => ({
         getData: () => tableData,
@@ -28,7 +29,7 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
         }
     }, [data, usersPin]);
 
-    const table = tableDefinitions(t, data);
+    const table = tableDefinitions(t, data, visibleCount);
     const tableDef = table.find((t) => t.key === tableKey);
     if (!tableDef) return null;
 
@@ -169,6 +170,7 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
                 tableClassName="min-w-[100px]"
                 checkDuplicate={tableKey === "departments" ? checkDuplicate : undefined}
                 loading={loading}
+                onVisibleRowsChange={(count) => setVisibleCount(count)}
             />
             <ValidationModal
                 errors={validationErrors}

@@ -545,6 +545,19 @@ export default function AssortmentPage() {
         // Убираем поля, которые не нужны в экспорте
         const cleanData = products.map(item => {
             const cleaned = { ...item };
+
+            if (cleaned.ID !== undefined) cleaned.ID = String(cleaned.ID);
+
+            // Приводим булевые поля к "Истина"/"Ложь"
+            cleaned.TME = cleaned.TME ? "Истина" : "Ложь";
+            cleaned.OnlinePay = cleaned.OnlinePay ? "Истина" : "Ложь";
+
+            if (cleaned.Group !== "") {
+                const groupId = Number(cleaned.Group);
+                const group = currentSetting.Groups?.find(g => g.ID === groupId || g.ID === cleaned.Group);
+                cleaned.Group = group ? group.Name : "";
+            }
+
             // Удаляем служебные поля
             delete cleaned.id;
             delete cleaned.ProviderID;

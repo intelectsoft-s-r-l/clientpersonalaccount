@@ -22,6 +22,7 @@ export default function FiscalDevicesListPage() {
     const [isWarningModalVisible, setIsWarningModalVisible] = useState(false);
     const [showWarningMessage, setShowWarningMessage] = useState(null);
     const { t } = useTranslation();
+    const [visibleCount, setVisibleCount] = useState(devices.length);
 
     const fetchDevices = async () => {
         try {
@@ -246,7 +247,7 @@ export default function FiscalDevicesListPage() {
         <div id="FiscalDevices" className="min-h-screen bg-gradient-to-br to-indigo-100 p-0 m-0">
             <div className="w-full px-0">
                 <DataTable
-                    title={`${t("FiscalDevice")} (${devices.length})`}
+                    title={`${t("FiscalDevice")} (${visibleCount ?? (devices.length || 0)})`}
                     columns={columns}
                     data={decoratedDevices}
                     loading={loading}
@@ -255,6 +256,7 @@ export default function FiscalDevicesListPage() {
                     selectableRow={false}
                     onRefresh={fetchDevices}
                     tableClassName="min-w-[900px]"
+                    onVisibleRowsChange={(count) => setVisibleCount(count)}
                 />
                 <FiscalDeviceModal
                     deviceId={selectedDevice != null ? selectedDevice.id : null}

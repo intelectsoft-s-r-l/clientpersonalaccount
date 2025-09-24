@@ -15,17 +15,15 @@ function formatDate(dateStr) {
 export default function TransactionDKVPage() {
     const { t } = useTranslation();
     const { token } = useAuth();
-
     const today = new Date();
     const sixMonthsAgo = new Date(today);
     sixMonthsAgo.setMonth(today.getMonth() - 6);
-
     const [startDate, setStartDate] = useState({ startDate: sixMonthsAgo });
     const [endDate, setEndDate] = useState({ startDate: today });
-
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [visibleCount, setVisibleCount] = useState(0);
 
     const fetchTransactions = useCallback(async () => {
         try {
@@ -133,7 +131,7 @@ export default function TransactionDKVPage() {
 
 
                 <DataTable
-                    title={`${t("TransactionDKV")} (${transactions.length})`}
+                    title={`${t("TransactionDKV")} (${visibleCount ?? (transactions.length || 0)})`}
                     columns={columns}
                     data={decoratedTransactions}
                     loading={loading}
@@ -141,6 +139,7 @@ export default function TransactionDKVPage() {
                     selectableRow={false}
                     onRefresh={fetchTransactions}
                     tableClassName="min-w-[1100px]"
+                    onVisibleRowsChange={(count) => setVisibleCount(count)}
                 />
             </div>
         </div>

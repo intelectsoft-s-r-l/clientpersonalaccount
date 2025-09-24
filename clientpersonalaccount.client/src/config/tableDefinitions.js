@@ -1,4 +1,4 @@
-export const tableDefinitions = (t, data) => [
+export const tableDefinitions = (t, data, visibleCount) => [
     {
         key: "payments",
         title: t("Tabs.Payments"),
@@ -12,12 +12,12 @@ export const tableDefinitions = (t, data) => [
     },
     {
         key: "products",
-        title: `${t("Tabs.Products")} (${data?.length || 0})`,
+        title: `${t("Tabs.Products")} (${visibleCount ?? (data?.length || 0)})`,
         idField: "ID",
         columns: [
             { key: "ID", label: "ID", width: "3%", editable: false, filterable: true, align: "left" },
-            { key: "PLU", label: "Plu", editable: true, type: "number", filterable: true, align: "left" },
-            { key: "Code", label: t("Code"), editable: true, type: "number", filterable: true, align: "left" },
+            { key: "PLU", label: "PLU", editable: true, type: "number", filterable: true, align: "left" },
+            { key: "Code", label: t("Code"), editable: true, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
             { key: "Price", label: t("Price"), editable: true, type: "price", filterable: true, align: "right" },
             { key: "Barcode", label: t("Barcode"), editable: true, type: "number", filterable: true, align: "left" },
@@ -27,14 +27,13 @@ export const tableDefinitions = (t, data) => [
                 label: t("Group"),
                 editable: true,
                 type: "select",
-                // options будут подставлены динамически в AssortmentTab из extraData.groups
                 render: (value, row, extraData) => {
                     const option = extraData.groups.find(g => g.ID.toString() === value || g.ID === value);
                     return option ? option.Name : "-";
                 },
                 filterable: true, align: "left"
             },
-            { key: "TME", label: "Tme", editable: true, type: "boolean", filterable: true, align: "left" }
+            { key: "TME", label: "TME", editable: true, type: "boolean", filterable: true, align: "left" }
         ],
     },
     {

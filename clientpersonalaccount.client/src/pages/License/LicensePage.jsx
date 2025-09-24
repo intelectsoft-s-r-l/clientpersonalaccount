@@ -21,6 +21,7 @@ export default function LicensePage() {
     const [token, setToken] = useState(null);
     const { t } = useTranslation();
     const [selectedLicense, setSelectedLicense] = useState(null);
+    const [visibleCount, setVisibleCount] = useState(0);
 
     const fetchToken = async () => {
         const result = await getTokenFromServer();
@@ -125,7 +126,7 @@ export default function LicensePage() {
     return (
         <div className="min-h-screen bg-gradient-to-br to-indigo-100 p-0 m-0">
             <DataTable
-                title={`${t("Licenses")} (${licenses.length})`}
+                title={`${t("Licenses")} (${visibleCount ?? (licenses.length || 0)})`}
                 columns={columns}
                 data={decoratedLicenses}
                 loading={loading}
@@ -134,6 +135,7 @@ export default function LicensePage() {
                 selectableRow={false}
                 onRefresh={fetchLicenses}
                 tableClassName="min-w-[100px]"
+                onVisibleRowsChange={(count) => setVisibleCount(count)}
             />
 
             <LicenseModal

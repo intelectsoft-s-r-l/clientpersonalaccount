@@ -161,13 +161,15 @@ export default function LicenseModal({ license, onClose }) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {users.map((user, idx) => (
-                                        <tr key={idx} className="border-t hover:bg-gray-50">
-                                            <td className="px-4 py-2 border-r border-gray-300">{user.ID}</td>
-                                            <td className="px-4 py-2 border-r border-gray-300">{user.Name}</td>
-                                            <td className="px-4 py-2">{user.PIN}</td>
-                                        </tr>
-                                    ))}
+                                    {[...users]
+                                        .sort((a, b) => a.ID - b.ID)
+                                        .map((user, idx) => (
+                                            <tr key={idx} className="border-t hover:bg-gray-50">
+                                                <td className="px-4 py-2 border-r border-gray-300">{user.ID}</td>
+                                                <td className="px-4 py-2 border-r border-gray-300">{user.Name}</td>
+                                                <td className="px-4 py-2">{user.PIN}</td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
                 )}
