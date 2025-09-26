@@ -577,10 +577,14 @@ export function DataTable({
                                                     ref={thRef}
                                                     style={{ width: col.width || "auto", minWidth: col.minWidth || "15px", whiteSpace: "nowrap" }}
                                                     className="px-2 py-1 text-sm font-semibold text-center relative"
-                                                    onClick={() => col.sortable !== false && handleSort(col.sortField ?? col.key)}
                                                 >
                                                     <div className={`flex items-center ${getAlignmentFlex(col)} space-x-1`}>
-                                                        <span className="pl-1">{col.label}</span>
+                                                        <span
+                                                            className="pl-1 cursor-pointer"
+                                                            onClick={() => col.sortable !== false && handleSort(col.sortField ?? col.key)}
+                                                        >
+                                                            {col.label}
+                                                        </span>
 
                                                         {/* Маленький зелёный кружок для активного фильтра */}
                                                         {isFiltered && <span className="inline-block w-2 h-2 rounded-full bg-green-500" />}
