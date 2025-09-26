@@ -4,7 +4,7 @@ export const tableDefinitions = (t, data, visibleCount) => [
         title: t("Tabs.Payments"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "8%", filterable: true, align: "left" },
+            { key: "ID", label: "ID", minWidth: 70, width: 70, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), filterable: true, align: "left" },
             { key: "IsActive", label: t("IsActive"), type: "boolean", editable: true, filterable: true },
             { key: "MaxPaymentAmount", label: t("MaxPaymentAmount"), type: "price", editable: true, filterable: true, align: "right" },
@@ -41,7 +41,7 @@ export const tableDefinitions = (t, data, visibleCount) => [
         title: t("Tabs.Groups"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "8%", editable: false, filterable: true, align: "left" },
+            { key: "ID", label: "ID", minWidth: 70, width: 70, editable: false, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
         ],
     },
@@ -50,7 +50,7 @@ export const tableDefinitions = (t, data, visibleCount) => [
         title: t("Tabs.Departments"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "8%", editable: false, filterable: true, align: "left" },
+            { key: "ID", label: "ID", minWidth: 70, width: 70, editable: false, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
             {
                 key: "Assortment",
@@ -83,7 +83,7 @@ export const tableDefinitions = (t, data, visibleCount) => [
         title: t("Tabs.Users"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "8%", editable: false, filterable: true, align: "left" },
+            { key: "ID", label: "ID", minWidth: 70, width: 70, editable: false, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
             { key: "PIN", label: "PIN", editable: true, type: "number", filterable: true, align: "left", width: 80, maxLength: 5 },
         ],
