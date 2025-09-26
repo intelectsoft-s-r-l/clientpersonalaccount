@@ -1113,11 +1113,12 @@ export default function FiscalDevicePage() {
                                 bottom: "auto",
                                 transform: "translateX(-50%)",
                                 width: "450px",
-                                minHeight: "60%",       // ограничиваем по экрану
+                                maxHeight: "90%",       // ограничиваем по экрану
                                 padding: "20px",
                                 display: "flex",
                                 flexDirection: "column",
-                                position: "relative"
+                                position: "relative",
+                                overflow: "hidden"
                             },
                         }}
                     >
@@ -1138,9 +1139,11 @@ export default function FiscalDevicePage() {
                             &times;
                         </button>
 
-                        {fiscalSummaryText && (
-                            <pre className="whitespace-pre-wrap font-mono text-center">{fiscalSummaryText}</pre>
-                        )}
+                        <div style={{ overflowY: "auto", flex: 1 }}>
+                            {fiscalSummaryText && (
+                                <pre className="whitespace-pre-wrap font-mono text-center">{fiscalSummaryText}</pre>
+                            )}
+                        </div>
                         <div className="mt-3 flex items-center justify-between">
                             <button
                                 className="mb-3 px-3 py-1 bg-red-600 text-white rounded"

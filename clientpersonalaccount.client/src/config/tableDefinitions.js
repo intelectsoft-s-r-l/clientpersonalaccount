@@ -15,8 +15,8 @@ export const tableDefinitions = (t, data, visibleCount) => [
         title: `${t("Tabs.Products")} (${visibleCount ?? (data?.length || 0)})`,
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "8%", editable: false, filterable: true, align: "left" },
-            { key: "PLU", label: "PLU", editable: true, filterable: true, align: "left" },
+            { key: "ID", label: "ID", minWidth: 70, width: 70, editable: false, filterable: true, align: "left" },
+            { key: "PLU", label: "PLU", minWidth: 70, width: 70, editable: true, filterable: true, align: "left" },
             { key: "Code", label: t("Code"), editable: true, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
             { key: "Price", label: t("Price"), editable: true, type: "price", filterable: true, align: "right" },
@@ -31,9 +31,9 @@ export const tableDefinitions = (t, data, visibleCount) => [
                     const option = extraData.groups.find(g => g.ID.toString() === value || g.ID === value);
                     return option ? option.Name : "-";
                 },
-                filterable: true, width: "15%", align: "left"
+                filterable: true, minWidth: 100, align: "left"
             },
-            { key: "TME", label: "TME", editable: true, type: "boolean", filterable: true, align: "left" }
+            { key: "TME", label: "TME", minWidth: 65, width: 65, editable: true, type: "boolean", filterable: true, align: "left" }
         ],
     },
     {
