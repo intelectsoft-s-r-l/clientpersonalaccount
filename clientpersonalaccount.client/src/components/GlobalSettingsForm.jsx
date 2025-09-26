@@ -89,18 +89,8 @@ const GlobalSettingsForm = forwardRef(({ initialSettings, onChange }, ref) => {
 
             if (type === "checkbox") {
                 newValue = checked;
-            } else if (type === "number") {
-                newValue = +value || 0;
-
-                // проверка ограничений для нужных полей
-                if (name === "MaxServiceAmount") {
-                    newValue = Math.min(newValue, maxPrice);
-                }
-                if (name === "MaxInvoiceAmount") {
-                    newValue = Math.min(newValue, maxPrice);
-                }
             } else {
-                newValue = value || "";
+                newValue = value;
             }
 
             const updated = {
@@ -177,8 +167,16 @@ const GlobalSettingsForm = forwardRef(({ initialSettings, onChange }, ref) => {
                     <input
                         type="number"
                         name="MaxInvoiceAmount"
-                        value={settings.MaxInvoiceAmount ?? 0}
-                        onChange={handleChange}
+                        value={settings.MaxInvoiceAmount}
+                        onChange={(e) => {
+                            const newValue = e.target.value;
+                            const maxPrice = process.env.NODE_ENV === "development" ? 3000000 : 100000;
+
+                            const numericValue = Number(newValue);
+                            if (!isNaN(numericValue) && numericValue > maxPrice) return;
+
+                            handleChange(e);
+                        }}
                         className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                         min={0}
                     />
@@ -201,8 +199,16 @@ const GlobalSettingsForm = forwardRef(({ initialSettings, onChange }, ref) => {
                     <input
                         type="number"
                         name="MaxServiceAmount"
-                        value={settings.MaxServiceAmount ?? 0}
-                        onChange={handleChange}
+                        value={settings.MaxServiceAmount}
+                        onChange={(e) => {
+                            const newValue = e.target.value;
+                            const maxPrice = process.env.NODE_ENV === "development" ? 3000000 : 100000;
+
+                            const numericValue = Number(newValue);
+                            if (!isNaN(numericValue) && numericValue > maxPrice) return;
+
+                            handleChange(e);
+                        }}
                         className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                         min={0}
                     />
