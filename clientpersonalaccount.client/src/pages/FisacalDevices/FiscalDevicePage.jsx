@@ -16,8 +16,17 @@ import autoTable from "jspdf-autotable";
 import Modal from "react-modal";
 import Datepicker from "react-tailwindcss-datepicker";
 import { useParams } from "react-router-dom";
+import CourierPrime from '../../fonts/CourierPrime-Regular-BpSU6fVE.ttf';
+import Toast from "../../components/Toast";
 
 Modal.setAppElement("#root");
+
+function formatPricesInReceipt(text) {
+    return text.replace(/(\d+)[.,](\d{2})(?=\s|$)/g, (_, intPart, decPart) => {
+        const num = parseFloat(intPart.replace(/\s/g, '') + '.' + decPart);
+        return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    });
+}
 
 export default function FiscalDevicePage() {
     const { id } = useParams();
@@ -25,6 +34,7 @@ export default function FiscalDevicePage() {
     const [shifts, setShifts] = useState([]);
     const [bills, setBills] = useState([]);
     const [selectedShiftId, setSelectedShiftId] = useState(null);
+    const [selectedShiftGuid, setSelectedShiftGuid] = useState(null);
     const [selectedBill, setSelectedBill] = useState(null);
     const [receiptText, setReceiptText] = useState("");
     const [reportModel, setReportModel] = useState(null);
@@ -45,6 +55,7 @@ export default function FiscalDevicePage() {
     });
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [currentReportType, setCurrentReportType] = useState(null);
+    const [currentReportName, setCurrentReportName] = useState(null);
     const today = new Date();
     const [period, setPeriod] = useState({
         startDate: today,
@@ -58,23 +69,38 @@ export default function FiscalDevicePage() {
     const [pdfUrl, setPdfUrl] = useState(null);
     const [fiscalSummaryText, setFiscalSummaryText] = useState("");
     const [isOpenFiscalSummary, setIsOpenFiscalSummary] = useState(false);
+    const [isOpenKkmJournal, setIsOpenKkmJournal] = useState(false);
+    const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+    const [showSuccessMessage, setShowSuccessMessage] = useState(null);
+    const [isWarningModalVisible, setIsWarningModalVisible] = useState(false);
+    const [showWarningMessage, setShowWarningMessage] = useState(null);
+    const [modalHeight, setModalHeight] = useState("auto");
 
     const printReceipt = () => {
-        const isDev = import.meta.env.MODE === "development"; // Vite проверка режима
+        // проверка режима (vite)
+        const mode = import.meta.env.MODE;
 
-        const receiptUrl = isDev
-            ? "https://freceipt.edi.md/ReceiptPrint/"
-            : "https://freceipt.eservicii.md/ReceiptPrint/";
+        let baseUrl = null;
+        switch (mode) {
+            case "devrelease": // аналог DEVRELEASE
+                baseUrl = "https://freceipt.edi.md";
+                break;
+            case "production": // аналог RELEASE
+            default:
+                baseUrl = "https://freceipt.edi.md";
+                break;
+        }
 
+        const receiptUrl = `${baseUrl}/ReceiptPrint/${selectedShiftGuid}/${id}`;
         // Если нужно печатать Z-подробный чек через системную печать
         const receiptDiv = document.getElementById("receiptDiv");
-        if (receiptDiv) {
+
+        if (receiptDiv && mode == "development") {
             printJS({
                 printable: receiptDiv,
                 type: "html",
                 scanStyles: false,
-                targetStyles: ["*"],
-                css: "/path/to/tailwind.css",
+                targetStyles: ["*"]
             });
         } else {
             // если нужно просто открыть URL печати для чека
@@ -128,7 +154,7 @@ export default function FiscalDevicePage() {
             })
 
             setShifts(data.shifts || []);
-            if (data.shifts?.length) setSelectedShiftId(data.shifts[0].shiftID);
+            if (data.shifts?.length) { setSelectedShiftId(data.shifts[0].shiftID); setSelectedShiftGuid(data.shifts[0].id); }
         } catch {
             setShifts([]);
         }
@@ -201,7 +227,7 @@ export default function FiscalDevicePage() {
                         console.error("Ошибка при копировании QR:", err);
                     }
                 }
-
+                decodedText = formatPricesInReceipt(decodedText);
                 setMevURi(standardJson.mevURI);
                 setReceiptText(decodedText);
                 setViewMode("receipt");
@@ -246,29 +272,27 @@ export default function FiscalDevicePage() {
     };
 
     const getReportLabel = (reportType, type) => {
-        if (!reportType) return null;
-
         if (reportType === 1) {
             return (
                 <div className="flex justify-center items-center" style={{ ...iconStyle, backgroundColor: "#2563eb" }}>
                     Z
                 </div>
             );
-        }
-        if (reportType === 2) {
-            return (
-                <div style={{ ...iconStyle, backgroundColor: "#16a34a" }}>
-                    X
-                </div>
-            );
-        }
-        if (type === 2 && reportType === 0) {
-            return (
-                <div style={{ ...iconStyle, backgroundColor: "#7c3aed" }}>
-                    S
-                </div>
-            );
-        }
+        } else
+            if (reportType === 2) {
+                return (
+                    <div style={{ ...iconStyle, backgroundColor: "#16a34a" }}>
+                        X
+                    </div>
+                );
+            } else
+                if (type === 2 && reportType === 0) {
+                    return (
+                        <div style={{ ...iconStyle, backgroundColor: "#7c3aed" }}>
+                            S
+                        </div>
+                    );
+                }
 
         return null;
     };
@@ -294,15 +318,14 @@ export default function FiscalDevicePage() {
         .sort((a, b) => new Date(b.createDate) - new Date(a.createDate)) // самые новые сверху
         .map((s) => ({
             ...s,
-            id: s.shiftID,
             createDate: formatDate(s.createDate),
         }));
 
     const priorityOrder = (bill) => {
         if (bill.reportType === 1) return 1;    // Z - самый высокий приоритет
         if (bill.reportType === 2) return 2;    // X
-        if (bill.type === 2 && bill.reportType === 0) return 3;  // S
-        return 4;                               // остальные
+        if (bill.type === 2 && bill.reportType === 0) return 3;  // S    
+        return 4;// остальные
     };
 
     const decoratedBills = bills
@@ -367,6 +390,11 @@ export default function FiscalDevicePage() {
                     setFiscalSummaryText(decodedText);
                     setIsOpenFiscalSummary(true);
                 }
+                else {
+                    setShowWarningMessage(t("NothingToDisplay"));
+                    setIsWarningModalVisible(true);
+                    return;
+                }
 
                 exportToExcel(data || [], "FiscalSummary.xlsx");
             }
@@ -383,6 +411,12 @@ export default function FiscalDevicePage() {
 
                 const reportByPeriod = data.ReportByPeriod || [];
                 const receiptForPeriod = data.fiscalReceiptItems || [];
+
+                if (!receiptForPeriod) {
+                    setShowWarningMessage(t("NothingToDisplay"));
+                    setIsWarningModalVisible(true);
+                    return;
+                }
 
                 if (currentReportType === "ReceiptForPeriod") {
                     receiptForPeriodExcel(receiptForPeriod);
@@ -553,12 +587,13 @@ export default function FiscalDevicePage() {
             );
 
             if (!data) {
+                setShowWarningMessage(t("NothingToDisplay"));
+                setIsWarningModalVisible(true);
                 return;
             }
-
             // Генерируем PDF
             const doc = generateKKMJournalPDF(data, payload.startDate, payload.endDate);
-            doc.save(`KKMJournal_${payload.startDate}_${payload.endDate}.pdf`);
+            doc.save(`Registrul mașinii de casă și control al aparatului fiscal al companiei ${data.company} pe perioada de la ${payload.startDate} până la ${payload.endDate}.pdf`);
         } catch (err) {
             console.error("Ошибка при скачивании KKMJournal:", err);
         }
@@ -568,9 +603,8 @@ export default function FiscalDevicePage() {
         const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
 
         const pageWidth = pdf.internal.pageSize.getWidth();
-        const margin = 10;
-
-        pdf.setFontSize(10);
+        const margin = 12;
+        pdf.setFontSize(7);
         pdf.text(`${data.company}, Cod Fiscal: ${data.companyIDNO}`, pageWidth / 2, 30, { align: "center" });
         pdf.text(
             `Registrul electronic MCC/IF de la ${new Date(startDate).toLocaleDateString("ro-RO")} pana la ${new Date(endDate).toLocaleDateString("ro-RO")}`,
@@ -581,14 +615,29 @@ export default function FiscalDevicePage() {
         pdf.text(`Numarul de inregistrare: ${data.registrationNumber}, Adresa: ${data.salesPointAddress}`, pageWidth / 2, 60, { align: "center" });
 
         // Dynamic headers
+        console.log(data.taxesMapping);
         const dynamicTaxHeaders = data.taxesMapping?.map((tax) => {
             return {
                 content: `Valoarea rulajului pe cota ${tax.taxCode} / Valoarea T.V.A. pe cota ${tax.taxCode}`,
                 styles: {
-                    cellWidth: 60
+                    minCellWidth: 35
                 }
             };
         }) || [];
+
+        dynamicTaxHeaders.unshift({
+            content: "Valoarea totala a rulajului/ Valoarea totala a T.V.A.",
+            styles: {
+                cellWidth: 35
+            }
+        });
+
+        dynamicTaxHeaders.push({
+            content: "Varsamint de serviciu de numerar in caseta de bani a MCC/ IF la inceputul perioadei de gestiune",
+            styles: {
+                cellWidth: 45
+            }
+        });
 
         const head = [
             [
@@ -599,49 +648,74 @@ export default function FiscalDevicePage() {
                 },
                 {
                     content: "Nr. raportului de inchidere zilnica / Data raportului de inchidere zilnica", styles: {
-                        cellWidth: 70
+                        cellWidth: 50
                     }, rowSpan: 2
                 },
                 {
                     content: "Valoare totala a rulajului inregistrat de la inceputul anului gestionar(lei)/ Valoarea totala a T.V.A. inregistrate de la inceputul anului gestionar(lei)", styles: {
-                        cellWidth: 70
+                        cellWidth: 60
                     }, rowSpan: 2
                 },
                 {
-                    content: "Rulajul (lei) inregistrat, conform cu raportul de inchidere zilnica emis la sfarsitul perioadei de gestiune / Valorile T.V.A. (lei) pe cotele aferente", colSpan: dynamicTaxHeaders.length
+                    content: "Rulajul (lei) inregistrat, conform cu raportul de inchidere zilnica emis la sfarsitul perioadei de gestiune / Valorile T.V.A. (lei) pe cotele aferente", styles: { cellWidth: 0, valign: 'middle' }, colSpan: dynamicTaxHeaders.length
                 },
                 {
                     content: "Suma predata in casierie / incasatorului in timpul perioadei de gestiune", styles: {
-                        cellWidth: 70
+                        cellWidth: 60
                     }, rowSpan: 2
                 },
                 {
                     content: "Suma restituita consumatorilor in timpul perioadei de gestiune", styles: {
-                        cellWidth: 70
+                        cellWidth: 60
                     }, rowSpan: 2
                 },
                 {
                     content: "Suma achitata (confirmata) cu (prin) alte instrumente (documente) de plata", styles: {
-                        cellWidth: 70
+                        cellWidth: 60
                     }, rowSpan: 2
                 },
                 {
                     content: "Suma achitata (confirmata) cu (prin) tichet de masa pe suport de hârtie /pe suport electronic", styles: {
-                        cellWidth: 70
+                        cellWidth: 60
                     }, rowSpan: 2
                 },
                 {
                     content: "Soldul de numerar din caseta de bani a MCC/IF la sfarsitul perioadei de gestiune /Suma totala a restului nerambursat din valoarea nominala a tichetului de masa pe suport de hartie ('rest TMH')", styles: {
-                        cellWidth: 120
+                        cellWidth: 60
                     }, rowSpan: 2
                 }
             ],
             dynamicTaxHeaders
         ];
 
+        const thirdRow = [];
+        let counter = 1; // общий счетчик для основных колонок
+
+        head[0].forEach((col, index) => {
+            if (col.colSpan) {
+                // динамические колонки
+                for (let i = 0; i < col.colSpan - 1; i++) {
+                    if (i >= 5) {
+                        // последние колонки (E, F) — через прошлое значение
+                        const prevNum = String(thirdRow[thirdRow.length - 1]?.content).split(".")[0];
+                        thirdRow.push({ content: `${prevNum}.${i - 4}`, styles: { halign: "center", valign: 'middle' } });
+                    } else {
+                        thirdRow.push({ content: counter, styles: { halign: "center", valign: 'middle' } });
+
+                        counter++;
+                    }
+                }
+            } else {
+                thirdRow.push({ content: counter, styles: { halign: "center", valign: 'middle' } });
+                counter++;
+            }
+        });
+
+        head.push(thirdRow);
+
         const body = data.reports?.flatMap((report, idx) => {
             const brutRow = [
-                idx + 1,
+                { content: idx + 1, rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
                 report.reportNumber ?? "",
                 Number(report.grandTotalBrut ?? 0).toFixed(2),
                 Number(report.totalBrut ?? 0).toFixed(2),
@@ -658,7 +732,6 @@ export default function FiscalDevicePage() {
             ];
 
             const taxRow = [
-                "", // empty for rowspan
                 new Date(report.reportDate).toLocaleString("ro-RO"),
                 Number(report.grandTotalTax ?? 0).toFixed(2),
                 Number(report.totalTax ?? 0).toFixed(2),
@@ -666,7 +739,7 @@ export default function FiscalDevicePage() {
                     const taxItem = report.taxes?.find((t) => t.taxCode === tax.taxCode);
                     return Number(taxItem?.tax ?? 0).toFixed(2);
                 }) || []),
-                "", "", "", "", "", "" // empty fields for the rest of the row
+                "", "", "", "", "", "","", // empty for rowspan // empty fields for the rest of the row
             ];
 
             return [brutRow, taxRow];
@@ -674,26 +747,27 @@ export default function FiscalDevicePage() {
 
         // Table styles
         autoTable(pdf, {
-            head: head,
-            body: body,
+            head,
+            body,
             startY: 80,
             theme: "grid",
             margin: { left: margin, right: margin },
             styles: {
-                fontSize: 8,
+                fontSize: 7,
+                fontStyle: "normal",
                 halign: "center",
                 valign: "top",
-                cellPadding: 3,
+                cellPadding: 2,
                 lineWidth: 0.5,
                 lineColor: [0, 0, 0],
                 textColor: [0, 0, 0],
                 overflow: "linebreak",
             },
             headStyles: {
-                fontStyle: "bold",
-                fillColor: [255, 255, 255], // Серый фон для заголовков
-                minCellHeight: 80, // Увеличиваем высоту ячеек заголовка для многострочного текста
+                fillColor: [255, 255, 255],
+                fontStyle: "normal"
             },
+            tableWidth: "auto" // растягиваем таблицу равномерно по странице
         });
 
         return pdf;
@@ -705,18 +779,44 @@ export default function FiscalDevicePage() {
             { method: "GET" }
         );
 
-        if (!data) return;
+        if (!data) {
+            setShowWarningMessage(t("NothingToDisplay"));
+            setIsWarningModalVisible(true);
+            return;
+        };
 
         const pdf = generateKKMJournalPDF(data, payload.startDate, payload.endDate);
 
         const pdfBlob = pdf.output("blob");
         const blobUrl = URL.createObjectURL(pdfBlob);
         setPdfUrl(blobUrl);
-        setIsOpenFiscalSummary(true);
+        setIsOpenKkmJournal(true);
     };
 
     const openReportModal = (reportType) => {
         setCurrentReportType(reportType);
+
+        switch (reportType) {
+            case "FiscalSummary":
+                setCurrentReportName(t("FiscalSummary"));
+                break;
+            case "ReceiptForPeriod":
+                setCurrentReportName(t("ReceiptForPeriod"));
+                break;
+            case "ReceiptForPeriodGrouped":
+                setCurrentReportName(t("ReceiptForPeriodGrouped"));
+                break;
+            case "KKMJournal":
+                setCurrentReportName(t("KKMJournal"));
+                break;
+            case "DownloadKKMJournal":
+                setCurrentReportName(t("DownloadKKMJournal"));
+                break;
+            default:
+                setCurrentReportName("");
+                break;
+        }
+
         setIsReportModalOpen(true);
     };
 
@@ -728,6 +828,7 @@ export default function FiscalDevicePage() {
     return (
         <>
             <style>{`
+
         .receipt-text {
         font-family: 'Courier Prime', monospace;
         text-align: center;
@@ -742,7 +843,7 @@ export default function FiscalDevicePage() {
                             title={t("Shifts")}
                             columns={columnsShifts}
                             data={decoratedShifts}
-                            onRowClick={(row) => setSelectedShiftId(row.id)}
+                            onRowClick={(row) => { setSelectedShiftId(row.shiftID); setSelectedShiftGuid(row.id); }}
                             selectedRowId={selectedShiftId}
                             selectableRow={true}
                             onRefresh={() => fetchShifts(id)}
@@ -750,7 +851,7 @@ export default function FiscalDevicePage() {
                                 <ShiftMenu openReportModal={openReportModal} t={t} />
                             )}
                             rowClassName={(row) =>
-                                row.id === selectedRowId ? "bg-gray-200" : ""
+                                row.shiftID === selectedRowId ? "bg-gray-200" : ""
                             }
                             tableClassName="min-w-[10px] table-auto"
                         />
@@ -760,7 +861,7 @@ export default function FiscalDevicePage() {
                             title={t("Bills")}
                             columns={columnsBills}
                             data={decoratedBills}
-                            onRowClick={(row) => setSelectedBill(row)}
+                            onRowClick={(row) => { setSelectedBill(row); }}
                             selectedRowId={selectedBill?.id}
                             selectableRow={true}
                             onRefresh={() => fetchBills(id, selectedShiftId)}
@@ -803,7 +904,7 @@ export default function FiscalDevicePage() {
                                 </div>
 
 
-                                <div className="text-sm whitespace-pre-wrap break-words min-h-[200px] bg-white PrintArea rounded">
+                                <div className="text-sm whitespace-pre-wrap break-words bg-white">
                                     {viewMode === "report" ? (
                                         <LongZReport className="bg-white" model={reportModel} t={t} />
                                     ) : (
@@ -812,12 +913,12 @@ export default function FiscalDevicePage() {
                                             <input id="Id" value={selectedBill?.id || ""} type="hidden" />
 
                                             <div className="receipt" id="receiptDiv">
-                                                <div className="receiptBody flex flex-col items-center">
+                                                <div className="receiptBody flex flex-col items-center PrintArea rounded">
                                                     <div className="contentReceipt flex flex-col items-center">
-                                                        <pre className="receipt-text break-words whitespace-pre-wrap text-center">{receiptText || t("SelectBill")}</pre>
+                                                        <pre className="receipt-text text-center">{receiptText || t("SelectBill")}</pre>
 
                                                         {mevURi && (
-                                                            <div className="mt-2 text-center" style={{ fontSize: "87.5%" }}>
+                                                            <div className="mt-2 text-center items-center" style={{ fontSize: "87.5%" }}>
                                                                 Copie a bonului fiscal
                                                                 <br />
                                                                 Verificați aici:
@@ -848,16 +949,18 @@ export default function FiscalDevicePage() {
                                                         </a>
                                                     </div>
                                                 )}
-                                                <div className="mt-3 ">
-                                                    <button
-                                                        id="printNext"
-                                                        className="btn btn-contained border rounded border-gray-900"
-                                                        style={{ width: 140 }}
-                                                        onClick={() => printReceipt()}
-                                                    >
-                                                        {t("Print")}
-                                                    </button>
-                                                </div>
+                                                {(selectedBill?.type == 2 && selectedBill?.reportType == 0) != true && (
+                                                    <div className="mt-3">
+                                                        <button
+                                                            id="printNext"
+                                                            className="btn btn-contained border rounded border-gray-900"
+                                                            style={{ width: 140 }}
+                                                            onClick={() => printReceipt()}
+                                                        >
+                                                            {t("Print")}
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -869,7 +972,8 @@ export default function FiscalDevicePage() {
                     {isReportModalOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={closeReportModal}>
                             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[450px]" onClick={(e) => e.stopPropagation()}>
-                                <h3 className="text-lg font-semibold mb-2">{t("SelectPeriod")}</h3>
+                                <h3 className="text-lg font-semibold mb-2">{`${currentReportName}`}</h3>
+                                <h3 className="text-lg font-semibold mb-2">{`${t("SelectPeriod")}`}</h3>
                                 {/* Для FiscalSummary показываем переключатель */}
                                 {currentReportType === "FiscalSummary" && (
                                     <div className="flex gap-4 mb-2">
@@ -901,9 +1005,11 @@ export default function FiscalDevicePage() {
                                         <Datepicker
                                             asSingle
                                             value={{ startDate: period.startDate, endDate: period.startDate }}
-                                            onChange={(val) =>
-                                                setPeriod((prev) => ({ ...prev, startDate: val.startDate }))
-                                            }
+                                            onChange={(val) => {
+                                                const selectedDate = new Date(val.startDate);
+                                                selectedDate.setHours(12, 0, 0, 0);
+                                                setPeriod((prev) => ({ ...prev, startDate: selectedDate }));
+                                            }}
                                             primaryColor="cyan"
                                             displayFormat="DD.MM.YYYY"
                                             maxDate={period?.endDate || new Date()}
@@ -917,9 +1023,11 @@ export default function FiscalDevicePage() {
                                         <Datepicker
                                             asSingle
                                             value={{ startDate: period.endDate, endDate: period.endDate }}
-                                            onChange={(val) =>
-                                                setPeriod((prev) => ({ ...prev, endDate: val.startDate }))
-                                            }
+                                            onChange={(val) => {
+                                                const selectedDate = new Date(val.startDate);
+                                                selectedDate.setHours(12, 0, 0, 0);
+                                                setPeriod((prev) => ({ ...prev, endDate: selectedDate }));
+                                            }}
                                             primaryColor="cyan"
                                             displayFormat="DD.MM.YYYY"
                                             minDate={period?.startDate || new Date()}
@@ -1000,30 +1108,40 @@ export default function FiscalDevicePage() {
                         style={{
                             content: {
                                 top: "5%",
-                                left: "15%",
-                                right: "15%",
-                                bottom: "5%",
-                                width: "70%",
-                                height: "80%",
+                                left: "50%",
+                                right: "auto",
+                                bottom: "auto",
+                                transform: "translateX(-50%)",
+                                width: "450px",
+                                minHeight: "60%",       // ограничиваем по экрану
                                 padding: "20px",
-                                overflow: "auto"
+                                display: "flex",
+                                flexDirection: "column",
+                                position: "relative"
                             },
                         }}
                     >
-                        {pdfUrl && (
-                            <iframe
-                                src={pdfUrl}
-                                title="KKM Journal PDF"
-                                width="100%"
-                                height="100%"
-                                style={{ border: "none" }}
-                            />
-                        )}
+                        {/* Крестик закрытия */}
+                        <button
+                            onClick={() => setIsOpenFiscalSummary(false)}
+                            style={{
+                                position: "absolute",
+                                top: "10px",
+                                right: "10px",
+                                background: "transparent",
+                                border: "none",
+                                fontSize: "20px",
+                                cursor: "pointer"
+                            }}
+                            aria-label="Close"
+                        >
+                            &times;
+                        </button>
 
                         {fiscalSummaryText && (
                             <pre className="whitespace-pre-wrap font-mono text-center">{fiscalSummaryText}</pre>
                         )}
-                        <div className="mt-3 flex items-center">
+                        <div className="mt-3 flex items-center justify-between">
                             <button
                                 className="mb-3 px-3 py-1 bg-red-600 text-white rounded"
                                 onClick={() => setIsOpenFiscalSummary(false)}
@@ -1040,6 +1158,66 @@ export default function FiscalDevicePage() {
                             </button>
                         </div>
                     </Modal>
+
+                    <Modal
+                        isOpen={isOpenKkmJournal}
+                        onRequestClose={() => setIsOpenKkmJournal(false)}
+                        contentLabel="Сводный отчет"
+                        style={{
+                            content: {
+                                top: "5%",
+                                left: "50%",
+                                right: "auto",
+                                bottom: "auto",
+                                transform: "translateX(-50%)",
+                                width: "80%",
+                                height: "92%",
+                                padding: "20px",
+                                display: "flex",
+                                flexDirection: "column",
+                                position: "relative"
+                            },
+                        }}
+                    >
+                        {/* Крестик закрытия */}
+                        <button
+                            onClick={() => setIsOpenKkmJournal(false)}
+                            style={{
+                                position: "absolute",
+                                top: "4px",
+                                right: "4px",
+                                background: "transparent",
+                                border: "none",
+                                fontSize: "20px",
+                                cursor: "pointer"
+                            }}
+                            aria-label="Close"
+                        >
+                            &times;
+                        </button>
+                        <div style={{ flexGrow: 1, minHeight: 0 }}>
+                            {pdfUrl && (
+                                <iframe
+                                    src={pdfUrl}
+                                    title="KKM Journal PDF"
+                                    style={{ width: "100%", height: "100%" }} // Use 100% width/height for iframe
+                                />
+                            )}
+                        </div>
+                    </Modal>
+
+                    <Toast
+                        visible={isSuccessModalVisible}
+                        message={showSuccessMessage}
+                        onClose={() => setIsSuccessModalVisible(false)}
+                        type="success"
+                    />
+                    <Toast
+                        visible={isWarningModalVisible}
+                        message={showWarningMessage}
+                        onClose={() => setIsWarningModalVisible(false)}
+                        type="warning"
+                    />
                 </div>
             </div>
         </>

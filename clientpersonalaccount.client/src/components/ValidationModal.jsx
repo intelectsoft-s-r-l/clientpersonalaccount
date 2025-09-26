@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-export default function ValidationModal({ errors, visible, onClose }) {
+export default function ValidationModal({ errors, visible, onClose, rowNames = {} }) {
     const { t } = useTranslation();
 
     if (!visible) return null;
@@ -12,13 +12,12 @@ export default function ValidationModal({ errors, visible, onClose }) {
         const messages = [];
 
         if (typeof value === "string") {
-            const shouldShowRowPrefix =
-                rowId &&
-                isNumericKey(rowId) &&
-                rowId !== "general"; // general не получает префикс
+            const shouldShowRowPrefix = rowId && isNumericKey(rowId) && rowId !== "general";
 
-            if (shouldShowRowPrefix) {
-                messages.push(`${t("Row")} ${rowId}: ${value}`);
+            const rowLabel = shouldShowRowPrefix ? (rowNames[rowId] || rowId) : null;
+
+            if (rowLabel) {
+                messages.push(`${t("Row")} ${rowLabel}: ${value}`);
             } else {
                 messages.push(value);
             }

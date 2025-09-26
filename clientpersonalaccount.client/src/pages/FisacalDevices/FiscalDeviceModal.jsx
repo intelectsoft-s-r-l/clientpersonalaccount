@@ -139,30 +139,52 @@ export default function FiscalDeviceModal({ deviceId, onClose, onSuccess }) {
                 ...item,
                 ID: index + 1,
             })),
-            taxiTariffs: (taxiTariffsObj.Tariffs || taxiTariffsObj.tariffs  || []).map((item, index) => ({
+            taxiTariffs: (taxiTariffsObj.Tariffs || taxiTariffsObj.tariffs || []).map((item, index) => ({
                 ...item,
                 ID: index + 1,
             })),
         });
     }, [device]);
 
-    const handleTableDataUpdate = useCallback((key, updatedData) => {
-        setTableData((prevData) => ({
-            ...prevData,
-            [key]: updatedData,
+    const handleTableDataUpdate = (tableKey, updatedData) => {
+        setTableData((prev) => ({
+            ...prev,
+            [tableKey]: updatedData
         }));
-    }, []);
+    };
 
     function cleanRows(rows) {
-        return rows.map(({ ID, isNew, ...rest }) => rest);
+        return rows.map(({ ID, isNew, AggregatorId, AggregatorNumber, ...rest }) => rest);
     }
 
     const saveVatRates = async () => {
         if (!token) return null;
 
-        const errors = validateDevice(tableData.vatRates || [], activeTab, t);
-        if (Object.keys(errors).length > 0) {
-            setValidationErrors(errors);
+        const getCompanyInfo = await apiService.proxyRequest(`/ISClientWebAppService/json/GetCompanyInfo`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        let isTaxpayer = getCompanyInfo?.VATCode?.trim() === "";
+
+        let validationErrors = {};
+        const validateAll = (rows, key) => {
+            rows.forEach(row => {
+                const errors = validateDevice(row, activeTab, t, isTaxpayer, rows);
+
+                if (Object.keys(errors).length > 0) {
+                    validationErrors[row.ID] = errors;
+                }
+            });
+        };
+
+        validateAll(tableData.vatRates || [], activeTab);
+
+        if (Object.keys(validationErrors).length > 0) {
+            setValidationErrors(validationErrors);
             setShowErrors(true);
             return;
         } else {
@@ -170,12 +192,13 @@ export default function FiscalDeviceModal({ deviceId, onClose, onSuccess }) {
             setShowErrors(false);
         }
 
+
         const payload = {
             token: token,
             id: deviceId,
             vatRates: encodeBase64Json({ VatRates: cleanRows(tableData.vatRates || []) }),
         };
-
+        console.log(payload);
         const resp = await apiService.proxyRequest(`/FiscalCloudManagement/UpsertVATRatesFiscalDevice`, {
             method: "POST",
             credentials: "include",
@@ -201,9 +224,21 @@ export default function FiscalDeviceModal({ deviceId, onClose, onSuccess }) {
     const saveTaxiTariffs = async () => {
         if (!token) return null;
 
-        const errors = validateDevice(tableData.taxiTariffs || [], activeTab, t);
-        if (Object.keys(errors).length > 0) {
-            setValidationErrors(errors);
+        let validationErrors = {};
+        const validateAll = (rows, key) => {
+            rows.forEach(row => {
+                const errors = validateDevice(row, activeTab, t, null, rows);
+
+                if (Object.keys(errors).length > 0) {
+                    validationErrors[row.ID] = errors;
+                }
+            });
+        };
+
+        validateAll(tableData.taxiTariffs || [], activeTab);
+
+        if (Object.keys(validationErrors).length > 0) {
+            setValidationErrors(validationErrors);
             setShowErrors(true);
             return;
         } else {
@@ -211,12 +246,15 @@ export default function FiscalDeviceModal({ deviceId, onClose, onSuccess }) {
             setShowErrors(false);
         }
 
+        const tarif = cleanRows(tableData.taxiTariffs || []);
+
+        console.log(tarif, tableData.taxiTariffs);
         const payload = {
             token: token,
             id: deviceId,
-            tariffs: encodeBase64Json({ Tariffs: cleanRows(tableData.taxiTariffs || [])}),
+            tariffs: encodeBase64Json({ Tariffs: tarif }),
         };
-
+        console.log(payload);
         const resp = await apiService.proxyRequest(`/FiscalCloudManagement/UpsertTariffsFiscalDevice`, {
             method: "POST",
             credentials: "include",
@@ -224,7 +262,7 @@ export default function FiscalDeviceModal({ deviceId, onClose, onSuccess }) {
                 "Content-Type": "application/json",
                 "X-Service-Id": "29",
             },
-            body: JSON.stringify(payload),
+            body: payload,
         });
 
         if (resp.errorCode !== 0) {
@@ -362,6 +400,13 @@ export default function FiscalDeviceModal({ deviceId, onClose, onSuccess }) {
                         errors={validationErrors}
                         visible={showErrors}
                         onClose={() => setShowErrors(false)}
+                        rowNames={Array.isArray(tableData[activeTab])
+                            ? tableData[activeTab].reduce((acc, row) => {
+                                if (row && row.Name)
+                                    acc[row?.ID] = row.Name;
+                                return acc;
+                            }, {})
+                            : {}}
                     />
                     <SuccessModal
                         visible={isSuccessModalVisible}

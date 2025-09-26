@@ -25,12 +25,6 @@ export default function LongZReport({ model, t }) {
     });
 
     const printReport = () => {
-        const isDev = import.meta.env.MODE === "development"; // Vite проверка режима
-
-        const receiptUrl = isDev
-            ? "https://freceipt.edi.md/ReceiptPrint/"
-            : "https://freceipt.eservicii.md/ReceiptPrint/";
-
         // Если нужно печатать Z-подробный чек через системную печать
         const reportDiv = document.getElementById("reportDiv");
         if (reportDiv) {
@@ -44,18 +38,15 @@ export default function LongZReport({ model, t }) {
                     "/path/to/tailwind.css"
                 ]
             });
-        } else {
-            // если нужно просто открыть URL печати для чека
-            window.open(receiptUrl, "_blank");
         }
     };
 
 
     return (
         <div className="billStyle dark:bg-gray-800 dark:text-white">
-            <div className="receipt">
+            <div className="receipt PrintArea rounded">
                 <div className="receiptBody" id="reportDiv">
-                    <div className="contentReceipt d-flex flex-column">
+                    <div className="contentReceipt d-flex flex-column pl-5">
                         <div style={{ flex: "0 0 auto", width: "100%" }}>
                             <div style={{ textAlign: "center" }}>
                                 <span style={{ wordBreak: "break-word" }}>{model.company}</span>
@@ -137,13 +128,13 @@ export default function LongZReport({ model, t }) {
 
                         <div className="row">
                             <div
-                                className="col-6 pe-0"
+                                className="col-6"
                                 style={{ wordBreak: "break-word", float: "left" }}
                             >
                                 Vânzări
                             </div>
                             <div
-                                className="col-6 ps-0 text-end"
+                                className="col-6 text-end"
                                 style={{
                                     wordBreak: "break-word",
                                     float: "right",
@@ -211,16 +202,16 @@ export default function LongZReport({ model, t }) {
                         <div className="text-center">--- BON DE SERVICIU ---</div>
                     </div>
                 </div>
-                <div className="mt-3 text-center">
-                    <button
-                        id="printNext"
-                        className="btn btn-contained border rounded border-gray-900"
-                        style={{ width: 140 }}
-                        onClick={() => printReport()}
-                    >
-                        {t("Print")}
-                    </button>
-                </div>
+            </div>
+            <div className="mt-3 text-center">
+                <button
+                    id="printNext"
+                    className="btn btn-contained border rounded border-gray-900"
+                    style={{ width: 140 }}
+                    onClick={() => printReport()}
+                >
+                    {t("Print")}
+                </button>
             </div>
         </div>
     );

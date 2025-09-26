@@ -798,7 +798,7 @@
   "month.oct": "October",
   "month.nov": "November",
   "month.dec": "December",
-  "TotalValue": "General",
+  "TotalValue": "Total for the current year",
   "TopProducts": "Top 5 products for the period",
   "TotalSales": "Total sales",
   "POSForYear": "Sales statistics by device for the current year",

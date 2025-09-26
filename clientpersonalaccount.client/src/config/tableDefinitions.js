@@ -4,7 +4,7 @@ export const tableDefinitions = (t, data, visibleCount) => [
         title: t("Tabs.Payments"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "2.5%", filterable: true, align: "left" },
+            { key: "ID", label: "ID", width: "8%", filterable: true, align: "left" },
             { key: "Name", label: t("Name"), filterable: true, align: "left" },
             { key: "IsActive", label: t("IsActive"), type: "boolean", editable: true, filterable: true },
             { key: "MaxPaymentAmount", label: t("MaxPaymentAmount"), type: "price", editable: true, filterable: true, align: "right" },
@@ -15,12 +15,12 @@ export const tableDefinitions = (t, data, visibleCount) => [
         title: `${t("Tabs.Products")} (${visibleCount ?? (data?.length || 0)})`,
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "3%", editable: false, filterable: true, align: "left" },
-            { key: "PLU", label: "PLU", editable: true, type: "number", filterable: true, align: "left" },
+            { key: "ID", label: "ID", width: "8%", editable: false, filterable: true, align: "left" },
+            { key: "PLU", label: "PLU", editable: true, filterable: true, align: "left" },
             { key: "Code", label: t("Code"), editable: true, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
             { key: "Price", label: t("Price"), editable: true, type: "price", filterable: true, align: "right" },
-            { key: "Barcode", label: t("Barcode"), editable: true, type: "number", filterable: true, align: "left" },
+            { key: "Barcode", label: t("Barcode"), editable: true, filterable: true, align: "left" },
             { key: "VATCode", label: t("VATCode"), editable: true, filterable: true, align: "left" },
             {
                 key: "Group",
@@ -31,7 +31,7 @@ export const tableDefinitions = (t, data, visibleCount) => [
                     const option = extraData.groups.find(g => g.ID.toString() === value || g.ID === value);
                     return option ? option.Name : "-";
                 },
-                filterable: true, align: "left"
+                filterable: true, width: "15%", align: "left"
             },
             { key: "TME", label: "TME", editable: true, type: "boolean", filterable: true, align: "left" }
         ],
@@ -41,7 +41,7 @@ export const tableDefinitions = (t, data, visibleCount) => [
         title: t("Tabs.Groups"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "1.95%", editable: false, filterable: true, align: "left" },
+            { key: "ID", label: "ID", width: "8%", editable: false, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
         ],
     },
@@ -50,7 +50,7 @@ export const tableDefinitions = (t, data, visibleCount) => [
         title: t("Tabs.Departments"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "3.55%", editable: false, filterable: true, align: "left" },
+            { key: "ID", label: "ID", width: "8%", editable: false, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
             {
                 key: "Assortment",
@@ -83,9 +83,9 @@ export const tableDefinitions = (t, data, visibleCount) => [
         title: t("Tabs.Users"),
         idField: "ID",
         columns: [
-            { key: "ID", label: "ID", width: "2.3%", editable: false, filterable: true, align: "left" },
+            { key: "ID", label: "ID", width: "8%", editable: false, filterable: true, align: "left" },
             { key: "Name", label: t("Name"), editable: true, filterable: true, align: "left" },
-            { key: "PIN", label: "PIN", editable: true, type: "number", filterable: true, align: "left", width: 80 },
+            { key: "PIN", label: "PIN", editable: true, type: "number", filterable: true, align: "left", width: 80, maxLength: 5 },
         ],
     },
     {

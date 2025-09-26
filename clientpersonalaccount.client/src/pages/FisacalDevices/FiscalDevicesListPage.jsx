@@ -252,7 +252,7 @@ export default function FiscalDevicesListPage() {
                     data={decoratedDevices}
                     loading={loading}
                     editable={false}
-                    onRowClick={(device) => setSelectedDevice(device)}
+                    onRowDoubleClick={(device) => setSelectedDevice(device)}
                     selectableRow={false}
                     onRefresh={fetchDevices}
                     tableClassName="min-w-[900px]"

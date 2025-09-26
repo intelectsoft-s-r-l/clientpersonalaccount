@@ -23,6 +23,7 @@ const GlobalSettingsForm = forwardRef(({ initialSettings, onChange }, ref) => {
     const [options, setOptions] = useState([]);
     const [cashRegisterTypes, setCashRegisterTypes] = useState([]);
     const { t } = useTranslation();
+    const maxPrice = process.env.NODE_ENV === "development" ? 3000000 : 100000;
 
     useEffect(() => {
         async function fetchOptions() {
@@ -84,14 +85,27 @@ const GlobalSettingsForm = forwardRef(({ initialSettings, onChange }, ref) => {
 
         // дефолтное поведение
         setSettings((prev) => {
+            let newValue;
+
+            if (type === "checkbox") {
+                newValue = checked;
+            } else if (type === "number") {
+                newValue = +value || 0;
+
+                // проверка ограничений для нужных полей
+                if (name === "MaxServiceAmount") {
+                    newValue = Math.min(newValue, maxPrice);
+                }
+                if (name === "MaxInvoiceAmount") {
+                    newValue = Math.min(newValue, maxPrice);
+                }
+            } else {
+                newValue = value || "";
+            }
+
             const updated = {
                 ...prev,
-                [name]:
-                    type === "checkbox"
-                        ? checked
-                        : type === "number"
-                            ? +value || 0
-                            : value || "",
+                [name]: newValue,
             };
             onChange?.(updated);
             return updated;

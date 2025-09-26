@@ -106,6 +106,17 @@ export function DataTable({
     const [filterWidth, setFilterWidth] = useState(undefined);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deleteItem, setDeleteItem] = useState(null);
+    const inputRef = React.useRef(null);
+
+    useEffect(() => {
+        if (inputRef.current) {
+            const el = inputRef.current;
+            el.focus();
+            const length = el.value.length;
+            // ставим курсор в конец
+            el.setSelectionRange(length, length);
+        }
+    }, []);
 
     useEffect(() => {
         if (!thRef.current) return;
@@ -161,11 +172,6 @@ export function DataTable({
     const cancelEdit = () => {
         setEditCell({ rowId: null, columnKey: null });
         setEditValue("");
-    };
-
-    const handleKeyDown = (e) => {
-        if (e.key === "Enter") saveEdit();
-        else if (e.key === "Escape") cancelEdit();
     };
 
     const handleFilterChange = (key, value) => {
@@ -388,6 +394,95 @@ export function DataTable({
 
     const showDeleteColumn = !!onDeleteRow && pagedData.length > 0;
 
+    const handleKeyDown = (e, rowId, currentColumnKey) => {
+        if (e.key === "Tab") {
+            e.preventDefault();
+
+            const currentIndex = columns.findIndex(col => col.key === currentColumnKey);
+
+            const editableColumns = columns.filter(col => col.editable && col.key !== "actions");
+            const editableKeys = editableColumns.map(col => col.key);
+
+            const currentEditableIndex = editableKeys.findIndex(key => key === currentColumnKey);
+
+            let nextColumnKey = null;
+
+            if (e.shiftKey) {
+                if (currentEditableIndex > 0) {
+                    nextColumnKey = editableKeys[currentEditableIndex - 1];
+                } else {
+                    // Если это первая редактируемая ячейка, можно перейти на последнюю редактируемую ячейку в предыдущем ряду (опционально)
+                    // Для простоты оставим фокус на первой ячейке.
+                }
+            } else {
+                if (currentEditableIndex < editableKeys.length - 1) {
+                    nextColumnKey = editableKeys[currentEditableIndex + 1];
+                }
+            }
+
+            saveEdit();
+
+            if (nextColumnKey) {
+                const nextRow = pagedData.find(r => r.ID === rowId);
+                const nextColumn = columns.find(c => c.key === nextColumnKey);
+                const nextCellValue = nextRow ? nextRow[nextColumnKey] : "";
+                startEdit(rowId, nextColumnKey, nextCellValue);
+            } else if (!e.shiftKey) {
+                const deleteButton = document.querySelector(`button[data-delete-id="${rowId}"]`);
+
+                if (deleteButton) {
+                    deleteButton.focus();
+                }
+            }
+        }
+
+        if (e.key === "Enter") {
+            e.preventDefault();
+            saveEdit();
+        }
+        else if (e.key === "Escape") cancelEdit();
+    };
+
+    // Определите эту функцию в вашем компоненте
+    const handleTabFromDelete = (e, currentRowId) => {
+        if (e.key === 'Tab' && !e.shiftKey) { // Tab (не Shift+Tab)
+            e.preventDefault();
+
+            // 1. Находим индекс текущего ряда
+            const currentRowIndex = pagedData.findIndex(r => r.ID === currentRowId);
+            const nextRow = pagedData[currentRowIndex + 1];
+
+            // 2. Если есть следующий ряд
+            if (nextRow) {
+                // Находим ключ первой редактируемой колонки
+                const editableColumns = columns.filter(col => col.editable && col.key !== "actions");
+                const firstEditableKey = editableColumns.length > 0 ? editableColumns[0].key : null;
+
+                if (firstEditableKey) {
+                    const nextCellValue = nextRow[firstEditableKey];
+
+                    // Начинаем редактирование первой ячейки следующего ряда
+                    startEdit(nextRow.ID, firstEditableKey, nextCellValue);
+                }
+            }
+            // Если следующего ряда нет, фокус просто покинет таблицу.
+        } else if (e.key === 'Tab' && e.shiftKey) {
+            e.preventDefault();
+
+            // Shift+Tab: Переход обратно на последнюю редактируемую ячейку текущего ряда
+            const editableColumns = columns.filter(col => col.editable && col.key !== "actions");
+            const lastEditableKey = editableColumns.length > 0 ? editableColumns[editableColumns.length - 1].key : null;
+
+            if (lastEditableKey) {
+                const currentRow = pagedData.find(r => r.ID === currentRowId);
+                const currentCellValue = currentRow ? currentRow[lastEditableKey] : "";
+
+                // Начинаем редактирование последней ячейки текущего ряда
+                startEdit(currentRowId, lastEditableKey, currentCellValue);
+            }
+        }
+    };
+
     return (
         <>
             <style>{`
@@ -481,102 +576,95 @@ export function DataTable({
                                                     key={col.key}
                                                     ref={thRef}
                                                     style={{ width: col.width || "auto", minWidth: col.minWidth || "15px", whiteSpace: "nowrap" }}
-                                                    className={`"px-2 py-1 text-sm font-semibold text-center relative "`}
+                                                    className="px-2 py-1 text-sm font-semibold text-center relative"
                                                     onClick={() => col.sortable !== false && handleSort(col.sortField ?? col.key)}
                                                 >
                                                     <div className={`flex items-center ${getAlignmentFlex(col)} space-x-1`}>
                                                         <span className="pl-1">{col.label}</span>
 
                                                         {/* Маленький зелёный кружок для активного фильтра */}
-                                                        {isFiltered && (
-                                                            <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
-                                                        )}
+                                                        {isFiltered && <span className="inline-block w-2 h-2 rounded-full bg-green-500" />}
 
                                                         {sortConfig.key === (col.sortField ?? col.key) && (
                                                             <span className="ml-1 text-xs">
                                                                 {sortConfig.direction === "asc" ? "▲" : "▼"}
                                                             </span>
                                                         )}
-
-                                                        {col.filterable && !activeFilter && (
-                                                            <div
-                                                                className="w-6 h-6 cursor-pointer flex items-center justify-center"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleClick(col.key);
-                                                                }}
-                                                            >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 6a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zm0 6a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" />
-                                                                </svg>
-                                                            </div>
-                                                        )}
                                                     </div>
 
-                                                    {/* Поле фильтра */}
-                                                    {col.filterable && activeFilter === col.key && (
-                                                        <div
-                                                            id={`filter-${col.key}`}
-                                                            onClick={(e) => e.stopPropagation()}
-                                                            className=" w-full left-0 mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-300 rounded shadow-lg"
-                                                        >
+                                                    {/* Фильтр под названием колонки */}
+                                                    {col.filterable && (
+                                                        <div className="mt-1">
                                                             {col.type === "boolean" ? (
                                                                 <select
                                                                     value={filters[col.key] ?? ""}
                                                                     onChange={(e) => handleFilterChange(col.key, e.target.value.trim())}
-                                                                    className="w-full p-1 border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
-                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    className="w-full h-8 p-1 border border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
                                                                 >
                                                                     <option value="">{t("All")}</option>
                                                                     <option value="true">{t("True")}</option>
                                                                     <option value="false">{t("False")}</option>
                                                                 </select>
                                                             ) : col.filterOptions ? (
-                                                                    <Select
-                                                                        value={col.filterOptions.find(
-                                                                            (opt) => String(opt.value ?? opt) === String(filters[col.key])
-                                                                        ) || null}
-                                                                        onChange={(selected) =>
-                                                                            handleFilterChange(col.key, selected?.value ?? "")
-                                                                        }
-                                                                        options={col.filterOptions.map((opt) => ({
-                                                                            value: typeof opt === "object" ? opt.value : opt,
-                                                                            label: typeof opt === "object" ? opt.label : opt,
-                                                                        }))}
-                                                                        isClearable
-                                                                        placeholder={t("Filter") + "..."}
-                                                                        menuPortalTarget={document.body}
-                                                                        styles={{
-                                                                            container: (base) => ({ ...base, minWidth: "150px" }),
-                                                                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                                                                            menu: (base) => ({ ...base, zIndex: 9999 }),
-                                                                            control: (base) => ({
-                                                                                ...base,
-                                                                                fontSize: window.innerWidth < 640 ? "14px" : "12px", // уменьшение шрифта на маленьких экранах
-                                                                            }),
-                                                                            option: (base) => ({
-                                                                                ...base,
-                                                                                fontSize: window.innerWidth < 640 ? "14px" : "12px",
-                                                                            }),
-                                                                            singleValue: (base) => ({
-                                                                                ...base,
-                                                                                fontSize: window.innerWidth < 640 ? "14px" : "12px",
-                                                                            }),
-                                                                        }}
-                                                                    />
+                                                                <Select
+                                                                    value={col.filterOptions.find(
+                                                                        (opt) => String(opt.value ?? opt) === String(filters[col.key])
+                                                                    ) || null}
+                                                                    onChange={(selected) => handleFilterChange(col.key, selected?.value ?? "")}
+                                                                    options={col.filterOptions.map((opt) => ({
+                                                                        value: typeof opt === "object" ? opt.value : opt,
+                                                                        label: typeof opt === "object" ? opt.label : opt,
+                                                                    }))}
+                                                                    isClearable
+                                                                    placeholder={t("Filter") + "..."}
+                                                                    menuPortalTarget={document.body}
+                                                                    styles={{
+                                                                        container: (base) => ({ ...base, minWidth: "100%", height: '32px' }), // h-8 = 32px
+                                                                        control: (base) => ({
+                                                                            ...base,
+                                                                            minHeight: '32px',
+                                                                            height: '32px',
+                                                                            fontSize: window.innerWidth < 640 ? "14px" : "12px",
+                                                                        }),
+                                                                        valueContainer: (base) => ({
+                                                                            ...base,
+                                                                            height: '32px',
+                                                                            padding: '0 6px',
+                                                                        }),
+                                                                        singleValue: (base) => ({
+                                                                            ...base,
+                                                                            lineHeight: '32px',
+                                                                            marginLeft: 0,
+                                                                        }),
+                                                                        placeholder: (base) => ({
+                                                                            ...base,
+                                                                            lineHeight: '32px',
+                                                                            marginLeft: 0,
+                                                                        }),
+                                                                        indicatorsContainer: (base) => ({
+                                                                            ...base,
+                                                                            height: '32px',
+                                                                        }),
+                                                                        option: (base) => ({
+                                                                            ...base,
+                                                                            fontSize: window.innerWidth < 640 ? "14px" : "12px",
+                                                                            padding: '4px 8px',
+                                                                        }),
+                                                                    }}
+                                                                />
                                                             ) : (
                                                                 <input
                                                                     type="text"
                                                                     value={filters[col.key] || ""}
                                                                     onChange={(e) => handleFilterChange(col.key, e.target.value.trim())}
                                                                     placeholder={`${t("Filter")}...`}
-                                                                    className="w-full p-1 border border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
-                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    className="w-full h-8 p-1 border border-gray-300 rounded text-xs dark:bg-gray-800 dark:text-white"
                                                                 />
                                                             )}
                                                         </div>
                                                     )}
                                                 </th>
+
                                             );
                                         })}
                                         {showDeleteColumn && <th className="sticky right-0 dark:bg-gray-800 z-20 font-semibold text-center relative " style={{ width: 35, minWidth: 35, whiteSpace: "nowrap" }}></th>}
@@ -606,6 +694,8 @@ export function DataTable({
                                         </tr>
                                     ) : (
                                         pagedData.map((row, index) => {
+                                            if (row === undefined) return;
+
                                             const isSelected =
                                                 selectedRowId !== undefined && selectedRowId === row.id;
                                             return (
@@ -630,7 +720,7 @@ export function DataTable({
                                                 >
                                                     {columns.map((col) => {
                                                         const isEditing =
-                                                            editCell.rowId === row.ID &&
+                                                            editCell.rowId === row?.ID &&
                                                             editCell.columnKey === col.key;
 
                                                         const rawValue = row[col.key];
@@ -659,6 +749,7 @@ export function DataTable({
                                                                                 setEditValue(value);
                                                                             }}
                                                                             onBlur={saveEdit}
+                                                                            onKeyDown={(e) => handleKeyDown(e, row?.ID, col.key)}
                                                                         />
                                                                     </td>
                                                                 );
@@ -689,6 +780,7 @@ export function DataTable({
                                                                     >
                                                                         <Select
                                                                             value={selectedOption ?? ""}
+                                                                            onKeyDown={(e) => handleKeyDown(e, row?.ID, col.key)}
                                                                             onChange={(e) => {
                                                                                 if (!e) {
                                                                                     setEditValue(null);
@@ -729,9 +821,10 @@ export function DataTable({
                                                                     </td>
                                                                 );
                                                             }
+
                                                         }
 
-                                                        if (col.type === "price" && isEditing && editCell.columnKey === col.key && editCell.rowId === row.ID) {
+                                                        if (col.type === "price" && isEditing && editCell.columnKey === col.key && editCell.rowId === row?.ID) {
                                                             return (
                                                                 <td
                                                                     key={col.key}
@@ -740,6 +833,7 @@ export function DataTable({
                                                                     )} dark:bg-gray-800 dark:text-white`}
                                                                 >
                                                                     <input
+                                                                        ref={inputRef}
                                                                         type="text"
                                                                         value={editValue || ""}
                                                                         autoFocus
@@ -754,10 +848,15 @@ export function DataTable({
                                                                         }}
                                                                         onChange={(e) => {
                                                                             const newValue = e.target.value.replace(/[^0-9,]/g, "");
+                                                                            const maxPrice = process.env.NODE_ENV === "development" ? 3000000 : 100000;
+                                                                            
+                                                                            if (!isNaN(newValue) && newValue > maxPrice) return;
+
                                                                             setEditValue(newValue);
-                                                                            handleCellUpdate(row.ID, col.key, newValue);
+                                                                            onCellUpdate(row?.ID, col.key, newValue);
                                                                         }}
                                                                         onBlur={saveEdit}
+                                                                        onKeyDown={(e) => handleKeyDown(e, row?.ID, col.key)}
                                                                         className="w-full border border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white"
                                                                     />
                                                                 </td>
@@ -776,21 +875,17 @@ export function DataTable({
                                                                         type="checkbox"
                                                                         checked={!!row[col.key]}
                                                                         onChange={(e) =>
-                                                                            onCellUpdate(row.ID, col.key, e.target.checked)
+                                                                            onCellUpdate(row?.ID, col.key, e.target.checked)
                                                                         }
                                                                         className="m-2"
+                                                                        onKeyDown={(e) => handleKeyDown(e, row?.ID, col.key)}
                                                                     />
                                                                 </td>
                                                             );
                                                         }
 
                                                         if (isEditing) {
-                                                            const inputType =
-                                                                col.type === "boolean"
-                                                                    ? "checkbox"
-                                                                    : col.type === "price"
-                                                                        ? "text"
-                                                                        : col.type || "text";
+                                                            const inputType = col.type ? col.type : "text";
 
                                                             return (
                                                                 <td
@@ -799,18 +894,15 @@ export function DataTable({
                                                                         col
                                                                     )} dark:bg-gray-800 dark:text-white`}
                                                                 >
-                                                                    <textarea
+                                                                    <input
+                                                                        ref={inputRef}
                                                                         type={inputType}
                                                                         value={editValue || ""}
                                                                         onChange={(e) => {
                                                                             let val = e.target.value.trim();
-                                                                            // Для чисел и цены фильтруем только цифры и запятую/точку
-                                                                            if (col.type === "price")
-                                                                                val = val.replace(/[^0-9.,]/g, "");
-
                                                                             if (col.type === "number")
                                                                                 val = val.replace(/[^0-9.]/g, "");
-
+                                                                            if (col.maxLength) val = val.slice(0, col.maxLength);
                                                                             setEditValue(val);
 
                                                                             // Авто-рост textarea
@@ -818,7 +910,7 @@ export function DataTable({
                                                                             e.target.style.height = `${e.target.scrollHeight}px`;
                                                                         }}
                                                                         onBlur={saveEdit}
-                                                                        onKeyDown={handleKeyDown}
+                                                                        onKeyDown={(e) => handleKeyDown(e, row.ID, col.key)}
                                                                         autoFocus
                                                                         rows={1}
                                                                         className=" w-full border border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white resize-none"
@@ -866,7 +958,7 @@ export function DataTable({
                                                         );
                                                     })}
                                                     {showDeleteColumn && (
-                                                        <td className="text-center dark:bg-gray-800 dark:text-white flex-shrink-0">
+                                                        <td key="actions-col" className="text-center dark:bg-gray-800 dark:text-white flex-shrink-0">
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
@@ -874,6 +966,8 @@ export function DataTable({
                                                                 }}
                                                                 className="text-red-600 hover:text-red-800 dark:text-white"
                                                                 title={t("Delete")} /* Используем t() */
+                                                                data-delete-id={row.ID}
+                                                                onKeyDown={(e) => handleTabFromDelete(e, row.ID)}
                                                             >
                                                                 <img
                                                                     src="/icons/Trash.svg"

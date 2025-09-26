@@ -86,8 +86,6 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
 
     const handleCellUpdate = (rowId, columnKey, newValue, callback) => {
         setTableData((prevData) => {
-            if (!Array.isArray(prevData)) return prevData;
-
             const newData = prevData.map((row) => {
                 if (row.ID !== rowId) return row;
 
@@ -96,7 +94,9 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
                     updatedRow.NoVat = !!newValue;
                     if (updatedRow.NoVat) {
                         updatedRow.VatValue = 0;
-                        updatedRow.VatCode = "-";
+
+                        if (!updatedRow.VatCode)
+                            updatedRow.VatCode = "_";
                     }
                 } else {
                     updatedRow[columnKey] = newValue;
@@ -127,9 +127,12 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
     const handleAddRow = () => {
         // Проверяем, есть ли строки с незаполненными полями (кроме ID)
         const hasEmptyRow = tableData.some(row =>
-            tableDef.columns.some(col =>
-                col.key !== "ID" && (!row[col.key] || row[col.key].toString().trim() === "")
-            )
+            tableDef.columns.some(col => {
+                if (col.key === "ID") return false; // пропускаем ID
+                if (tableKey === "vatRates" && col.key === "NoVat") return false; // пропускаем NoVat
+                const val = row[col.key];
+                return val === null || val === undefined || val.toString().trim() === "";
+            })
         );
 
         if (hasEmptyRow) {
@@ -146,9 +149,14 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
 
         // Создаём пустые поля для новой строки
         const emptyFields = tableDef.columns.reduce((acc, col) => {
-            if (col.key !== "ID") {
-                acc[col.key] = "";
+            if (col.key === "ID") return acc; // пропускаем ID
+
+            if (col.key === "StartOfPeriod" || col.key === "EndOfPeriod") {
+                acc[col.key] = "00:00:00"; // время по умолчанию
+            } else {
+                acc[col.key] = ""; // текстовое поле
             }
+
             return acc;
         }, {});
 
@@ -156,8 +164,9 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
             ID: maxId + 1 || 1,
             ...emptyFields
         };
-
-        setTableData((prev) => [newRow, ...prev]);
+        const updatedData = [newRow, ...tableData];
+        setTableData(updatedData);
+        onDataChange(updatedData);
     };
 
     const handleDeleteRow = (rowId) => {
@@ -165,7 +174,8 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
             let newData = null;
             if (tableKey === "vatRates")
                 newData = prevData.map(row => {
-                    if (row.ID === rowId) {
+                    console.log(rowId, row, prevData);
+                    if (row?.ID === rowId) {
                         return {
                             ...row,
                             VatValue: 0,
@@ -173,6 +183,7 @@ const FiscalDeviceModalTab = forwardRef(({ tableKey, data = [], onDataChange }, 
                             VatCode: "-",
                         };
                     }
+                    return row;
                 });
             else
                 newData = tableData.filter((row) => row.ID !== rowId);

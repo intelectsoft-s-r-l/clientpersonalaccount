@@ -1,4 +1,4 @@
-import * as yup from "yup";
+ï»¿import * as yup from "yup";
 
 export const commonValidation = (t) => ({
     username: yup.string().required(t("validation.usernameRequired")),
@@ -65,7 +65,7 @@ export const validateProducts = (item, tableKey, usersPin, pins, t, data) => {
         if (!item.VATCode || item.VATCode.trim() === "") {
             rowErrors.VATCode = t("validation.vatRequired");
         } else if (!/^[A-Z_]+$/.test(item.VATCode)) {
-            rowErrors.VATCode = t("validation.vatCodeLetter"); // Íàïðèìåð, "Òîëüêî A-Z èëè _"
+            rowErrors.VATCode = t("validation.vatCodeLetter"); // ÐÐ°Ð¿Ñ€Ð¸Ð¼ÐµÑ€, "Ð¢Ð¾Ð»ÑŒÐºÐ¾ A-Z Ð¸Ð»Ð¸ _"
         }
     }
 
@@ -73,7 +73,7 @@ export const validateProducts = (item, tableKey, usersPin, pins, t, data) => {
         const amount = item.MaxPaymentAmount?.toString() || "";
         if (!/^\d+$/.test(amount)) {
             rowErrors.MaxPaymentAmount = t("validation.onlyNumbers");
-        } else if (amount.length > 20) { // îãðàíè÷åíèå íà äëèíó
+        } else if (amount.length > 20) { // Ð¾Ð³Ñ€Ð°Ð½Ð¸Ñ‡ÐµÐ½Ð¸Ðµ Ð½Ð° Ð´Ð»Ð¸Ð½Ñƒ
             rowErrors.MaxPaymentAmount = t("validation.maxLength", { count: 20 });
         }
     }
@@ -85,57 +85,60 @@ export const validateProducts = (item, tableKey, usersPin, pins, t, data) => {
     return errors;
 };
 
-export const validateDevice = (data, tableKey, t) => {
+export const validateDevice = (row, tableKey, t, isTaxpayer, data) => {
     const errors = {};
 
     if (tableKey === "vatRates") {
-        data.forEach((item, idx) => {
-            const rowErrors = {};
-            const id = item.ID || idx;
+        const rowErrors = {};
+        const id = row.ID;
 
-            const vatCode = item.VatCode?.trim() ?? "";
-            const vatValue = parseFloat(item.VatValue ?? "0");
-            const notVat = !!item.NoVat;
+        const vatCode = row.VatCode?.trim() ?? "";
+        const vatValue = parseFloat(row.VatValue ?? "0");
+        const notVat = !!row.NoVat;
 
-            if (notVat) {
-                if (vatCode !== "" && vatCode !== "-" && vatCode !== "_") {
-                    rowErrors.VatCode = t("validation.notVatCodeUnderscore");
-                }
-            } else {
-                if (!/^[A-Z]$/.test(vatCode)) rowErrors.VatCode = t("validation.vatCodeLetter");
-                const isDuplicate = data.filter(p => p.ID !== item.ID)
-                    .some(p => (p.VatCode?.trim() ?? "") === vatCode);
-                if (isDuplicate) rowErrors.VatCode = t("validation.vatCodeUnique");
-                if (vatCode.includes("_")) rowErrors.VatCode = t("validation.vatCodeNoUnderscore");
+        if (notVat) {
+            if (vatCode !== "" && vatCode !== "-" && vatCode !== "_" && isTaxpayer) {
+                rowErrors.VatCode = t("validation.notVatCodeUnderscore");
             }
+        } else {
+            if (!/^[A-Z]$/.test(vatCode)) rowErrors.VatCode = t("validation.vatCodeLetter");
+            const isDuplicate = data.filter(p => p.ID !== id)
+                .some(p => (p.VatCode?.trim() ?? "") === vatCode);
+            if (isDuplicate) rowErrors.VatCode = t("validation.vatCodeUnique");
+            if (vatCode.includes("_")) rowErrors.VatCode = t("validation.vatCodeNoUnderscore");
+        }
 
-            if (notVat) {
-                if (vatValue !== 0) rowErrors.VatValue = t("validation.vatValueZero");
-            } else {
-                if (isNaN(vatValue) || vatValue < 0 || vatValue > 99) rowErrors.VatValue = t("validation.vatValueRange");
-                else if (!/^\d{1,2}(\.\d{1,2})?$/.test(String(item.VatValue))) rowErrors.VatValue = t("validation.vatValueTwoDecimals");
-            }
+        if (notVat) {
+            if (vatValue !== 0) rowErrors.VatValue = t("validation.vatValueZero");
+        } else {
+            if (isNaN(vatValue) || vatValue < 0 || vatValue > 99) rowErrors.VatValue = t("validation.vatValueRange");
+            else if (!/^\d{1,2}(\.\d{1,2})?$/.test(String(row.VatValue))) rowErrors.VatValue = t("validation.vatValueTwoDecimals");
+        }
 
-            if (Object.keys(rowErrors).length > 0) errors[id] = rowErrors;
-        });
+        if (Object.keys(rowErrors).length > 0) errors[id] = rowErrors;
     }
 
     if (tableKey === "taxiTariffs") {
-        data.forEach((item, idx) => {
-            const rowErrors = {};
-            const id = item.ID || idx;
+        const rowErrors = {};
+        const id = row.ID;
 
-            if (!item.Name || item.Name.trim() === "")
-                rowErrors.Name = t("validation.nameRequired");
+        if (!row.Name || row.Name.trim() === "")
+            rowErrors.Name = t("validation.nameRequired");
 
-            if (!item.VatCode || item.VatCode.trim() === "") {
-                rowErrors.VATCode = t("validation.vatRequired");
-            } else if (!/^[A-Z_]+$/.test(item.VatCode)) {
-                rowErrors.VATCode = t("validation.vatCodeLetter"); // Íàïðèìåð, "Òîëüêî A-Z èëè _"
-            }
+        if (!row.VatCode || row.VatCode.trim() === "") {
+            rowErrors.VATCode = t("validation.vatRequired");
+        } else if (!/^[A-Z_]+$/.test(row.VatCode)) {
+            rowErrors.VATCode = t("validation.vatCodeLetter"); // ÐÐ°Ð¿Ñ€Ð¸Ð¼ÐµÑ€, "Ð¢Ð¾Ð»ÑŒÐºÐ¾ A-Z Ð¸Ð»Ð¸ _"
+        }
 
-            if (Object.keys(rowErrors).length > 0) errors[id] = rowErrors;
-        });
+        const numberCount = data.filter(x => Number(x.Number) === Number(row.Number)).length;
+        if (row.Number === null || row.Number === undefined || row.Number === "") {
+            rowErrors.Number = t("validation.numberRequired");
+        } else if (numberCount > 1) {
+            rowErrors.Number = t("validation.numberUnique");
+        }
+
+        if (Object.keys(rowErrors).length > 0) errors[id] = rowErrors;
     }
 
     return errors;

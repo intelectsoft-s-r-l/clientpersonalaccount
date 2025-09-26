@@ -417,7 +417,7 @@ export default function AssortmentPage() {
             delete cleaned.isNew;
             return cleaned;
         });
-
+        console.log(cleanAssortments);
         const Settings = {
             PaymentTypes: currentSetting.PaymentTypes || [],
             Assortments: cleanAssortments || [],
@@ -480,7 +480,6 @@ export default function AssortmentPage() {
                 settings: encodedSettings,
                 type: type,
             };
-
             const resp = await apiService.proxyRequest(`/MobileCashRegister/web/UpsertSettings`, {
                 method: "POST",
                 credentials: "include",
@@ -693,11 +692,17 @@ export default function AssortmentPage() {
 
                 const processedData = jsonData.map(item => {
                     const newItem = {};
+                    const booleanFields = ["TME", "Tme"];
                     for (let key in item) {
                         if (headerMap[key]) {
-                            newItem[headerMap[key]] = key === "TME" || key === "Tme"
-                                ? Boolean(item[key])
-                                : item[key];
+                            if (booleanFields.includes(key)) {
+                                const val = item[key];
+                                newItem[headerMap[key]] =
+                                    val === 1 || val === "1" ||
+                                    val === true || val === "true";
+                            } else {
+                                newItem[headerMap[key]] = item[key];
+                            }
                         }
                     }
 

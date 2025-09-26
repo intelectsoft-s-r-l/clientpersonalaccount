@@ -4,6 +4,7 @@ import { tableDefinitions } from "../config/tableDefinitions";
 import { useTranslation } from "react-i18next";
 import ValidationModal from "./ValidationModal";
 import { validateProducts } from "../validation/validationSchemas";
+import Toast from "../components/Toast";
 
 const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataChange, usersPin = [], onResetPayments, checkDuplicate, loading }, ref) => {
     const [tableData, setTableData] = useState(data);
@@ -13,6 +14,8 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
     const [validationErrors, setValidationErrors] = useState({});
     const [showErrors, setShowErrors] = useState(false);
     const [visibleCount, setVisibleCount] = useState(data.length);
+    const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
+    const [showErrorMessage, setShowErrorMessage] = useState(null);
 
     useImperativeHandle(ref, () => ({
         getData: () => tableData,
@@ -70,6 +73,20 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
     };
 
     const handleAddRow = () => {
+        if (tableKey === "products") {
+            const hasEmptyRow = tableData.some(row =>
+                tableDef.columns.some(col =>
+                    col.key !== "ID" && col.key !== "TME" && col.key !== "Group" && (!row[col.key] || row[col.key].toString().trim() === "")
+                )
+            );
+
+            if (hasEmptyRow) {
+                setShowErrorMessage(t("FieldsControlerForNull"));
+                setIsErrorModalVisible(true);
+                return;
+            }
+        }
+
         if (tableKey === "products" && tableData.length >= 1000) {
             const generalError = { general: [t("validation.maxRows", { count: 1000 })] };
             setValidationErrors(generalError);
@@ -111,21 +128,25 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
             ...emptyFields
         };
 
+        const updatedData = [newRow, ...tableData];
+
+        onDataChange(tableKey, updatedData);
+        setTableData(updatedData);
+
         setValidationErrors(prev => {
             const updated = { ...prev };
             delete updated[newRow.ID];
             return updated;
         });
 
-        setTableData(prev => [...prev, newRow]);
     };
 
     const handleDeleteRow = (rowId) => {
         const newData = tableData.filter((row) => row.ID !== rowId);
 
-        setTableData(newData);
         if (onDataChange) {
             onDataChange(tableKey, newData);
+            setTableData(newData);
         }
 
         if (onDataChange) {
@@ -176,6 +197,12 @@ const AssortmentTab = forwardRef(({ tableKey, data = [], extraData = {}, onDataC
                 errors={validationErrors}
                 visible={showErrors}
                 onClose={() => setShowErrors(false)}
+            />
+            <Toast
+                visible={isErrorModalVisible}
+                message={showErrorMessage}
+                onClose={() => setIsErrorModalVisible(false)}
+                type="error"
             />
         </div>
     );

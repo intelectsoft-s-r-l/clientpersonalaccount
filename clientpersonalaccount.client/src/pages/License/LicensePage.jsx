@@ -69,8 +69,10 @@ export default function LicensePage() {
             colorClass: "bg-gray-100 text-gray-800",
         };
         const date = new Date(lic.lastDateUpdate);
+
         return {
             ...lic,
+            oid: lic.oid,
             statusCode: String(lic.licenseStatus),
             licenseStatusDisplay: (
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusInfo.colorClass}`}><span className="ml-2">{statusInfo.label}</span></span>
@@ -82,6 +84,7 @@ export default function LicensePage() {
     }).sort((a, b) => b.oid - a.oid);
 
     const columns = [
+        { key: "oid", label: t("ID"), filterable: true, minWidth: 80, width: 80 },
         { key: "deviceName", label: t("DeviceName"), filterable: true, minWidth: 140, },
         { key: "address", label: t("Address"), filterable: true, minWidth: 140, },
         { key: "batteryDisplay", label: t("Battery"), filterable: true, sortable: true, minWidth: 40, },
