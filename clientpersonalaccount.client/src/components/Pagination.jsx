@@ -68,7 +68,7 @@ export default function Pagination({
                         const value = Math.max(1, Math.min(totalPages, Number(e.target.value)));
                         setCurrentPage(value);
                     }}
-                    className="w-12 text-center border rounded px-1 py-0.5"
+                    className="w-14 text-center border rounded px-1 py-0.5"
                 />
                 <span className="mx-1">/ {totalPages}</span>
             </>

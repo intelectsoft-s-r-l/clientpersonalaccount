@@ -93,8 +93,8 @@ export const tableDefinitions = (t, data, visibleCount) => [
         title: t("VATHistory"),
         idField: "ID",
         columns: [
-            { key: "VatValue", label: t("VatValue"), editable: false },
             { key: "VatCode", label: t("VATCode"), editable: false },
+            { key: "VatValue", label: t("VatValue"), editable: false },
             { key: "DateOfChange", label: t("DateOfChange"), editable: false },
         ],
     },
@@ -114,8 +114,8 @@ export const tableDefinitions = (t, data, visibleCount) => [
         title: t("TaxiTariff"),
         idField: "ID",
         columns: [
-            { key: "Name", label: t("Name"), editable: true, align: "left" },
             { key: "Number", label: t("Number"), type: "number", editable: true },
+            { key: "Name", label: t("Name"), editable: true, align: "left" },
             { key: "PricePerHour", label: t("PricePerHour"), type: "number", editable: true },
             { key: "PricePerKm", label: t("PricePerKm"), type: "number", editable: true },
             { key: "PriceStart", label: t("PriceStart"), type: "number", editable: true },

@@ -35,22 +35,22 @@ export const FiscalDeviceTypeEnum = (t) => ({
     },
     1: {
         code: 'SI_DE_imprimante_fiscale',
-        label: 'SI DE с фискальным принтером',
+        label: t("SI_DE_imprimante_fiscale"),
         value: 1
     },
     2: {
         code: 'SI_DE_fara_imprimante_fiscale',
-        label: 'SI DE без фискального принтера',
+        label: t("SI_DE_fara_imprimante_fiscale"),
         value: 2
     },
     3: {
         code: 'SI_FDE_fara_imprimante_fiscale',
-        label: 'SI FDE без фискального принтера',
+        label: t("SI_FDE_fara_imprimante_fiscale"),
         value: 3
     },
     4: {
         code: 'Masina_de_casa_si_control',
-        label: 'Кассовая машина и контроль',
+        label: t("Masina_de_casa_si_control"),
         value: 4
     }
 });

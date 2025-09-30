@@ -876,5 +876,9 @@
   "False": "Ложь",
   "AreYouSureDelete": "Вы уверены, что хотите удалить эту запись",
   "EnterLoginToConfirm": "Вы действительно хотите удалить этот банк? Для подтверждения сначала введите \"Логин банка\"",
-  "FieldsControlerForNull": "Пожалуйста, заполните все поля предыдущей строки перед добавлением новой"
+  "FieldsControlerForNull": "Пожалуйста, заполните все поля предыдущей строки перед добавлением новой",
+  "SI_DE_imprimante_fiscale": "SI DE с фискальным принтером",
+  "SI_DE_fara_imprimante_fiscale": "SI DE без фискального принтера",
+  "SI_FDE_fara_imprimante_fiscale": "SI FDE без фискального принтера",
+  "Masina_de_casa_si_control": "Кассовая машина и контроль"
 }

@@ -836,9 +836,9 @@ export default function FiscalDevicePage() {
         max-width: 100%; 
         }
       `}</style>
-            <div className="p-2">
+            <div className="p-2  overflow-x-auto">
                 <div className="flex flex-wrap gap-4 justify-center">
-                    <div className="w-[490px] min-w-1/1">
+                    <div className="w-full xl:w-[490px]">
                         <DataTable
                             title={t("Shifts")}
                             columns={columnsShifts}
@@ -853,10 +853,10 @@ export default function FiscalDevicePage() {
                             rowClassName={(row) =>
                                 row.shiftID === selectedRowId ? "bg-gray-200" : ""
                             }
-                            tableClassName="min-w-[10px] table-auto"
+                            tableClassName="min-w-[400px] table-auto"
                         />
                     </div>
-                    <div className="w-[490px] min-w-1/1">
+                    <div className="w-full xl:w-[490px]">
                         <DataTable
                             title={t("Bills")}
                             columns={columnsBills}
@@ -868,12 +868,11 @@ export default function FiscalDevicePage() {
                             rowClassName={(row) =>
                                 row.id === selectedRowId ? "bg-gray-200" : ""
                             }
-                            tableClassName="table-auto min-w-[100px] xl:w-full"
+                            tableClassName="table-auto min-w-[400px] xl:w-full"
                         />
                     </div>
-
                     {(receiptText || (selectedBill?.reportType == 1 && reportModel)) && (
-                        <div className="flex min-w-[400px]">
+                        <div className="flex w-full xl:w-[490px]">
                             <div className="bg-white rounded-xl shadow-md p-4">
                                 <div className="flex items-center justify-between mb-3 w-full">
                                     {/* Левая кнопка: FiscalReceipt */}
@@ -902,8 +901,6 @@ export default function FiscalDevicePage() {
                                         </button>
                                     )}
                                 </div>
-
-
                                 <div className="text-sm whitespace-pre-wrap break-words bg-white">
                                     {viewMode === "report" ? (
                                         <LongZReport className="bg-white" model={reportModel} t={t} />
@@ -1099,8 +1096,6 @@ export default function FiscalDevicePage() {
                             </div>
                         </div>
                     )}
-
-
                     <Modal
                         isOpen={isOpenFiscalSummary}
                         onRequestClose={() => setIsOpenFiscalSummary(false)}
@@ -1144,16 +1139,16 @@ export default function FiscalDevicePage() {
                                 <pre className="whitespace-pre-wrap font-mono text-center">{fiscalSummaryText}</pre>
                             )}
                         </div>
-                        <div className="mt-3 flex items-center justify-between">
+                        <div className="mt-3 flex flex-wrap gap-2 justify-end sm:justify-between">
                             <button
-                                className="mb-3 px-3 py-1 bg-red-600 text-white rounded"
+                                className="px-3 py-1 bg-red-600 text-white rounded"
                                 onClick={() => setIsOpenFiscalSummary(false)}
                             >
                                 {t("Close")}
                             </button>
                             <button
                                 id="printNext"
-                                className="ml-auto mb-3 px-3 py-1 bg-gray-600 text-white rounded"
+                                className="px-3 py-1 bg-gray-600 text-white rounded w-[140px]"
                                 style={{ width: 140 }}
                                 onClick={() => printReceipt()}
                             >

@@ -34,6 +34,8 @@
 html, body, #root {
     height: 100%;
     margin: 0;
+    overflow-x: auto;
+    overflow-y: auto;
     /* ”брали overflow: hidden; из html, body, #root,
        чтобы не блокировать скролл внутри модальных окон или контента,
        который может быть выше вьюпорта. ”правление скроллом теперь

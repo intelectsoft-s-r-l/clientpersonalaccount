@@ -213,15 +213,22 @@ export default function AssortmentPage() {
                 const decodedSettings = {};
                 const tabsList = [];
 
-                const forceBase64 = (str) => {
-                    try {
-                        // Пробуем сразу распарсить
-                        JSON.parse(str);
-                        // Если получилось — значит не base64, нужно кодировать
-                        return btoa(encodeURIComponent(str));
-                    } catch {
-                        // Иначе — вероятно, уже base64
-                        return str;
+                // Проверка Base64
+                const isBase64 = (str) => /^[A-Za-z0-9+/=]+$/.test(str);
+
+                // Декодировка UTF-8 из Base64
+                const decodeBase64Utf8 = (base64) => {
+                    const binaryStr = atob(base64);
+                    const bytes = Uint8Array.from(binaryStr, c => c.charCodeAt(0));
+                    return new TextDecoder("utf-8").decode(bytes);
+                };
+
+                // Безопасный парсинг JSON
+                const safeParseJson = (str) => {
+                    try { return JSON.parse(str); }
+                    catch {
+                        try { return JSON.parse(decodeURIComponent(str)); }
+                        catch { return null; }
                     }
                 };
 
@@ -230,22 +237,15 @@ export default function AssortmentPage() {
 
                     if (rawData[key]) {
                         try {
-                            const base64Str = forceBase64(rawData[key]);
+                            // Если уже Base64, оставляем, иначе кодируем
+                            const base64Str = isBase64(rawData[key])
+                                ? rawData[key]
+                                : btoa(encodeURIComponent(rawData[key]));
 
-                            // Декодируем UTF-8 корректно
-                            const binaryStr = atob(base64Str);
-                            const bytes = Uint8Array.from(binaryStr, c => c.charCodeAt(0));
-                            const jsonStr = new TextDecoder("utf-8").decode(bytes);
+                            const jsonStr = decodeBase64Utf8(base64Str);
+                            const data = safeParseJson(jsonStr);
 
-                            try {
-                                parsed = JSON.parse(jsonStr);
-                            } catch {
-                                try {
-                                    parsed = JSON.parse(decodeURIComponent(jsonStr));
-                                } catch (e) {
-                                    console.error("Не удалось распарсить JSON:", e);
-                                }
-                            }
+                            if (data) parsed = data;
                         } catch (e) {
                             console.error(`Ошибка декодирования ${key}`, e);
                         }

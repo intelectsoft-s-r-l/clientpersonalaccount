@@ -118,10 +118,10 @@ export default function FiscalDevicesListPage() {
             sortable: true,
             filterOptions: [
                 { value: "0", label: t("NotFiscal") },
-                { value: "1", label: "SI_DE_imprimante_fiscale" },
-                { value: "2", label: "SI_DE_fara_imprimante_fiscale" },
-                { value: "3", label: "SI_FDE_fara_imprimante_fiscale" },
-                { value: "4", label: "Masina_de_casa_si_control" }
+                { value: "1", label: t("SI_DE_imprimante_fiscale") },
+                { value: "2", label: t("SI_DE_fara_imprimante_fiscale") },
+                { value: "3", label: t("SI_FDE_fara_imprimante_fiscale") },
+                { value: "4", label: t("Masina_de_casa_si_control") }
             ],
             render: (value) => (
                 <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-md text-xs font-medium">
@@ -136,7 +136,7 @@ export default function FiscalDevicesListPage() {
             width: "6.5%",
             sortable: true,
             filterOptions: [
-                { value: "0", label: t("NotFiscal") },
+                { value: "0", label: t("NotSet") },
                 { value: "1", label: "Petrol" },
                 { value: "2", label: "Sales" },
                 { value: "3", label: "PetrolAndSales" },

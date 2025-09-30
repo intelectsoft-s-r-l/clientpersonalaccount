@@ -805,6 +805,17 @@ export function DataTable({
                                                                             placeholder="Выберите..."
                                                                             menuPlacement="auto"
                                                                             menuPortalTarget={document.body}
+                                                                            onMenuOpen={() => {
+                                                                                setTimeout(() => {
+                                                                                    const menuEl = document.querySelector(".react-select__menu");
+                                                                                    const selectedEl = menuEl?.querySelector(
+                                                                                        ".react-select__option--is-selected"
+                                                                                    );
+                                                                                    if (selectedEl) {
+                                                                                        selectedEl.scrollIntoView({ block: "nearest" });
+                                                                                    }
+                                                                                }, 0);
+                                                                            }}
                                                                             styles={{
                                                                                 menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                                                                                 menu: (base) => ({ ...base, zIndex: 9999 }),
@@ -861,6 +872,7 @@ export function DataTable({
                                                                         }}
                                                                         onBlur={saveEdit}
                                                                         onKeyDown={(e) => handleKeyDown(e, row?.ID, col.key)}
+                                                                        size={(editValue || "").length || 1}
                                                                         className="w-full border border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white"
                                                                     />
                                                                 </td>
@@ -916,9 +928,9 @@ export function DataTable({
                                                                         onBlur={saveEdit}
                                                                         onKeyDown={(e) => handleKeyDown(e, row.ID, col.key)}
                                                                         autoFocus
-                                                                        rows={1}
+                                                                        size={(editValue || "").length || 1}
                                                                         className=" w-full border border-gray-300 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white resize-none"
-                                                                        style={{ minHeight: "1.5rem", overflow: "hidden" }}
+                                                                        style={{ minHeight: "1.5rem", overflow: "hidden", width: "auto" }}
                                                                     />
                                                                 </td>
                                                             );

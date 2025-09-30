@@ -872,5 +872,10 @@
   "False": "False",
   "AreYouSureDelete": "Are you sure you want to delete this entry",
   "EnterLoginToConfirm": "Do you really want to delete this bank? To confirm, first enter \"Bank login\"",
-  "FieldsControlerForNull": "Please fill in all fields of the previous line before adding a new one"
+  "FieldsControlerForNull": "Please fill in all fields of the previous line before adding a new one",
+  "SI_DE_imprimante_fiscale": "SI DE with fiscal printer",
+  "SI_DE_fara_imprimante_fiscale": "SI DE without fiscal printer",
+  "SI_FDE_fara_imprimante_fiscale": "SI FDE without fiscal printer",
+  "Masina_de_casa_si_control": "Cash register and control",
+  "Logout": "Logout"
 }
