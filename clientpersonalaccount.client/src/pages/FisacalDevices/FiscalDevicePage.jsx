@@ -872,7 +872,7 @@ export default function FiscalDevicePage() {
                         />
                     </div>
                     {(receiptText || (selectedBill?.reportType == 1 && reportModel)) && (
-                        <div className="flex w-full xl:w-[490px] xl:justify-between justify-center">
+                        <div className="flex w-full xl:w-[490px] xl:justify-between justify-center items-start">
                             <div className="bg-white rounded-xl shadow-md p-4">
                                 <div className="flex items-center justify-between mb-3 w-full">
                                     {/* Левая кнопка: FiscalReceipt */}
