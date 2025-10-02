@@ -834,6 +834,7 @@ export default function FiscalDevicePage() {
         text-align: center;
         white-space: pre-wrap;
         max-width: 100%; 
+        font-size: 12px;
         }
       `}</style>
             <div className="p-2  overflow-x-auto">
