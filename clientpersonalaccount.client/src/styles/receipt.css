@@ -1,18 +1,13 @@
 /* Общие стили для печатной области */
 .billStyle {
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  color: #000;
-  max-width: 450px;
-  margin: 0 auto;
-  background: #fff;
-  padding: 10px;
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 0; /* убрать */
 }
 
-/* Класс для области, которая печатается */
 .PrintArea {
-  padding: 10px;
-  border: 1px solid #ccc;
+    padding: 0; /* убрать */
+    border: 1px solid #ccc;
 }
 
 /* Стиль для чеков */
@@ -34,88 +29,19 @@
   gap: 10px;
 }
 
-/* Сброс отступов для hr */
-hr {
-  border: none;
-  border-top: 1px solid #ccc;
-  margin: 10px 0;
-}
-
-/* Строка с двумя колонками */
 .row {
-  display: flex;
-  width: 100%;
-  margin-bottom: 4px;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
 
-/* Левая колонка - 60% ширины */
-.col-6 {
-  width: 50%;
-  padding-left: 5px;
-  padding-right: 5px;
-  box-sizing: border-box;
+.col-6, .col-10, .col-2 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    float: none !important;
 }
 
-/* Левая колонка для 10 из 12 */
-.col-10 {
-  width: 83.3333%;
-  padding-left: 5px;
-  padding-right: 5px;
-  box-sizing: border-box;
-}
-
-/* Правая колонка - оставшаяся часть */
-.col-2 {
-  width: 16.6667%;
-  padding-left: 5px;
-  padding-right: 5px;
-  box-sizing: border-box;
-  text-align: right;
-}
-
-/* Подключаем классы из твоего Razor-стиля */
-.pe-0 {
-  padding-right: 0 !important;
-}
-
-.ps-0 {
-  padding-left: 0 !important;
-}
-
-/* Текст переносится при необходимости */
-.word-break {
-  word-break: break-word;
-}
-
-/* Для текста, который надо выровнять по левому краю */
-.text-left {
-  text-align: left;
-}
-
-/* Для текста, который надо выровнять по правому краю */
-.text-end {
-  text-align: right;
-}
-
-/* Выравнивание по центру */
-.text-center {
-  text-align: center;
-}
-
-/* Для плавного флекса и расположения элементов */
-.d-flex {
-  display: flex;
-}
-
-.flex-column {
-  flex-direction: column;
-}
-
-.min-h-200px {
-  min-height: 200px;
-}
-
-.d-flex.justify-content-between {
-  display: flex;
-  justify-content: space-between;
+hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 10px 0;
 }

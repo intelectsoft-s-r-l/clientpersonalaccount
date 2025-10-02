@@ -903,7 +903,7 @@ export default function FiscalDevicePage() {
                                 </div>
                                 <div className="text-sm whitespace-pre-wrap break-words bg-white">
                                     {viewMode === "report" ? (
-                                        <LongZReport className="bg-white" model={reportModel} t={t} />
+                                        <LongZReport className="bg-white text-sm" model={reportModel} t={t} />
                                     ) : (
                                         <div className="billStyle">
                                             <input id="dId" value={id} type="hidden" />

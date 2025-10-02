@@ -46,160 +46,161 @@ export default function LongZReport({ model, t }) {
         <div className="billStyle dark:bg-gray-800 dark:text-white">
             <div className="receipt PrintArea rounded">
                 <div className="receiptBody" id="reportDiv">
-                    <div className="contentReceipt d-flex flex-column pl-5">
-                        <div style={{ flex: "0 0 auto", width: "100%" }}>
-                            <div style={{ textAlign: "center" }}>
-                                <span style={{ wordBreak: "break-word" }}>{model.company}</span>
+                    <div className="contentReceipt d-flex flex-column">
+                        <div className="receipt-text">
+                            <div>
+                                <div>
+                                    <span>{model.company}</span>
+                                </div>
+                                <div>
+                                    Cod Fiscal: {model.companyIDNO}
+                                </div>
+                                <div>{model.salesPointAddress}</div>
+                                <div>
+                                    Numărul de înregistrare: {model.registrationNumber}
+                                </div>
+
+                                <hr />
+
+                                <div style={{ textAlign: "center" }}>
+                                    <b>RAPORT INFORMATIV VÂNZĂRI ARTICOLE DETALIAT</b>
+                                </div>
                             </div>
-                            <div style={{ textAlign: "center" }}>
-                                Cod Fiscal: {model.companyIDNO}
-                            </div>
-                            <div style={{ textAlign: "center" }}>{model.salesPointAddress}</div>
-                            <div style={{ textAlign: "center" }}>
-                                Numărul de înregistrare: {model.registrationNumber}
-                            </div>
 
-                            <hr />
-
-                            <div style={{ textAlign: "center" }}>
-                                <b>RAPORT INFORMATIV VÂNZĂRI ARTICOLE DETALIAT</b>
-                            </div>
-
-                            <hr />
-                        </div>
-
-                        {model.fiscalReceiptItems && model.fiscalReceiptItems.length > 0 && (
-                            model.fiscalReceiptItems.map((item, index) => (
-                                <React.Fragment key={index}>
-                                    <div className="row">
-                                        <div
-                                            className="col-10 pe-0 text-center"
-                                            style={{ wordBreak: "break-word", float: "left" }}
-                                        >
-                                            {item.name}
-                                        </div>
-                                        <div
-                                            className="col-2 ps-0 text-end"
-                                            style={{ wordBreak: "break-word", float: "right" }}
-                                        >
-                                            TVA {item.tax?.code || ""}
-                                        </div>
-                                    </div>
-
-                                    <div className="row">
-                                        <div
-                                            className="col-6 pe-0"
-                                            style={{ wordBreak: "break-word", float: "left" }}
-                                        >
-                                            Cant: {item.quantity}
-                                        </div>
-                                        <div
-                                            className="col-6 ps-0 text-end"
-                                            style={{ wordBreak: "break-word", float: "right" }}
-                                        >
-                                            Total: {item.totalCost.toLocaleString("fr-FR", {
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2,
-                                            })}
-                                        </div>
-                                    </div>
-
-                                    {item.Discount && (
+                            {model.fiscalReceiptItems && model.fiscalReceiptItems.length > 0 && (
+                                model.fiscalReceiptItems.map((item, index) => (
+                                    <React.Fragment key={index}>
+                                        <hr />
                                         <div className="row">
                                             <div
-                                                className="col-6 pe-0"
+                                                className="col-10 text-center"
                                                 style={{ wordBreak: "break-word", float: "left" }}
                                             >
-                                                Reducere
+                                                {item.name}
                                             </div>
                                             <div
-                                                className="col-6 ps-0 text-end"
+                                                className="col-2 text-end"
                                                 style={{ wordBreak: "break-word", float: "right" }}
                                             >
-                                                - {item.discount.amount} {item.tax?.code || ""}
+                                                TVA {item.tax?.code || ""}
                                             </div>
                                         </div>
-                                    )}
-                                </React.Fragment>
-                            ))
-                        )}
 
-                        <hr />
+                                        <div className="row">
+                                            <div
+                                                className="col-6 text-start"
+                                                style={{ wordBreak: "break-word", float: "left" }}
+                                            >
+                                                Cant: {item.quantity}
+                                            </div>
+                                            <div
+                                                className="col-6 text-end"
+                                                style={{ wordBreak: "break-word", float: "right" }}
+                                            >
+                                                Total: {item.totalCost.toLocaleString("fr-FR", {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                })}
+                                            </div>
+                                        </div>
 
-                        <div className="row">
-                            <div
-                                className="col-6"
-                                style={{ wordBreak: "break-word", float: "left" }}
-                            >
-                                Vânzări
+                                        {item.Discount && (
+                                            <div className="row">
+                                                <div
+                                                    className="col-6 text-start"
+                                                    style={{ wordBreak: "break-word", float: "left" }}
+                                                >
+                                                    Reducere
+                                                </div>
+                                                <div
+                                                    className="col-6 text-end"
+                                                    style={{ wordBreak: "break-word", float: "right" }}
+                                                >
+                                                    - {item.discount.amount} {item.tax?.code || ""}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </React.Fragment>
+                                ))
+                            )}
+
+                            <hr />
+
+                            <div className="row">
+                                <div
+                                    className="col-6 text-start"
+                                    style={{ wordBreak: "break-word", float: "left" }}
+                                >
+                                    Vânzări
+                                </div>
+                                <div
+                                    className="col-6 text-end"
+                                    style={{
+                                        wordBreak: "break-word",
+                                        float: "right",
+                                        fontWeight: "bold",
+                                    }}
+                                >
+                                    {totalBrut.toLocaleString("fr-FR", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    })}
+                                </div>
                             </div>
-                            <div
-                                className="col-6 text-end"
-                                style={{
-                                    wordBreak: "break-word",
-                                    float: "right",
-                                    fontWeight: "bold",
-                                }}
-                            >
-                                {totalBrut.toLocaleString("fr-FR", {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                })}
+
+                            <hr />
+
+                            <div className="row">
+                                <div
+                                    className="col-6 text-start"
+                                    style={{ whiteSpace: "nowrap", float: "left" }}
+                                >
+                                    NUMĂRUL RAPORTULUI
+                                </div>
+                                <div
+                                    className="col-6 text-end"
+                                    style={{ wordBreak: "break-word", float: "right" }}
+                                >
+                                    {model.reportNumber}
+                                </div>
                             </div>
+
+                            <hr />
+
+                            <div className="row">
+                                <div
+                                    className="col-6 text-start"
+                                    style={{ wordBreak: "break-word", float: "left" }}
+                                >
+                                    Data {formattedDate}
+                                </div>
+                                <div
+                                    className="col-6 text-end"
+                                    style={{ wordBreak: "break-word", float: "right" }}
+                                >
+                                    Ora {formattedTime}
+                                </div>
+                            </div>
+
+                            <div className="row">
+                                <div
+                                    className="col-6 text-start"
+                                    style={{ whiteSpace: "nowrap", float: "left" }}
+                                >
+                                    NUMĂRUL FABRICĂRII
+                                </div>
+                                <div
+                                    className="col-6 text-end"
+                                    style={{ float: "right" }}
+                                >
+                                    {model.factoryNumber}
+                                </div>
+                            </div>
+
+                            <hr />
+
+                            <div className="text-center">--- BON DE SERVICIU ---</div>
                         </div>
-
-                        <hr />
-
-                        <div className="row">
-                            <div
-                                className="col-6 pe-0"
-                                style={{ wordBreak: "break-word", float: "left" }}
-                            >
-                                NUMĂRUL RAPORTULUI
-                            </div>
-                            <div
-                                className="col-6 ps-0 text-end"
-                                style={{ wordBreak: "break-word", float: "right" }}
-                            >
-                                {model.reportNumber}
-                            </div>
-                        </div>
-
-                        <hr />
-
-                        <div className="row">
-                            <div
-                                className="col-6 pe-0"
-                                style={{ wordBreak: "break-word", float: "left" }}
-                            >
-                                Data {formattedDate}
-                            </div>
-                            <div
-                                className="col-6 ps-0 text-end"
-                                style={{ wordBreak: "break-word", float: "right" }}
-                            >
-                                Ora {formattedTime}
-                            </div>
-                        </div>
-
-                        <div className="row">
-                            <div
-                                className="col-6 pe-0"
-                                style={{ wordBreak: "break-word", float: "left" }}
-                            >
-                                NUMĂRUL FABRICĂRII
-                            </div>
-                            <div
-                                className="col-6 ps-0 text-end"
-                                style={{ wordBreak: "break-word", float: "right" }}
-                            >
-                                {model.factoryNumber}
-                            </div>
-                        </div>
-
-                        <hr />
-
-                        <div className="text-center">--- BON DE SERVICIU ---</div>
                     </div>
                 </div>
             </div>
