@@ -912,10 +912,10 @@ export default function FiscalDevicePage() {
                                             <div className="receipt" id="receiptDiv">
                                                 <div className="receiptBody flex flex-col items-center PrintArea rounded">
                                                     <div className="contentReceipt flex flex-col items-center">
-                                                        <pre className="receipt-text text-center">{receiptText || t("SelectBill")}</pre>
+                                                        <pre className="receipt-text text-center mb-1">{receiptText || t("SelectBill")}</pre>
 
                                                         {mevURi && (
-                                                            <div className="mt-2 text-center items-center" style={{ fontSize: "87.5%" }}>
+                                                            <div className="text-center items-center" style={{ fontSize: "87.5%" }}>
                                                                 Copie a bonului fiscal
                                                                 <br />
                                                                 Verificați aici:
